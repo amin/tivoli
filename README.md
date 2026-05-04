@@ -39,8 +39,6 @@ From the repo root:
 ```bash
 pnpm dev      # Vite (5173) + php artisan serve (8000), via concurrently
 pnpm build    # Vite production build
-pnpm test     # php artisan test
-pnpm lint     # placeholder
 ```
 
 App runs at <http://localhost:8000>. Vite HMR runs at <http://localhost:5173>.
