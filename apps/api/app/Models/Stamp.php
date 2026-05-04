@@ -2,26 +2,65 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+enum AnimalType: string
+{
+    case Lion = 'lion';
+    case Dolphin = 'dolphin';
+    case Toucan = 'toucan';
+    case Beetlebug = 'beetlebug';
+    case Snake = 'snake';
+}
+
+enum MetalType: string
+{
+    case Silver = 'silver';
+    case Gold = 'gold';
+    case Platinum = 'platinum';
+}
+
 class Stamp extends Model
 {
-    // These may be altered by users through form/API-requests
-    protected $fillable = [
-        'user_id',
-        'stamptype_id',
+    protected $fillable = ['user_id', 'animal', 'metal'];
+
+    protected $appends = ['image_url'];
+
+    protected $casts = [
+        'animal' => AnimalType::class,
+        'metal' => MetalType::class,
     ];
 
-    // A stamp belongs to a stamptype
-    public function stamptype(): BelongsTo
+    protected function imageUrl(): Attribute
     {
-        return $this->belongsTo(Stamptype::class);
+        return Attribute::get(function (): string {
+            $filename = $this->metal
+                ? "{$this->metal->value}-{$this->animal->value}.svg"
+                : "{$this->animal->value}.svg";
+
+            return asset("images/stamps/{$filename}");
+        });
     }
 
-    // A user can have several stamps
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public static function generate(int $userId): self
+    {
+        $animals = AnimalType::cases();
+        $metals = MetalType::cases();
+
+        $animal = $animals[array_rand($animals)];
+        $metal = random_int(0, 1) === 1 ? $metals[array_rand($metals)] : null;
+
+        return self::create([
+            'user_id' => $userId,
+            'animal' => $animal->value,
+            'metal' => $metal?->value,
+        ]);
     }
 }
