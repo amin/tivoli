@@ -231,6 +231,46 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+    patch:
+      tags: [Groups]
+      operationId: updateGroup
+      summary: Rename a group
+      description: >
+        Any member of the group can rename it. The `name` must be 1–50
+        characters and unique across all groups (case-insensitive
+        comparison). A 422 is returned if the name is already taken.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/GroupId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  example: "Centralbank"
+      responses:
+        "200":
+          description: Updated group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
   # ── Amusements ─────────────────────────────────────────────────────────
 
   /amusements:
@@ -795,7 +835,7 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     Forbidden:
-      description: Not a member of this amusement's group
+      description: The authenticated user is not a member of the required group.
       content:
         application/json:
           schema:
@@ -894,6 +934,8 @@ components:
           type: integer
         name:
           type: string
+          minLength: 1
+          maxLength: 50
           example: "Centralbank"
         member_count:
           type: integer
