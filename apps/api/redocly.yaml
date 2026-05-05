@@ -1,0 +1,7 @@
+extends:
+  - recommended
+
+rules:
+  # The localhost server URL is intentional — this is an internal API served
+  # during the Tivoli event and not published to the public internet.
+  no-server-example.com: off

@@ -2,6 +2,9 @@ openapi: "3.0.3"
 info:
   title: Tivoli Centralbank API
   version: "1.0.0"
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
   description: >
     Central bank API for the Tivoli amusement park. Handles users, groups,
     amusement registration, transactions, stamps, exchanges, voting, and
@@ -10,21 +13,30 @@ info:
     ## Authentication
 
     **Users** authenticate with `Authorization: Bearer <jwt>` obtained from
-    `POST /auth/login` using first name and startcode. The JWT contains
-    `uuid`, `first_name`, and `group_id`.
+    `POST /auth/login` using first name and startcode. Startcodes are stored
+    hashed (bcrypt) and compared in constant time — they are never stored or
+    logged in plaintext. The JWT contains `uuid`, `first_name`, and
+    `group_id`, signed with HS256 and valid for **24 hours** from issuance.
 
     **Amusements** authenticate with `X-Api-Key: <key>`. Each amusement gets
     a unique API key when registered. Use this key for transaction endpoints
-    (`POST /transactions`, `POST /transactions/{id}/payout`) on behalf
-    of users pass `user_uuid` in the request body.
+    (`POST /transactions`, `POST /transactions/{id}/payout`). To act on behalf
+    of a user, pass their `user_uuid` in the request body.
+
+    ## First login
+
+    Users are seeded with a `null` balance and no `logged_in_at` timestamp.
+    On the user's first successful login, their balance is set to **€25** and
+    `logged_in_at` is recorded. Subsequent logins never touch the balance.
 
     ## Key concepts
 
     ### Stamps
-    Each play or visit rewards the user with a random stamp: one of five
-    animals (lion, dolphin, tucan, beetlebug, snake) with a 50% chance of
-    a metal tier (silver, gold, platinum). Stamps are generated server-side
-    by the central bank.
+    Each transaction (game play *or* attraction visit) rewards the user with
+    a random stamp as a participation trophy: one of five animals (lion,
+    dolphin, tucan, beetlebug, snake) with a 50% chance of a metal tier
+    (silver, gold, platinum). Stamps are generated server-side by the central
+    bank.
 
     ### Exchanges vs VP
     You can exchange stamp sets for cash *or* save them to earn Victory Points
@@ -33,24 +45,24 @@ info:
 
     ### Revenue
     Money from games and attractions flows into the amusement's pooled balance.
-    At the end of showdown, `POST /settle` splits each amusement's balance (or
-    debt, if the amusement paid out more than it earned) equally among its
-    group members.
+    At the end of showdown, `POST /settle` is called **once**. It zeros every
+    amusement's balance and distributes the profit (or debt) equally among
+    its group members' personal balances.
 
     ### User flow (amusements)
-    1. User clicks link in the tivoli frontend receives a URL with `?token=<jwt>`.
-       Note: the token will appear in browser history. The JWT contains the
-       user's UUID, name, and group.
+    1. User clicks a link in the Tivoli frontend and is redirected to the
+       amusement with `?token=<jwt>`. Note: the token will appear in browser
+       history. The JWT contains the user's UUID, name, and group.
     2. Amusement extracts `user_uuid` from the JWT.
     3. Amusement calls `POST /transactions` with `{ user_uuid, amount }`.
     4. Central bank deducts the amount from the user, credits the amusement,
        generates a random stamp, and returns `{ id, stamp }`.
     5. Amusement runs its own game logic.
     6. If the user wins, amusement calls `POST /transactions/{id}/payout`
-       with `{ amount }` central bank deducts from the amusement and credits
+       with `{ amount }`. Central bank deducts from the amusement and credits
        the user.
 
-    For attractions (rides), only step 3 is needed no payout.
+    For attractions (rides), only step 3 is needed — no payout.
 
 servers:
   - url: http://localhost:8000/api
@@ -58,13 +70,21 @@ servers:
 
 tags:
   - name: Auth
+    description: Login and JWT issuance.
   - name: User
+    description: Current user profile and updates.
   - name: Groups
+    description: Groups of users that collectively own amusements.
   - name: Amusements
+    description: Games and attractions registered in the park.
   - name: Transactions
+    description: Amusement-initiated money movement (charge and payout).
   - name: Stamps
+    description: Stamp collection and exchanging sets for cash.
   - name: Votes
+    description: User voting for the nicest amusement.
   - name: Results
+    description: End-of-showdown settlement and final leaderboard.
 
 paths:
 
@@ -73,11 +93,14 @@ paths:
   /auth/login:
     post:
       tags: [Auth]
+      operationId: login
       summary: Log in with first name and startcode
       description: >
-        Returns a JWT. On the user's first-ever login, their balance is
-        initialized to €25. The JWT payload contains `uuid`, `first_name`,
-        and `group_id`.
+        Returns a JWT valid for 24 hours. On the user's first-ever successful
+        login, their balance is initialized to €25 (see "First login" in the
+        intro). Startcodes are checked against a bcrypt hash. The JWT payload
+        contains `uuid`, `first_name`, and `group_id`.
+      security: []
       requestBody:
         required: true
         content:
@@ -113,6 +136,7 @@ paths:
   /me:
     get:
       tags: [User]
+      operationId: getMe
       summary: Current user profile
       security: [{ bearerAuth: [] }]
       responses:
@@ -127,6 +151,7 @@ paths:
 
     patch:
       tags: [User]
+      operationId: updateMe
       summary: Update profile information
       security: [{ bearerAuth: [] }]
       requestBody:
@@ -165,6 +190,7 @@ paths:
   /groups:
     get:
       tags: [Groups]
+      operationId: listGroups
       summary: List all groups
       security: [{ bearerAuth: [] }]
       responses:
@@ -179,10 +205,13 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/GroupSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /groups/{id}:
     get:
       tags: [Groups]
+      operationId: getGroup
       summary: Single group with members and amusements
       description: >
         If the requesting user belongs to this group, each amusement includes
@@ -197,6 +226,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Group"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -205,6 +236,7 @@ paths:
   /amusements:
     get:
       tags: [Amusements]
+      operationId: listAmusements
       summary: List all amusements
       description: >
         Returns all registered amusements. `api_key` is never included in
@@ -222,13 +254,16 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Amusement"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
     post:
       tags: [Amusements]
+      operationId: createAmusement
       summary: Register a new amusement
       description: >
         The amusement is automatically linked to the requesting user's group.
-        Returns the `api_key` save it it is only shown once in this response.
+        Returns the `api_key` — save it, it is only shown once in this response.
         To retrieve the key later, use `GET /groups/{id}` (group members only).
       security: [{ bearerAuth: [] }]
       requestBody:
@@ -255,11 +290,14 @@ paths:
                   example: "https://fortune.example.com"
       responses:
         "201":
-          description: Amusement registered
+          description: >
+            Amusement registered. The response always includes `api_key` —
+            save it, it is only shown in this response. To retrieve the key
+            later, use `GET /groups/{id}` (group members only).
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AmusementCreated"
+                $ref: "#/components/schemas/Amusement"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "422":
@@ -268,6 +306,7 @@ paths:
   /amusements/{id}:
     get:
       tags: [Amusements]
+      operationId: getAmusement
       summary: Single amusement detail
       description: >
         If the requesting user belongs to the amusement's group, the response
@@ -282,11 +321,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Amusement"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
 
     patch:
       tags: [Amusements]
+      operationId: updateAmusement
       summary: Update an amusement
       description: Any member of the amusement's group can update it.
       security: [{ bearerAuth: [] }]
@@ -316,12 +358,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Amusement"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "403":
-          description: Not a member of this amusement's group
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
         "422":
@@ -329,22 +369,23 @@ paths:
 
     delete:
       tags: [Amusements]
+      operationId: deleteAmusement
       summary: Delete an amusement
       description: >
         Any member of the amusement's group can delete it. Deletion is
-        blocked if the amusement has a non-zero balance settle first.
+        blocked if the amusement has a non-zero balance — settle first.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: "#/components/parameters/AmusementId"
       responses:
         "204":
           description: Amusement deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "403":
-          description: Not a member of this amusement's group
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "409":
           description: Cannot delete amusement with non-zero balance
           content:
@@ -353,12 +394,11 @@ paths:
                 $ref: "#/components/schemas/Error"
                 example:
                   message: "Cannot delete amusement with balance €15.00. Settle first."
-        "404":
-          $ref: "#/components/responses/NotFound"
 
   /amusements/{id}/regenerate-key:
     post:
       tags: [Amusements]
+      operationId: regenerateAmusementKey
       summary: Rotate the amusement's API key
       description: >
         Invalidates the old key and returns a new one. Any member of the
@@ -377,12 +417,10 @@ paths:
                   api_key:
                     type: string
                     example: "tiv_xyz789ghi012"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "403":
-          description: Not a member of this amusement's group
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -391,6 +429,7 @@ paths:
   /transactions:
     post:
       tags: [Transactions]
+      operationId: createTransaction
       summary: Deduct money from a user and award a stamp
       description: >
         Used when a user plays a game or visits an attraction. The amusement's
@@ -413,9 +452,10 @@ paths:
                   description: UUID of the user (extracted from the JWT)
                 amount:
                   type: number
+                  multipleOf: 0.01
                   minimum: 0.01
-                  description: Amount to deduct in euros
-                  example: 5
+                  description: Amount to deduct in euros (2-decimal precision).
+                  example: 19.95
       responses:
         "201":
           description: Money deducted and stamp awarded
@@ -434,28 +474,24 @@ paths:
                 example:
                   message: "Insufficient funds. Balance: €3.00, required: €5.00"
         "404":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFound"
 
   /transactions/{id}/payout:
     post:
       tags: [Transactions]
+      operationId: payoutTransaction
       summary: Pay winnings to a user from the amusement's balance
       description: >
         Called after the user wins a game. Deducts from the amusement's balance
-        and credits the user. The transaction is marked as settled double
+        and credits the user. The transaction is marked as settled — double
         payout is rejected.
+
+        The API key must belong to the same amusement that created the
+        original transaction. Attractions (`type: attraction`) are rejected
+        — only games can pay out.
       security: [{ apiKeyAuth: [] }]
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID of the original transaction (from `POST /transactions`)
-          schema:
-            type: integer
+        - $ref: "#/components/parameters/TransactionId"
       requestBody:
         required: true
         content:
@@ -466,9 +502,10 @@ paths:
               properties:
                 amount:
                   type: number
+                  multipleOf: 0.01
                   minimum: 0.01
-                  description: Winnings to pay out
-                  example: 10
+                  description: Winnings to pay out in euros (2-decimal precision).
+                  example: 10.00
       responses:
         "200":
           description: Payout completed
@@ -490,10 +527,20 @@ paths:
                 $ref: "#/components/schemas/Error"
                 example:
                   message: "Insufficient amusement balance. Balance: €2.00, required: €10.00"
+        "403":
+          description: API key does not match the transaction's amusement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example:
+                  message: "This transaction belongs to a different amusement"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
-          description: Transaction has already been paid out
+          description: >
+            Conflict — either the transaction has already been paid out, or
+            the amusement is an attraction (attractions cannot pay out).
           content:
             application/json:
               schema:
@@ -506,6 +553,7 @@ paths:
   /stamps:
     get:
       tags: [Stamps]
+      operationId: listStamps
       summary: Get current user's unexchanged stamps
       security: [{ bearerAuth: [] }]
       responses:
@@ -526,18 +574,23 @@ paths:
   /exchanges:
     post:
       tags: [Stamps]
+      operationId: exchangeStamps
       summary: Exchange stamp sets for money
       description: >
-        Submit stamp IDs. The server finds the optimal combination of complete
-        sets from the submitted stamps arranged to maximize payout:
+        Submit stamp IDs. The server forms sets greedily in this order,
+        picking the highest-value sets first:
 
-        - **Set of all three metals** (silver + gold + platinum): €10
-        - **Set of all five animals** (lion + dolphin + tucan + beetlebug + snake): €7
-        - **Set of three distinct non-metal animals** (three different animals
-          without metal): €3
+        1. **Metal sets** (silver + gold + platinum, any animals) — €10 each
+        2. **Animal sets** (all five animals, any metals) — €7 each
+        3. **Non-metal sets** (3 distinct animals with no metal) — €3 each
 
-        Submitted stamps are consumed by the exchange and no longer count
-        toward Victory Points. Money is created out of thin air.
+        Only stamps that end up in a formed set are consumed; stamps left
+        over stay in the user's collection and remain eligible for Victory
+        Points. This means you can safely submit your entire collection and
+        let the server take only what pays.
+
+        Money is created out of thin air — exchanges do not affect any
+        amusement's balance.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true
@@ -563,7 +616,9 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
         "422":
-          description: Stamps do not belong to user
+          description: >
+            Validation failed, or one or more stamp IDs do not belong to
+            the authenticated user.
           content:
             application/json:
               schema:
@@ -576,9 +631,11 @@ paths:
   /votes:
     post:
       tags: [Votes]
+      operationId: castVote
       summary: Vote for the nicest amusement
       description: >
         One vote per user. Voting again replaces your previous vote (upsert).
+        Users are free to vote for amusements in their own group.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true
@@ -610,23 +667,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "422":
+          $ref: "#/components/responses/ValidationError"
 
   # ── Settlement ─────────────────────────────────────────────────────────
 
   /settle:
     post:
       tags: [Results]
+      operationId: settle
       summary: End of showdown settlement
       description: >
-        Splits each amusement's balance (or debt) equally among its group
-        members. Each amusement with a positive balance distributes its
-        balance to its group members. Each amusement with a negative balance
-        deducts the debt from its group members (down to zero; debt beyond
-        members' ability to pay is written off).
+        Called **once** at the end of the showdown. For each amusement:
 
-        **Idempotent** calling this more than once has no effect on already
-        settled amusements. Calling it before showdown ends simply settles
-        the current state.
+        1. Take the amusement's current balance (positive = profit,
+           negative = debt).
+        2. Split it equally among the members of the amusement's group and
+           apply the split to each member's personal balance — profit is
+           credited, debt is debited.
+        3. Zero the amusement's balance.
+
+        After settlement, all amusement balances are zero and the surplus
+        or debt has been absorbed by the group members.
+
+        Calling this endpoint is intended to happen exactly once. Calling
+        it again would settle zero-balance amusements, which is a no-op.
       security: [{ bearerAuth: [] }]
       responses:
         "200":
@@ -643,19 +708,33 @@ paths:
   /leaderboard:
     get:
       tags: [Results]
+      operationId: getLeaderboard
       summary: Final leaderboard
       description: >
-        Shows the richest users, users with the most Victory Points,
-        and the highest-voted amusement.
+        Top 10 in each category.
 
-        **VP calculation:**
-        - Complete set of metals (silver + gold + platinum): 40 VP
-        - Complete set of animals (all five): 25 VP
-        - Loose stamps (not part of any completed set): triangular numbers
-          (1 stamp → 1 VP, 2 → 3 VP, 3 → 6 VP, 4 → 10 VP, etc.)
+        **Rankings:**
+        - **Richest**: users ordered by personal balance (descending).
+        - **Most VP**: users ordered by Victory Points (descending).
+        - **Nicest amusements**: amusements ordered by vote count (descending).
 
-        These checks are additive and do not consume stamps. Only unexchanged
-        stamps are counted. Exchanged stamps are gone forever.
+        **VP calculation (partition, metal first):**
+        1. `metal_sets = min(silver_count, gold_count, platinum_count)` →
+           `40 × metal_sets` VP. Reserves 3 × metal_sets stamps (one of each
+           metal per set).
+        2. From the remaining stamps,
+           `animal_sets = min(count of each of the five animals)` →
+           `25 × animal_sets` VP. Reserves 5 × animal_sets stamps.
+        3. `loose = remaining stamps after both partitions`. VP awarded as
+           the `loose`-th triangular number
+           (1 → 1, 2 → 3, 3 → 6, 4 → 10, …).
+        4. Total VP is the sum of the three.
+
+        Only unexchanged stamps are counted. Stamps are never deleted by
+        this endpoint — the partition is purely arithmetic.
+
+        **Tie-breaking** in all three rankings: lower `id` (or earliest
+        creation) wins.
       security: [{ bearerAuth: [] }]
       responses:
         "200":
@@ -664,6 +743,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Leaderboard"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
 # ── Components ───────────────────────────────────────────────────────────
 
@@ -675,8 +756,8 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: >
-        JWT obtained from `POST /auth/login`. Contains `uuid`, `first_name`,
-        and `group_id`.
+        HS256-signed JWT obtained from `POST /auth/login`, valid for 24 hours.
+        Contains `uuid`, `first_name`, and `group_id`.
     apiKeyAuth:
       type: apiKey
       in: header
@@ -698,10 +779,23 @@ components:
       required: true
       schema:
         type: integer
+    TransactionId:
+      name: id
+      in: path
+      required: true
+      description: ID of the original transaction (from `POST /transactions`).
+      schema:
+        type: integer
 
   responses:
     Unauthorized:
       description: Missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Not a member of this amusement's group
       content:
         application/json:
           schema:
@@ -759,7 +853,8 @@ components:
           example: null
         balance:
           type: number
-          example: 25
+          multipleOf: 0.01
+          example: 25.00
           readOnly: true
         group:
           allOf:
@@ -811,8 +906,9 @@ components:
           properties:
             total_balance:
               type: number
+              multipleOf: 0.01
               description: Sum of all amusement balances belonging to this group.
-              example: 45
+              example: 45.00
             members:
               type: array
               items:
@@ -845,8 +941,9 @@ components:
           example: "https://fortune.example.com"
         balance:
           type: number
+          multipleOf: 0.01
           description: Current pooled balance of this amusement.
-          example: 15.5
+          example: 15.50
           readOnly: true
         api_key:
           type: string
@@ -862,19 +959,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-
-    AmusementCreated:
-      allOf:
-        - $ref: "#/components/schemas/Amusement"
-        - type: object
-          required: [api_key]
-          properties:
-            api_key:
-              type: string
-              description: >
-                Store this. It is only returned on creation. To retrieve
-                it later, use `GET /groups/{id}` (group members only).
-              example: "tiv_abc123def456"
 
     # ── Stamp ───────────────────────────────────────────────────────
 
@@ -908,7 +992,7 @@ components:
       properties:
         id:
           type: integer
-          description: Transaction ID. Save this it is required for payout.
+          description: Transaction ID. Save this — it is required for payout.
         stamp:
           $ref: "#/components/schemas/Stamp"
 
@@ -919,8 +1003,9 @@ components:
       properties:
         amount:
           type: number
+          multipleOf: 0.01
           description: Total euros received from this exchange.
-          example: 10
+          example: 10.00
         sets_exchanged:
           type: object
           properties:
@@ -938,6 +1023,9 @@ components:
               example: 0
         stamps_consumed:
           type: integer
+          description: >
+            Count of submitted stamps that were used by the greedy set
+            formation. Stamps not used are left in the user's collection.
           example: 3
 
     # ── Settlement ─────────────────────────────────────────────────
@@ -960,9 +1048,11 @@ components:
                 type: string
               balance:
                 type: number
+                multipleOf: 0.01
                 description: Balance before split (positive = profit, negative = debt).
               split_per_member:
                 type: number
+                multipleOf: 0.01
                 description: Amount each group member received (or paid).
               member_count:
                 type: integer
@@ -981,6 +1071,7 @@ components:
                 $ref: "#/components/schemas/UserSummary"
               balance:
                 type: number
+                multipleOf: 0.01
         most_vp:
           type: array
           items:
@@ -991,7 +1082,7 @@ components:
               vp:
                 type: integer
                 description: Total Victory Points
-        nicest_amusement:
+        nicest_amusements:
           type: array
           items:
             type: object
