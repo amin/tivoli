@@ -1,0 +1,36 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+use Illuminate\Support\Str;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+
+class GuestSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // Create guest account
+        // Used by students during development for testing their applications
+        // Will then be used by guests (will not trigger any transactions)
+
+
+        // Delete old guest if exists
+        User::where('name', 'Guest')->delete();
+
+        User::create([
+            'name' => 'Guest',
+            'group_id' => null, // Guest tillhör ingen grupp
+            'startcode' => Str::uuid()->toString(),
+            'access_key' => null, // Genereras vid aktivering om ni vill
+            'balance' => 90000,
+            'github_link' => null,
+            'website_link' => null,
+            'is_active' => true, // Du togglar detta när spelet startar
+        ]);
+    }
+}
