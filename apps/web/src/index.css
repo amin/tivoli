@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --bg-page: #FFF6EC;
+  --bg-surface: #FFFFFF;
+  --bg-soft: #FFFBF5;
+  --bg-tint: #F5EFE4;
+  --border-faint: rgba(74, 27, 12, 0.10);
+  --border-soft: rgba(74, 27, 12, 0.18);
+  --text-ink: #2A1407;
+  --text-muted: #7A4A2E;
+  --text-faint: #A07555;
+
+  --c-pink: #D4537E;
+  --c-pink-dark: #993556;
+  --c-pink-soft: #FBEAF0;
+  --c-coral: #D85A30;
+  --c-coral-dark: #993C1D;
+  --c-coral-soft: #FAECE7;
+  --c-amber: #FAC775;
+  --c-amber-dark: #BA7517;
+  --c-amber-soft: #FAEEDA;
+  --c-purple: #534AB7;
+  --c-purple-dark: #3C3489;
+  --c-purple-soft: #EEEDFE;
+  --c-green: #1D9E75;
+  --c-green-dark: #0F6E56;
+  --c-green-soft: #E1F5EE;
+  --c-red: #E24B4A;
+  --c-night: #1F1B16;
+
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-pill: 999px;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg-page);
+  font-family: var(--font-body);
+  color: var(--text-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: inherit; text-decoration: none; }
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
