@@ -12,22 +12,17 @@ info:
 
     ## Authentication
 
-    **Users** authenticate with `Authorization: Bearer <jwt>` obtained from
-    `POST /auth/login` using first name and startcode. Startcodes are stored
-    hashed (bcrypt) and compared in constant time — they are never stored or
-    logged in plaintext. The JWT contains `uuid`, `first_name`, and
-    `group_id`, signed with HS256 and valid for **24 hours** from issuance.
+    **Users** activate with `POST /activate` using first name and startcode.
+    The endpoint returns a permanent access_key (UUID). The access_key is
+    stored hashed (bcrypt) server-side and shown only once in the activation
+    response. Subsequent requests authenticate via the `X-Access-Key` header.
+    The frontend can call `POST /auth/login` with the access_key to fetch the
+    user profile on sign-in.
 
     **Amusements** authenticate with `X-Api-Key: <key>`. Each amusement gets
     a unique API key when registered. Use this key for transaction endpoints
     (`POST /transactions`, `POST /transactions/{id}/payout`). To act on behalf
     of a user, pass their `user_uuid` in the request body.
-
-    ## First login
-
-    Users are seeded with a `null` balance and no `logged_in_at` timestamp.
-    On the user's first successful login, their balance is set to **€25** and
-    `logged_in_at` is recorded. Subsequent logins never touch the balance.
 
     ## Key concepts
 
@@ -51,9 +46,8 @@ info:
 
     ### User flow (amusements)
     1. User clicks a link in the Tivoli frontend and is redirected to the
-       amusement with `?token=<jwt>`. Note: the token will appear in browser
-       history. The JWT contains the user's UUID, name, and group.
-    2. Amusement extracts `user_uuid` from the JWT.
+       amusement with the user's identifier as a query parameter.
+    2. Amusement reads the user's UUID from that parameter.
     3. Amusement calls `POST /transactions` with `{ user_uuid, amount }`.
     4. Central bank deducts the amount from the user, credits the amusement,
        generates a random stamp, and returns `{ id, stamp }`.
@@ -70,7 +64,7 @@ servers:
 
 tags:
   - name: Auth
-    description: Login and JWT issuance.
+    description: User activation and login.
   - name: User
     description: Current user profile and updates.
   - name: Groups
@@ -87,19 +81,18 @@ tags:
     description: End-of-showdown settlement and final leaderboard.
 
 paths:
-
   # ── Auth ───────────────────────────────────────────────────────────────
 
-  /auth/login:
+  /activate:
     post:
       tags: [Auth]
-      operationId: login
-      summary: Log in with first name and startcode
+      operationId: activate
+      summary: Exchange first name + startcode for a permanent access key
       description: >
-        Returns a JWT valid for 24 hours. On the user's first-ever successful
-        login, their balance is initialized to €25 (see "First login" in the
-        intro). Startcodes are checked against a bcrypt hash. The JWT payload
-        contains `uuid`, `first_name`, and `group_id`.
+        Verifies the startcode for a user, generates a UUID access_key, stores
+        it hashed (bcrypt), and returns the plaintext key. The access_key is
+        shown only in this response — save it. Calling this endpoint a second
+        time for an already-activated user is rejected with 400.
       security: []
       requestBody:
         required: true
@@ -114,20 +107,67 @@ paths:
                   example: "Amin"
                 startcode:
                   type: string
-                  example: "abc123"
+                  format: uuid
+                  example: "9f1c2a14-7e5e-4a8a-b5b1-19d2a3a5f201"
+      responses:
+        "200":
+          description: Activation successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Activation successful"
+                  access_key:
+                    type: string
+                    description: Plaintext access key. Stored hashed server-side.
+                    example: "8d1f1c8a-12d4-4f3a-9b9b-77d9b66e30e1"
+        "400":
+          description: User already activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Invalid startcode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      summary: Sign in with an access key, returning the user profile
+      description: >
+        Validates the access_key (bcrypt-checked against the stored hash) and
+        returns the user profile. Used by the frontend on the sign-in form.
+        After a successful login, the client should send the access_key in the
+        `X-Access-Key` header on all subsequent requests.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [access_key]
+              properties:
+                access_key:
+                  type: string
+                  example: "8d1f1c8a-12d4-4f3a-9b9b-77d9b66e30e1"
       responses:
         "200":
           description: Login successful
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    description: JWT. Contains uuid, first_name, group_id.
-                  user:
-                    $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/User"
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -138,7 +178,7 @@ paths:
       tags: [User]
       operationId: getMe
       summary: Current user profile
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       responses:
         "200":
           description: User profile including balance, group, and stamp count
@@ -153,7 +193,7 @@ paths:
       tags: [User]
       operationId: updateMe
       summary: Update profile information
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       requestBody:
         content:
           application/json:
@@ -192,7 +232,7 @@ paths:
       tags: [Groups]
       operationId: listGroups
       summary: List all groups
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       responses:
         "200":
           description: All groups
@@ -216,7 +256,7 @@ paths:
       description: >
         If the requesting user belongs to this group, each amusement includes
         its `api_key`. Non-members receive amusements without `api_key`.
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       parameters:
         - $ref: "#/components/parameters/GroupId"
       responses:
@@ -239,7 +279,7 @@ paths:
         Any member of the group can rename it. The `name` must be 1–50
         characters and unique across all groups (case-insensitive
         comparison). A 422 is returned if the name is already taken.
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       parameters:
         - $ref: "#/components/parameters/GroupId"
       requestBody:
@@ -281,7 +321,7 @@ paths:
       description: >
         Returns all registered amusements. `api_key` is never included in
         this public listing.
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       responses:
         "200":
           description: All registered amusements
@@ -305,7 +345,7 @@ paths:
         The amusement is automatically linked to the requesting user's group.
         Returns the `api_key` — save it, it is only shown once in this response.
         To retrieve the key later, use `GET /groups/{id}` (group members only).
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       requestBody:
         required: true
         content:
@@ -351,7 +391,7 @@ paths:
       description: >
         If the requesting user belongs to the amusement's group, the response
         includes `api_key`. Otherwise it is omitted.
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       parameters:
         - $ref: "#/components/parameters/AmusementId"
       responses:
@@ -371,7 +411,7 @@ paths:
       operationId: updateAmusement
       summary: Update an amusement
       description: Any member of the amusement's group can update it.
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       parameters:
         - $ref: "#/components/parameters/AmusementId"
       requestBody:
@@ -414,7 +454,7 @@ paths:
       description: >
         Any member of the amusement's group can delete it. Deletion is
         blocked if the amusement has a non-zero balance — settle first.
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       parameters:
         - $ref: "#/components/parameters/AmusementId"
       responses:
@@ -443,7 +483,7 @@ paths:
       description: >
         Invalidates the old key and returns a new one. Any member of the
         amusement's group can do this.
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       parameters:
         - $ref: "#/components/parameters/AmusementId"
       responses:
@@ -489,7 +529,7 @@ paths:
                 user_uuid:
                   type: string
                   format: uuid
-                  description: UUID of the user (extracted from the JWT)
+                  description: UUID of the user (read from the URL parameter)
                 amount:
                   type: number
                   multipleOf: 0.01
@@ -595,7 +635,7 @@ paths:
       tags: [Stamps]
       operationId: listStamps
       summary: Get current user's unexchanged stamps
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       responses:
         "200":
           description: User's stamp collection
@@ -631,7 +671,7 @@ paths:
 
         Money is created out of thin air — exchanges do not affect any
         amusement's balance.
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       requestBody:
         required: true
         content:
@@ -676,7 +716,7 @@ paths:
       description: >
         One vote per user. Voting again replaces your previous vote (upsert).
         Users are free to vote for amusements in their own group.
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       requestBody:
         required: true
         content:
@@ -732,7 +772,7 @@ paths:
 
         Calling this endpoint is intended to happen exactly once. Calling
         it again would settle zero-balance amusements, which is a no-op.
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       responses:
         "200":
           description: Settlement results
@@ -775,7 +815,7 @@ paths:
 
         **Tie-breaking** in all three rankings: lower `id` (or earliest
         creation) wins.
-      security: [{ bearerAuth: [] }]
+      security: [{ accessKeyAuth: [] }]
       responses:
         "200":
           description: Leaderboard data
@@ -789,15 +829,15 @@ paths:
 # ── Components ───────────────────────────────────────────────────────────
 
 components:
-
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    accessKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Access-Key
       description: >
-        HS256-signed JWT obtained from `POST /auth/login`, valid for 24 hours.
-        Contains `uuid`, `first_name`, and `group_id`.
+        UUID access key obtained from `POST /activate`. Stored hashed (bcrypt)
+        server-side. Sent in the `X-Access-Key` header on every authenticated
+        user request.
     apiKeyAuth:
       type: apiKey
       in: header
@@ -864,7 +904,6 @@ components:
                     type: string
 
   schemas:
-
     # ── User ─────────────────────────────────────────────────────────
 
     User:
