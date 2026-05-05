@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('stamptypes', function (Blueprint $table) {
             $table->id();
+            $table->enum('animal', ['lion', 'dolphin', 'tucan', 'beetlebug', 'snake']);
+            $table->enum('metal', ['silver', 'gold', 'platinum'])->nullable();
             $table->timestamps();
         });
     }
