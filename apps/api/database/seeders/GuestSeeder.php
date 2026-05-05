@@ -24,13 +24,13 @@ class GuestSeeder extends Seeder
 
         User::create([
             'name' => 'Guest',
-            'group_id' => null, // Guest tillhör ingen grupp
+            'group_id' => null,
             'startcode' => Str::uuid()->toString(),
-            'access_key' => null, // Genereras vid aktivering om ni vill
+            'access_key' => null, // Generates when activated
             'balance' => 90000,
             'github_link' => null,
             'website_link' => null,
-            'is_active' => true, // Du togglar detta när spelet startar
+            'is_active' => true, // Toggle to false to inactive account
         ]);
     }
 }
