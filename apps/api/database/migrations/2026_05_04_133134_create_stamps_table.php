@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('stamps', function (Blueprint $table) {
             $table->id();
+
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users');
+
+            $table->unsignedBigInteger('stamptype_id');
+            $table->foreign('stamptype_id')->references('id')->on('stamptypes');
+
             $table->timestamps();
         });
     }
