@@ -31,6 +31,10 @@ class AccessKeyAuth
             return response()->json(['error' => 'Invalid access key'], 401);
         }
 
+        if (!$user->is_active) {
+            return response()->json(['error' => 'User is inactive'], 403);
+        }
+
         // Attach user to request
         $request->setUserResolver(fn() => $user);
 
