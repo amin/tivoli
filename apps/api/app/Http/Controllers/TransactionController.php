@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Amusement;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TransactionController extends Controller
@@ -19,5 +20,15 @@ class TransactionController extends Controller
         ]);
 
         return $transaction;
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        return response()->json(['message' => 'Not implemented'], 501);
+    }
+
+    public function payout(Request $request, int $id): JsonResponse
+    {
+        return response()->json(['message' => 'Not implemented'], 501);
     }
 }
