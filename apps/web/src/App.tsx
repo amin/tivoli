@@ -1,7 +1,17 @@
-import tivoliImg from "./assets/tivoli.jpg";
 import "./App.css";
 import { Routes, Route, Link } from "react-router-dom";
 import Activate from "./pages/activate";
+import logoImg from "../public/logo_transparent.svg"
+import './App.css'
+
+const BRAND_LETTERS = [
+  ['T', 'red'],
+  ['i', 'blue'],
+  ['v', 'red'],
+  ['o', 'yellow'],
+  ['l', 'red'],
+  ['i', 'blue'],
+] as const;
 
 type Attraction = {
   id: string;
@@ -17,7 +27,11 @@ function Home() {
   return (
     <>
       <header className="header">
-        <span className="brand-name">Tivoli</span>
+        <div className="brand-name">
+          {BRAND_LETTERS.map(([letter, color], i) => (
+            <span key={i} className={`col-diff-${color}`}>{letter}</span>
+          ))}
+        </div>
         <nav className="nav">
           <div className="auth-pill">
             <span className="avatar">G</span>
@@ -31,28 +45,28 @@ function Home() {
       </header>
 
       <section className="hero">
+        <div className="hero-img-wrap">
+          <img src={logoImg} alt="Tivoli park" className="hero-img" />
+        </div>
         <div className="hero-content">
-          <span className="eyebrow">NOW OPEN</span>
           <h1>
-            Your digital
-            <br />
-            <span className="pixel">playground</span>
+            Your digital<br />
+            <span className="pixel">
+              playground
+            </span>
           </h1>
           <p>
-            Games, rides, and attractions - all in one place. Grab a ticket and
-            explore.
+            Games, rides, and attractions - all in one place. Grab a ticket and explore.
           </p>
           <div className="hero-ctas">
             <button className="btn btn-primary">Enter the park</button>
             <button className="btn btn-secondary">How it works</button>
           </div>
         </div>
-        <div className="hero-img-wrap">
-          <img src={tivoliImg} alt="Tivoli park" className="hero-img" />
-        </div>
       </section>
 
       <main className="section">
+
         <div className="section-head">
           <h2>Attractions & Games</h2>
         </div>
