@@ -1,39 +1,54 @@
 @import "tailwindcss";
 
 :root {
-  --bg-page: #FFF6EC;
+  --bg-page: #EBF5FB;
   --bg-surface: #FFFFFF;
-  --bg-soft: #FFFBF5;
-  --bg-tint: #F5EFE4;
-  --border-faint: rgba(74, 27, 12, 0.10);
-  --border-soft: rgba(74, 27, 12, 0.18);
-  --text-ink: #2A1407;
-  --text-muted: #7A4A2E;
-  --text-faint: #A07555;
+  --bg-soft: #F0F8FD;
+  --bg-tint: #D8EEFA;
+  --bg-hero: #C8E8F8;
+  --border-faint: rgba(13, 42, 80, 0.10);
+  --border-soft: rgba(13, 42, 80, 0.18);
+  --text-ink: #0D2848;
+  --text-muted: #1A4E72;
+  --text-faint: #4A7A9B;
 
-  --c-pink: #D4537E;
-  --c-pink-dark: #993556;
-  --c-pink-soft: #FBEAF0;
-  --c-coral: #D85A30;
-  --c-coral-dark: #993C1D;
-  --c-coral-soft: #FAECE7;
-  --c-amber: #FAC775;
-  --c-amber-dark: #BA7517;
-  --c-amber-soft: #FAEEDA;
-  --c-purple: #534AB7;
-  --c-purple-dark: #3C3489;
-  --c-purple-soft: #EEEDFE;
+  /* blue — primary action, rides, sky */
+  --c-blue: #1E72B8;
+  --c-blue-dark: #0F4E8A;
+  --c-blue-soft: #DCF0FA;
+  --c-blue-muted: #76B8E8;
+
+  /* orange — bumper car, warm accent */
+  --c-orange: #D96020;
+  --c-orange-dark: #A84010;
+  --c-orange-soft: #FAE8DC;
+
+  /* yellow — candy stripes, carousel */
+  --c-yellow: #FAB830;
+  --c-yellow-dark: #C4851A;
+  --c-yellow-soft: #FEF3DC;
+
+  /* red — ride accents, errors */
+  --c-red: #c72c39;
+  --c-red-dark: #B52030;
+  --c-red-soft: #FAECEC;
+
   --c-green: #1D9E75;
   --c-green-dark: #0F6E56;
   --c-green-soft: #E1F5EE;
-  --c-red: #E24B4A;
-  --c-night: #1F1B16;
+  --c-night: #0D2848;
+  --c-sky: #A8D4F0;
+
+  --shadow-overlay: rgba(13, 40, 72, 0.5);
+  --shadow-modal: rgba(13, 40, 72, 0.2);
+  --shadow-card: rgba(13, 40, 72, 0.08);
+  --shadow-btn: rgba(30, 114, 184, 0.35);
 
   --r-md: 10px;
   --r-lg: 14px;
   --r-pill: 999px;
 
-  --font-display: "Fraunces", Georgia, serif;
+  --font-display: "Luckiest Guy", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
