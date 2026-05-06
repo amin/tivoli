@@ -2,7 +2,6 @@ import "./App.css";
 import { Routes, Route, Link } from "react-router-dom";
 import Activate from "./pages/activate";
 import logoImg from "../public/logo_transparent.svg"
-import './App.css'
 
 const BRAND_LETTERS = [
   ['T', 'red'],
@@ -27,20 +26,18 @@ function Home() {
   return (
     <>
       <header className="header">
-        <div className="brand-name">
+        <Link to="/" className="brand-name">
           {BRAND_LETTERS.map(([letter, color], i) => (
             <span key={i} className={`col-diff-${color}`}>{letter}</span>
           ))}
-        </div>
+        </Link>
         <nav className="nav">
-          <div className="auth-pill">
+          <Link to="/activate" className="auth-pill">
             <span className="avatar">G</span>
             <span className="auth-text">Guest</span>
             <span className="auth-divider">·</span>
-            <span className="auth-link">Log in</span>
-            <span className="auth-divider">·</span>
-            <Link to="/activate">Activate Account</Link>
-          </div>
+            <span className="auth-link">Log in / Activate</span>
+          </Link>
         </nav>
       </header>
 

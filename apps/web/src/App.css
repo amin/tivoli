@@ -15,9 +15,10 @@
 
 .brand-name {
   font-family: var(--font-display);
-  font-size: 46px;
+  font-size: 36px;
   text-align: center;
   text-shadow: 2px 2px white;
+  text-decoration: none;
 }
 
 .col-diff-blue { color: var(--c-blue); }
@@ -408,6 +409,7 @@
   .hero { padding: 48px 28px 56px; }
   .grid { grid-template-columns: repeat(2, 1fr); }
   .footer { padding: 28px 40px; flex-direction: row; align-items: center; }
+  .brand-name { font-size: 46px; }
 }
 
 @media (min-width: 880px) {
