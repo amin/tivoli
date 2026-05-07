@@ -190,7 +190,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s;
+  min-height: 44px;
 }
 
 .sell-btn:disabled {
@@ -221,7 +221,7 @@
   border-radius: var(--r-pill);
   padding: 8px 22px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  min-height: 44px;
 }
 
 @media (hover: hover) {

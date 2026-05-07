@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import logoImg from "../../public/logo_transparent.svg";
+import logoImg from "../assets/logo_transparent.svg";
 
 const BRAND_LETTERS = [
   ["T", "red"],
@@ -10,17 +11,32 @@ const BRAND_LETTERS = [
   ["i", "blue"],
 ] as const;
 
-type Attraction = {
-  id: string;
+type Amusement = {
+  id: number;
   name: string;
-  tag: string;
-  emoji: string;
-  bg: string;
+  description: string | null;
+  type: "game" | "attraction";
+  url: string;
 };
 
-const attractions: Attraction[] = [];
+type Filter = "all" | "game" | "attraction";
 
 export default function Home() {
+  const [amusements, setAmusements] = useState<Amusement[]>([]);
+  const [filter, setFilter] = useState<Filter>("all");
+
+  useEffect(() => {
+    const accessKey = localStorage.getItem("access_key") ?? "";
+    fetch("/api/amusements", {
+      headers: { "X-Access-Key": accessKey, Accept: "application/json" },
+    })
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then((body) => setAmusements(body.data ?? []))
+      .catch(() => {});
+  }, []);
+
+  const visible = filter === "all" ? amusements : amusements.filter((a) => a.type === filter);
+
   return (
     <>
       <header className="header">
@@ -36,7 +52,7 @@ export default function Home() {
             <span className="avatar">G</span>
             <span className="auth-text">Guest</span>
             <span className="auth-divider">·</span>
-            <span className="auth-link">Log in / Activate</span>
+            <span className="auth-link">Log in</span>
           </Link>
         </nav>
       </header>
@@ -56,7 +72,7 @@ export default function Home() {
             explore.
           </p>
           <div className="hero-ctas">
-            <Link to="/activate" className="btn btn-primary">
+            <Link to="/login" className="btn btn-primary">
               Enter the park
             </Link>
             <Link to="/how-it-works" className="btn btn-secondary">
@@ -73,31 +89,30 @@ export default function Home() {
         <p className="section-sub">All the fun in one place.</p>
 
         <div className="filters">
-          <button className="chip active">All</button>
-          <button className="chip">Games</button>
-          <button className="chip">Rides</button>
+          <button className={`chip${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>All</button>
+          <button className={`chip${filter === "game" ? " active" : ""}`} onClick={() => setFilter("game")}>Games</button>
+          <button className={`chip${filter === "attraction" ? " active" : ""}`} onClick={() => setFilter("attraction")}>Rides</button>
         </div>
 
-        {attractions.length === 0 ? (
+        {visible.length === 0 ? (
           <div className="empty-state">
             <span className="empty-icon">🎪</span>
             <p className="empty-title">Coming soon</p>
             <p className="empty-sub">
-              Attractions are being built — check back soon!
+              Attractions are being built. <br />
+              Check back soon!
             </p>
           </div>
         ) : (
           <div className="grid">
-            {attractions.map((a) => (
-              <div key={a.id} className="card">
-                <div className="card-illustration" style={{ background: a.bg }}>
-                  <span style={{ fontSize: 56 }}>{a.emoji}</span>
-                </div>
+            {visible.map((a) => (
+              <a key={a.id} className="card" href={a.url} target="_blank" rel="noreferrer">
+                <div className="card-illustration" />
                 <div className="card-body">
                   <p className="card-title">{a.name}</p>
-                  <p className="card-tag">{a.tag}</p>
+                  <p className="card-tag">{a.type}</p>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         )}
