@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
 
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+
 function InfoTip({ id, children }: { id: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
@@ -119,133 +122,137 @@ export default function Login() {
   }
 
   return (
-    <section className="activatePage">
-      <h1>Activate your account</h1>
+    <>
+      <Header />
+      <section className="activatePage">
+        <h1>Activate your account</h1>
 
-      {/* Primary: Login form */}
-      <section className="loginSection">
-        <h2>Log in with name & access key</h2>
-        <form className="loginGrid" onSubmit={(e) => { e.preventDefault(); loginWithKey(); }}>
-          <label className="label">Name</label>
-          <input
-            className="input"
-            placeholder="Enter your name"
-            value={loginName}
-            onChange={(e) => setLoginName((e.target as HTMLInputElement).value)}
-          />
-          <span className="label-row">
-            <label className="label">Access Key</label>
-            <InfoTip id="tip-access-key">
-              Generated when you activated your account. Copy it from the activation confirmation — it's your only way to log in.
-            </InfoTip>
-          </span>
-          <input
-            className="input"
-            placeholder="Enter your access key"
-            value={accessKeyInput}
-            onChange={(e) =>
-              setAccessKeyInput((e.target as HTMLInputElement).value)
-            }
-          />
-          <div className="loginActions">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loginLoading || !accessKeyInput || !loginName}
-            >
-              {loginLoading ? "Logging in…" : "Log in"}
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => {
-                setAccessKeyInput("");
-                setLoginError(null);
-              }}
-            >
-              Clear
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-link"
-              onClick={() => setShowActivate((s) => !s)}
-            >
-              Activate Account
-            </button>
-          </div>
-
-          {loginError && <div className="form-error">{loginError}</div>}
-        </form>
-      </section>
-
-      {/* Activation form: toggled below login */}
-      {showActivate && (
-        <form onSubmit={handleSubmit} className="activateForm">
-          <div className="field">
+        {/* Primary: Login form */}
+        <section className="loginSection">
+          <h2>Log in with name & access key</h2>
+          <form className="loginGrid" onSubmit={(e) => { e.preventDefault(); loginWithKey(); }}>
             <label className="label">Name</label>
             <input
               className="input"
               placeholder="Enter your name"
-              value={activationName}
-              onChange={(e) =>
-                setActivationName((e.target as HTMLInputElement).value)
-              }
-              required
+              value={loginName}
+              onChange={(e) => setLoginName((e.target as HTMLInputElement).value)}
             />
-          </div>
-
-          <div className="field">
             <span className="label-row">
-              <label className="label">Startcode</label>
-              <InfoTip id="tip-startcode">
-                A one-time code given to you when you registered for Tivoli.
+              <label className="label">Access Key</label>
+              <InfoTip id="tip-access-key">
+                Generated when you activated your account. Copy it from the activation confirmation — it's your only way to log in.
               </InfoTip>
             </span>
             <input
               className="input"
-              placeholder="Enter your startcode"
-              value={startcode}
+              placeholder="Enter your access key"
+              value={accessKeyInput}
               onChange={(e) =>
-                setStartcode((e.target as HTMLInputElement).value)
+                setAccessKeyInput((e.target as HTMLInputElement).value)
               }
-              required
             />
+            <div className="loginActions">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loginLoading || !accessKeyInput || !loginName}
+              >
+                {loginLoading ? "Logging in…" : "Log in"}
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setAccessKeyInput("");
+                  setLoginError(null);
+                }}
+              >
+                Clear
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-link"
+                onClick={() => setShowActivate((s) => !s)}
+              >
+                Activate Account
+              </button>
+            </div>
+
+            {loginError && <div className="form-error">{loginError}</div>}
+          </form>
+        </section>
+
+        {/* Activation form: toggled below login */}
+        {showActivate && (
+          <form onSubmit={handleSubmit} className="activateForm">
+            <div className="field">
+              <label className="label">Name</label>
+              <input
+                className="input"
+                placeholder="Enter your name"
+                value={activationName}
+                onChange={(e) =>
+                  setActivationName((e.target as HTMLInputElement).value)
+                }
+                required
+              />
+            </div>
+
+            <div className="field">
+              <span className="label-row">
+                <label className="label">Startcode</label>
+                <InfoTip id="tip-startcode">
+                  A one-time code given to you when you registered for Tivoli.
+                </InfoTip>
+              </span>
+              <input
+                className="input"
+                placeholder="Enter your startcode"
+                value={startcode}
+                onChange={(e) =>
+                  setStartcode((e.target as HTMLInputElement).value)
+                }
+                required
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn btn-primary">
+              {loading ? "Activating…" : "Get access key"}
+            </button>
+          </form>
+        )}
+
+        {result && (
+          <div
+            className={`result ${resultType === "success" ? "result-success" : resultType === "error" ? "result-error" : ""}`}
+          >
+            <p>
+              <strong>
+                {resultType === "success"
+                  ? "Success!"
+                  : resultType === "error"
+                    ? "Error!"
+                    : ""}
+              </strong>{" "}
+              {result}
+            </p>
+            {accessKeyInput && (
+              <>
+                <p className="accessKey">{accessKeyInput}</p>
+                {resultType === "success" && (
+                  <p className="saveNote">
+                    Save your <strong>access_key</strong> in a safe place!
+                  </p>
+                )}
+              </>
+            )}
           </div>
-
-          <button type="submit" disabled={loading} className="btn btn-primary">
-            {loading ? "Activating…" : "Get access key"}
-          </button>
-        </form>
-      )}
-
-      {result && (
-        <div
-          className={`result ${resultType === "success" ? "result-success" : resultType === "error" ? "result-error" : ""}`}
-        >
-          <p>
-            <strong>
-              {resultType === "success"
-                ? "Success!"
-                : resultType === "error"
-                  ? "Error!"
-                  : ""}
-            </strong>{" "}
-            {result}
-          </p>
-          {accessKeyInput && (
-            <>
-              <p className="accessKey">{accessKeyInput}</p>
-              {resultType === "success" && (
-                <p className="saveNote">
-                  Save your <strong>access_key</strong> in a safe place!
-                </p>
-              )}
-            </>
-          )}
-        </div>
-      )}
-    </section>
+        )}
+      </section>
+      <Footer />
+    </>
   );
 }

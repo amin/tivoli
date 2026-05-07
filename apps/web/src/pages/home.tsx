@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logoImg from "../assets/logo_transparent.svg";
-
-const BRAND_LETTERS = [
-  ["T", "red"],
-  ["i", "blue"],
-  ["v", "red"],
-  ["o", "yellow"],
-  ["l", "red"],
-  ["i", "blue"],
-] as const;
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 type Amusement = {
   id: number;
@@ -17,6 +10,7 @@ type Amusement = {
   description: string | null;
   type: "game" | "attraction";
   url: string;
+  price: string;
 };
 
 type Filter = "all" | "game" | "attraction";
@@ -39,23 +33,7 @@ export default function Home() {
 
   return (
     <>
-      <header className="header">
-        <Link to="/" className="brand-name">
-          {BRAND_LETTERS.map(([letter, color], i) => (
-            <span key={i} className={`col-diff-${color}`}>
-              {letter}
-            </span>
-          ))}
-        </Link>
-        <nav className="nav">
-          <Link to="/login" className="auth-pill">
-            <span className="avatar">G</span>
-            <span className="auth-text">Guest</span>
-            <span className="auth-divider">·</span>
-            <span className="auth-link">Log in</span>
-          </Link>
-        </nav>
-      </header>
+      <Header />
 
       <section className="hero">
         <div className="hero-img-wrap">
@@ -111,6 +89,7 @@ export default function Home() {
                 <div className="card-body">
                   <p className="card-title">{a.name}</p>
                   <p className="card-tag">{a.type}</p>
+                  <p className="card-price">{a.price}</p>
                 </div>
               </a>
             ))}
@@ -124,13 +103,7 @@ export default function Home() {
         ))}
       </div>
 
-      <footer className="footer">
-        <span className="footer-left">© {new Date().getFullYear()} Tivoli</span>
-        <nav className="footer-links">
-          <a href="#">About</a>
-          <a href="#">Contact</a>
-        </nav>
-      </footer>
+      <Footer />
     </>
   );
 }
