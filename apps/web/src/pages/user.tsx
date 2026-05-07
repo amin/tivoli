@@ -247,7 +247,7 @@ export default function User() {
               <span className="avatar">G</span>
               <span className="auth-text">Guest</span>
               <span className="auth-divider">·</span>
-              <span className="auth-link">Log in / Activate</span>
+              <span className="auth-link">Log in</span>
             </Link>
           )}
         </nav>
