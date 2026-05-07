@@ -234,6 +234,16 @@
   .stamp-grid { grid-template-columns: repeat(6, 1fr); }
 }
 
+@media (min-width: 560px) {
+  .stamp-grid { grid-template-columns: repeat(4, 1fr); }
+  .user-hero-name { font-size: 32px; }
+}
+
+@media (min-width: 880px) {
+  .user-hero { padding: 48px 40px; }
+  .stamp-grid { grid-template-columns: repeat(6, 1fr); }
+}
+
 @media (hover: hover) {
   .sell-btn:not(:disabled):hover { background: var(--c-orange-dark); }
   .logout-btn:hover { background: var(--c-red); color: white; }
