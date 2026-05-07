@@ -24,7 +24,6 @@ type GroupSummary = {
 };
 
 type UserProfile = {
-  id: number;
   uuid: string;
   name: string;
   balance: number;
@@ -67,6 +66,7 @@ function detectExchangeOptions(stamps: Stamp[]): ExchangeOption[] {
   const silver   = stamps.find(s => s.metal === 'silver');
   const gold     = stamps.find(s => s.metal === 'gold');
   const platinum = stamps.find(s => s.metal === 'platinum');
+
   if (silver && gold && platinum) {
     options.push({
       stampIds: [silver.id, gold.id, platinum.id],
@@ -91,6 +91,7 @@ function detectExchangeOptions(stamps: Stamp[]): ExchangeOption[] {
   const nonMetal = stamps.filter(s => s.metal === null);
   const seen = new Set<string>();
   const picked: Stamp[] = [];
+
   for (const s of nonMetal) {
     if (!seen.has(s.animal) && picked.length < 3) {
       seen.add(s.animal);
@@ -137,7 +138,6 @@ function calcVP(stamps: Stamp[]): number {
 const LS_KEY = 'tivoliAccessKey';
 
 const PREVIEW_USER: UserProfile = {
-  id: 0,
   uuid: '00000000-0000-0000-0000-000000000000',
   name: 'Nathalie',
   balance: 42.00,
@@ -180,12 +180,14 @@ export default function User() {
         navigate('/error?message=Your+session+has+expired.+Please+sign+in+again.');
         return;
       }
-      const userData: UserProfile = await userRes.json();
-      setUser(userData);
+      setUser(await userRes.json());
+
+      const userData = await userRes.json();
 
       const stampsRes = await fetch(apiUrl(`/stamps?user_id=${userData.id}`), {
         headers: { 'X-Access-Key': key, Accept: 'application/json' },
       });
+
       const stampsData = await stampsRes.json();
       setStamps(stampsData.data ?? []);
       setLoggedIn(true);
@@ -217,6 +219,7 @@ export default function User() {
         },
         body: JSON.stringify({ stamp_ids: stampIds }),
       });
+
       const data = await res.json();
       if (res.ok) {
         if (data.stamps_consumed === 0) {
@@ -274,51 +277,51 @@ export default function User() {
           </div>
         </section>
 
-        {(exchangeOptions.length > 0 || exchangeResult) && (
-          <section className="section exchange-section">
-            <div className="section-head">
-              <h2>Exchange Stamps</h2>
-              <button
-                className="btn sell-btn"
-                onClick={handleExchangeAll}
-                disabled={exchangeLoading || stamps.length === 0}
-              >
-                {exchangeLoading ? '…' : 'Sell All'}
-              </button>
-            </div>
-            <p className="section-sub">
-              You have complete sets ready to cash in.
-            </p>
-
-            {exchangeResult && (
-              <div className={`exchange-result ${exchangeOk ? 'exchange-result--ok' : 'exchange-result--err'}`}>
-                {exchangeResult}
+          {(exchangeOptions.length > 0 || exchangeResult) && (
+            <section className="section exchange-section">
+              <div className="section-head">
+                <h2>Exchange Stamps</h2>
+                <button
+                  className="btn sell-btn"
+                  onClick={handleExchangeAll}
+                  disabled={exchangeLoading || stamps.length === 0}
+                >
+                  {exchangeLoading ? '…' : 'Sell All'}
+                </button>
               </div>
-            )}
+              <p className="section-sub">
+                You have complete sets ready to cash in.
+              </p>
 
-            <div className="exchange-grid">
-              {exchangeOptions.map(opt => (
-                <div key={opt.label} className="exchange-card">
-                  <div className="exchange-card-info">
-                    <span className="exchange-value">€{opt.amount}.00</span>
-                    <p className="exchange-card-title">{opt.label}</p>
-                    <p className="exchange-card-desc">{opt.description}</p>
-                  </div>
-                  <div className="exchange-card-right">
-                    
-                    <button
-                      className="btn sell-btn"
-                      onClick={() => handleExchange(opt)}
-                      disabled={exchangeLoading}
-                    >
-                      {exchangeLoading ? '…' : 'Exchange'}
-                    </button>
-                  </div>
+              {exchangeResult && (
+                <div className={`exchange-result ${exchangeOk ? 'exchange-result--ok' : 'exchange-result--err'}`}>
+                  {exchangeResult}
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
+              )}
+
+              <div className="exchange-grid">
+                {exchangeOptions.map(opt => (
+                  <div key={opt.label} className="exchange-card">
+                    <div className="exchange-card-info">
+                      <span className="exchange-value">€{opt.amount}.00</span>
+                      <p className="exchange-card-title">{opt.label}</p>
+                      <p className="exchange-card-desc">{opt.description}</p>
+                    </div>
+                    <div className="exchange-card-right">
+                      
+                      <button
+                        className="btn sell-btn"
+                        onClick={() => handleExchange(opt)}
+                        disabled={exchangeLoading}
+                      >
+                        {exchangeLoading ? '…' : 'Exchange'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
         {exchangeResult && exchangeOptions.length === 0 && (
           <section className="section" style={{ paddingBottom: 8 }}>
