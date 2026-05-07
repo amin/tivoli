@@ -1,6 +1,41 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
+
+function InfoTip({ id, children }: { id: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <span className="infotip" ref={ref}>
+      <button
+        type="button"
+        className="infotip-btn"
+        aria-label="More information"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((s) => !s)}
+        onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
+      >
+        i
+      </button>
+      <span id={id} className={`infotip-content${open ? " open" : ""}`} role="tooltip">
+        {children}
+      </span>
+    </span>
+  );
+}
 
 export default function Login() {
   const navigate = useNavigate();
@@ -90,13 +125,20 @@ export default function Login() {
       {/* Primary: Login form */}
       <section className="loginSection">
         <h2>Log in with name & access key</h2>
-        <div className="loginGrid">
+        <form className="loginGrid" onSubmit={(e) => { e.preventDefault(); loginWithKey(); }}>
+          <label className="label">Name</label>
           <input
             className="input"
             placeholder="Enter your name"
             value={loginName}
             onChange={(e) => setLoginName((e.target as HTMLInputElement).value)}
           />
+          <span className="label-row">
+            <label className="label">Access Key</label>
+            <InfoTip id="tip-access-key">
+              Generated when you activated your account. Copy it from the activation confirmation — it's your only way to log in.
+            </InfoTip>
+          </span>
           <input
             className="input"
             placeholder="Enter your access key"
@@ -107,8 +149,8 @@ export default function Login() {
           />
           <div className="loginActions">
             <button
+              type="submit"
               className="btn btn-primary"
-              onClick={() => loginWithKey()}
               disabled={loginLoading || !accessKeyInput || !loginName}
             >
               {loginLoading ? "Logging in…" : "Log in"}
@@ -135,7 +177,7 @@ export default function Login() {
           </div>
 
           {loginError && <div className="form-error">{loginError}</div>}
-        </div>
+        </form>
       </section>
 
       {/* Activation form: toggled below login */}
@@ -155,7 +197,12 @@ export default function Login() {
           </div>
 
           <div className="field">
-            <label className="label">Startcode</label>
+            <span className="label-row">
+              <label className="label">Startcode</label>
+              <InfoTip id="tip-startcode">
+                A one-time code given to you when you registered for Tivoli.
+              </InfoTip>
+            </span>
             <input
               className="input"
               placeholder="Enter your startcode"
