@@ -13,6 +13,12 @@
   z-index: 10;
 }
 
+/* Luckiest Guy has ~30% built-in descent space that reads as phantom margin-bottom */
+:is(.brand-name, .section-head h2, .card-title, .empty-title, .modal-title,
+    .user-hero-name, .user-vp-chip, .exchange-card-title, .exchange-value) {
+  line-height: 0.85;
+}
+
 .brand-name {
   font-family: var(--font-display);
   font-size: var(--text-brand);
