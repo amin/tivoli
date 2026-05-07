@@ -88,7 +88,7 @@
   line-height: 1.05;
   letter-spacing: 0.2rem;
   text-shadow: 2px 2px var(--c-yellow);
-  color: var(--text-ink);
+  color: var(--c-blue);
   margin-bottom: 18px;
 }
 
