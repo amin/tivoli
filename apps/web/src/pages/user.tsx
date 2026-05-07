@@ -1,15 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import "./user.css";
-
-const BRAND_LETTERS = [
-  ['T', 'red'],
-  ['i', 'blue'],
-  ['v', 'red'],
-  ['o', 'yellow'],
-  ['l', 'red'],
-  ['i', 'blue'],
-] as const;
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 type Animal = 'lion' | 'dolphin' | 'toucan' | 'beetlebug' | 'snake';
 type Metal  = 'silver' | 'gold' | 'platinum';
@@ -228,30 +221,7 @@ export default function User() {
 
   return (
     <>
-      <header className="header">
-        <Link to="/" className="brand-name">
-          {BRAND_LETTERS.map(([letter, color], i) => (
-            <span key={i} className={`col-diff-${color}`}>{letter}</span>
-          ))}
-        </Link>
-        <nav className="nav">
-          {loggedIn && user ? (
-            <div className="auth-pill">
-              <span className="avatar">{user.name[0].toUpperCase()}</span>
-              <span className="auth-text">{user.name}</span>
-              <span className="auth-divider">·</span>
-              <span className="auth-balance">€{user.balance.toFixed(2)}</span>
-            </div>
-          ) : (
-            <Link to="/activate" className="auth-pill">
-              <span className="avatar">G</span>
-              <span className="auth-text">Guest</span>
-              <span className="auth-divider">·</span>
-              <span className="auth-link">Log in / Activate</span>
-            </Link>
-          )}
-        </nav>
-      </header>
+      <Header user={loggedIn ? user : null} />
 
       {!loggedIn ? (
         <section className="user-login-wrap">
@@ -276,7 +246,7 @@ export default function User() {
               </button>
             </form>
             <p className="user-login-hint">
-              Don't have a key? <Link to="/activate" className="auth-link">Activate your account</Link>
+              Don't have a key? <Link to="/login" className="auth-link">Activate your account</Link>
             </p>
           </div>
         </section>
@@ -394,13 +364,7 @@ export default function User() {
         ))}
       </div>
 
-      <footer className="footer">
-        <span className="footer-left">© {new Date().getFullYear()} Tivoli</span>
-        <nav className="footer-links">
-          <a href="#">About</a>
-          <a href="#">Contact</a>
-        </nav>
-      </footer>
+      <Footer />
     </>
   );
 }

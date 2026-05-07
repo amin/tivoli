@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
 
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+
 export default function Login() {
   const navigate = useNavigate();
   // Activation form state
@@ -84,121 +87,125 @@ export default function Login() {
   }
 
   return (
-    <section className="activatePage">
-      <h1>Activate your account</h1>
+    <>
+      <Header />
+      <section className="activatePage">
+        <h1>Activate your account</h1>
 
-      {/* Primary: Login form */}
-      <section className="loginSection">
-        <h2>Log in with name & access key</h2>
-        <div className="loginGrid">
-          <input
-            className="input"
-            placeholder="Enter your name"
-            value={loginName}
-            onChange={(e) => setLoginName((e.target as HTMLInputElement).value)}
-          />
-          <input
-            className="input"
-            placeholder="Enter your access key"
-            value={accessKeyInput}
-            onChange={(e) =>
-              setAccessKeyInput((e.target as HTMLInputElement).value)
-            }
-          />
-          <div className="loginActions">
-            <button
-              className="btn btn-primary"
-              onClick={() => loginWithKey()}
-              disabled={loginLoading || !accessKeyInput || !loginName}
-            >
-              {loginLoading ? "Logging in…" : "Log in"}
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => {
-                setAccessKeyInput("");
-                setLoginError(null);
-              }}
-            >
-              Clear
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-link"
-              onClick={() => setShowActivate((s) => !s)}
-            >
-              Activate Account
-            </button>
-          </div>
-
-          {loginError && <div className="form-error">{loginError}</div>}
-        </div>
-      </section>
-
-      {/* Activation form: toggled below login */}
-      {showActivate && (
-        <form onSubmit={handleSubmit} className="activateForm">
-          <div className="field">
-            <label className="label">Name</label>
+        {/* Primary: Login form */}
+        <section className="loginSection">
+          <h2>Log in with name & access key</h2>
+          <div className="loginGrid">
             <input
               className="input"
               placeholder="Enter your name"
-              value={activationName}
-              onChange={(e) =>
-                setActivationName((e.target as HTMLInputElement).value)
-              }
-              required
+              value={loginName}
+              onChange={(e) => setLoginName((e.target as HTMLInputElement).value)}
             />
-          </div>
-
-          <div className="field">
-            <label className="label">Startcode</label>
             <input
               className="input"
-              placeholder="Enter your startcode"
-              value={startcode}
+              placeholder="Enter your access key"
+              value={accessKeyInput}
               onChange={(e) =>
-                setStartcode((e.target as HTMLInputElement).value)
+                setAccessKeyInput((e.target as HTMLInputElement).value)
               }
-              required
             />
+            <div className="loginActions">
+              <button
+                className="btn btn-primary"
+                onClick={() => loginWithKey()}
+                disabled={loginLoading || !accessKeyInput || !loginName}
+              >
+                {loginLoading ? "Logging in…" : "Log in"}
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setAccessKeyInput("");
+                  setLoginError(null);
+                }}
+              >
+                Clear
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-link"
+                onClick={() => setShowActivate((s) => !s)}
+              >
+                Activate Account
+              </button>
+            </div>
+
+            {loginError && <div className="form-error">{loginError}</div>}
           </div>
+        </section>
 
-          <button type="submit" disabled={loading} className="btn btn-primary">
-            {loading ? "Activating…" : "Get access key"}
-          </button>
-        </form>
-      )}
+        {/* Activation form: toggled below login */}
+        {showActivate && (
+          <form onSubmit={handleSubmit} className="activateForm">
+            <div className="field">
+              <label className="label">Name</label>
+              <input
+                className="input"
+                placeholder="Enter your name"
+                value={activationName}
+                onChange={(e) =>
+                  setActivationName((e.target as HTMLInputElement).value)
+                }
+                required
+              />
+            </div>
 
-      {result && (
-        <div
-          className={`result ${resultType === "success" ? "result-success" : resultType === "error" ? "result-error" : ""}`}
-        >
-          <p>
-            <strong>
-              {resultType === "success"
-                ? "Success!"
-                : resultType === "error"
-                  ? "Error!"
-                  : ""}
-            </strong>{" "}
-            {result}
-          </p>
-          {accessKeyInput && (
-            <>
-              <p className="accessKey">{accessKeyInput}</p>
-              {resultType === "success" && (
-                <p className="saveNote">
-                  Save your <strong>access_key</strong> in a safe place!
-                </p>
-              )}
-            </>
-          )}
-        </div>
-      )}
-    </section>
+            <div className="field">
+              <label className="label">Startcode</label>
+              <input
+                className="input"
+                placeholder="Enter your startcode"
+                value={startcode}
+                onChange={(e) =>
+                  setStartcode((e.target as HTMLInputElement).value)
+                }
+                required
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn btn-primary">
+              {loading ? "Activating…" : "Get access key"}
+            </button>
+          </form>
+        )}
+
+        {result && (
+          <div
+            className={`result ${resultType === "success" ? "result-success" : resultType === "error" ? "result-error" : ""}`}
+          >
+            <p>
+              <strong>
+                {resultType === "success"
+                  ? "Success!"
+                  : resultType === "error"
+                    ? "Error!"
+                    : ""}
+              </strong>{" "}
+              {result}
+            </p>
+            {accessKeyInput && (
+              <>
+                <p className="accessKey">{accessKeyInput}</p>
+                {resultType === "success" && (
+                  <p className="saveNote">
+                    Save your <strong>access_key</strong> in a safe place!
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </section>
+      <Footer />
+    </>
   );
 }
