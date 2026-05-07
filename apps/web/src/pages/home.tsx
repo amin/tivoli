@@ -2,12 +2,12 @@ import { Link } from "react-router-dom";
 import logoImg from "../../public/logo_transparent.svg";
 
 const BRAND_LETTERS = [
-  ['T', 'red'],
-  ['i', 'blue'],
-  ['v', 'red'],
-  ['o', 'yellow'],
-  ['l', 'red'],
-  ['i', 'blue'],
+  ["T", "red"],
+  ["i", "blue"],
+  ["v", "red"],
+  ["o", "yellow"],
+  ["l", "red"],
+  ["i", "blue"],
 ] as const;
 
 type Attraction = {
@@ -26,11 +26,13 @@ export default function Home() {
       <header className="header">
         <Link to="/" className="brand-name">
           {BRAND_LETTERS.map(([letter, color], i) => (
-            <span key={i} className={`col-diff-${color}`}>{letter}</span>
+            <span key={i} className={`col-diff-${color}`}>
+              {letter}
+            </span>
           ))}
         </Link>
         <nav className="nav">
-          <Link to="/activate" className="auth-pill">
+          <Link to="/login" className="auth-pill">
             <span className="avatar">G</span>
             <span className="auth-text">Guest</span>
             <span className="auth-divider">·</span>
@@ -45,17 +47,21 @@ export default function Home() {
         </div>
         <div className="hero-content">
           <h1>
-            Your digital<br />
-            <span className="pixel">
-              playground
-            </span>
+            Your digital
+            <br />
+            <span className="pixel">playground</span>
           </h1>
           <p>
-            Games, rides, and attractions - all in one place. Grab a ticket and explore.
+            Games, rides, and attractions - all in one place. Grab a ticket and
+            explore.
           </p>
           <div className="hero-ctas">
-            <Link to="/activate" className="btn btn-primary">Enter the park</Link>
-            <Link to="/how-it-works" className="btn btn-secondary">How it works</Link>
+            <Link to="/activate" className="btn btn-primary">
+              Enter the park
+            </Link>
+            <Link to="/how-it-works" className="btn btn-secondary">
+              How it works
+            </Link>
           </div>
         </div>
       </section>
