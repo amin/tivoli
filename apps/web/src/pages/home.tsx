@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import logoImg from "../../public/logo_transparent.svg";
+import logoImg from "../assets/logo_transparent.svg";
 
 const BRAND_LETTERS = [
   ["T", "red"],
