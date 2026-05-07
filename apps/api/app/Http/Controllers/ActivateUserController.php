@@ -12,7 +12,12 @@ class ActivateUserController extends Controller
 {
     public function store(ActivateUserRequest $request)
     {
-        $user = User::where('name', $request->name)->first();
+        // Normalize name for case-insensitive lookup
+        $requestedName = trim($request->name);
+
+        // Case-insensitive name lookup (works for MySQL/Postgres/SQLite)
+        $user = User::whereRaw('LOWER(name) = ?', [\Illuminate\Support\Str::lower($requestedName)])
+            ->first();
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
