@@ -122,12 +122,13 @@
 
 /* ---------- Buttons ---------- */
 .btn {
-  padding: 13px 24px;
+  padding: 10px 14px;
   border-radius: var(--r-pill);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   border: none;
+  min-height: 44px;
 }
 
 .btn-primary {
@@ -187,7 +188,7 @@
 }
 
 .chip {
-  padding: 7px 14px;
+  padding: 10px 14px;
   background: white;
   border: 1px solid var(--border-soft);
   border-radius: var(--r-pill);
