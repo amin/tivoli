@@ -16,7 +16,6 @@ export default function Login() {
   );
   const [accessKeyInput, setAccessKeyInput] = useState("");
   const [showActivate, setShowActivate] = useState(false);
-  const [loggedInUser, setLoggedInUser] = useState<any | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -57,32 +56,28 @@ export default function Login() {
   async function loginWithKey(key?: string) {
     setLoginError(null);
     setLoginLoading(true);
-    const k = key ?? accessKeyInput;
+    const k = (key ?? accessKeyInput).trim();
     try {
       // Authenticate using name + access_key
-      const res = await fetch("/auth/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ name: loginName, access_key: k }),
+        body: JSON.stringify({ name: loginName.trim(), access_key: k }),
       });
 
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         setLoginError(body.error || `Login failed (${res.status})`);
-        setLoggedInUser(null);
       } else {
-        // Successful login — backend returns user profile
-        setLoggedInUser(body);
         setLoginError(null);
         // Redirect to user's admin dashboard
         navigate("/user");
       }
     } catch (err) {
       setLoginError("Network error");
-      setLoggedInUser(null);
     } finally {
       setLoginLoading(false);
     }
@@ -98,7 +93,7 @@ export default function Login() {
         <div className="loginGrid">
           <input
             className="input"
-            placeholder="Your name"
+            placeholder="Enter your name"
             value={loginName}
             onChange={(e) => setLoginName((e.target as HTMLInputElement).value)}
           />
@@ -124,7 +119,6 @@ export default function Login() {
               className="btn btn-secondary"
               onClick={() => {
                 setAccessKeyInput("");
-                setLoggedInUser(null);
                 setLoginError(null);
               }}
             >
@@ -141,21 +135,6 @@ export default function Login() {
           </div>
 
           {loginError && <div className="form-error">{loginError}</div>}
-
-          {loggedInUser ? (
-            <div className="authenticated">
-              <p>
-                <strong>Logged in as:</strong>
-                <span className="userName">{loggedInUser.name}</span>
-              </p>
-              <p>
-                <strong>Balance: </strong>
-                {loggedInUser.balance}
-              </p>
-            </div>
-          ) : (
-            <div className="notAuthenticated">Not authenticated</div>
-          )}
         </div>
       </section>
 
