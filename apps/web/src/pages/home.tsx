@@ -52,7 +52,7 @@ export default function Home() {
             <span className="avatar">G</span>
             <span className="auth-text">Guest</span>
             <span className="auth-divider">·</span>
-            <span className="auth-link">Log in / Activate</span>
+            <span className="auth-link">Log in</span>
           </Link>
         </nav>
       </header>
@@ -72,7 +72,7 @@ export default function Home() {
             explore.
           </p>
           <div className="hero-ctas">
-            <Link to="/activate" className="btn btn-primary">
+            <Link to="/login" className="btn btn-primary">
               Enter the park
             </Link>
             <Link to="/how-it-works" className="btn btn-secondary">
