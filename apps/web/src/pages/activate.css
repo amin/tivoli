@@ -1,67 +1,93 @@
+/* Activate page styles — reuse global tokens/classes from App.css */
+
 .activatePage {
-  padding: 24px;
+  padding: 36px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-tint);
 }
 
 .activateForm,
 .loginGrid {
-  display: grid;
-  gap: 12px;
-  max-width: 420px;
+  width: 100%;
+  max-width: 520px;
+  margin-top: 12px;
 }
 
-.formLabel {
-  display: flex;
-  flex-direction: column;
+.field {
+  margin-bottom: 12px;
 }
 
-.textInput {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-ink);
+  margin-bottom: 6px;
 }
 
-.primaryButton {
-  padding: 8px 12px;
-  background: #0ea5e9;
-  color: white;
-  border: none;
-  border-radius: 6px;
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-ink);
+  background: white;
+  outline: none;
+  transition: border-color 0.15s;
 }
 
-.secondaryButton {
-  padding: 8px 12px;
-  background: transparent;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+.input:focus {
+  border-color: var(--c-blue);
 }
 
 .result {
   margin-top: 16px;
+  width: 100%;
+  max-width: 520px;
+  background: white;
+  padding: 12px;
+  border: 1px solid var(--border-faint);
+  border-radius: var(--r-md);
 }
 
 .loginSection {
-  margin-top: 24px;
-  padding: 12px;
-  border-top: 1px solid #eee;
+  margin-top: 28px;
+  width: 100%;
+  max-width: 520px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-soft);
 }
 
 .loginActions {
   display: flex;
   gap: 8px;
-}
-
-.loginError {
-  color: #b91c1c;
-}
-
-.authenticated {
   margin-top: 8px;
 }
 
-.notAuthenticated {
-  color: #666;
+.form-error {
+  font-size: 13px;
+  color: var(--c-red);
+  margin-top: 8px;
 }
 
-.userName {
-  margin-left: 8px;
+.authenticated {
+  margin-top: 10px;
+  background: white;
+  padding: 12px;
+  border: 1px solid var(--border-faint);
+  border-radius: var(--r-md);
+}
+
+.notAuthenticated {
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* Responsive adjustments */
+@media (min-width: 880px) {
+  .activatePage { padding: 48px 40px; }
 }

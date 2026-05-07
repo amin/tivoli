@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
 import "./activate.css";
 
 export default function Activate() {
@@ -12,7 +11,7 @@ export default function Activate() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setResult(null);
@@ -29,7 +28,7 @@ export default function Activate() {
 
       const json = await res.json();
       if (res.ok) {
-        setResult(`Activation successful. Access key: ${json.access_key}`);
+        setResult("Activation successful!");
         // Auto-fill access key into login input for convenience
         if (json.access_key) setAccessKeyInput(json.access_key);
       } else {
@@ -72,34 +71,37 @@ export default function Activate() {
       <h1>Activate your account</h1>
 
       <form onSubmit={handleSubmit} className="activateForm">
-        <label className="formLabel">
-          Name
+        <div className="field">
+          <label className="label">Name</label>
           <input
-            className="textInput"
+            className="input"
+            placeholder="Enter your name"
             value={name}
             onChange={(e) => setName((e.target as HTMLInputElement).value)}
             required
           />
-        </label>
+        </div>
 
-        <label className="formLabel">
-          Startcode
+        <div className="field">
+          <label className="label">Startcode</label>
           <input
-            className="textInput"
+            className="input"
+            placeholder="Enter your startcode"
             value={startcode}
             onChange={(e) => setStartcode((e.target as HTMLInputElement).value)}
             required
           />
-        </label>
+        </div>
 
-        <button type="submit" disabled={loading} className="primaryButton">
+        <button type="submit" disabled={loading} className="btn btn-primary">
           {loading ? "Activating…" : "Get access key"}
         </button>
       </form>
 
       {result && (
         <div className="result">
-          <pre>{result}</pre>
+          <p>{result}</p>
+          {accessKeyInput && <p className="accessKey">{accessKeyInput}</p>}
         </div>
       )}
 
@@ -107,15 +109,16 @@ export default function Activate() {
         <h2>Log in with access key</h2>
         <div className="loginGrid">
           <input
-            className="textInput"
-            placeholder="Paste access key here"
+            className="input"
+            placeholder="Enter your access key"
             value={accessKeyInput}
-            onChange={(e) => setAccessKeyInput((e.target as HTMLInputElement).value)}
+            onChange={(e) =>
+              setAccessKeyInput((e.target as HTMLInputElement).value)
+            }
           />
-
           <div className="loginActions">
             <button
-              className="primaryButton"
+              className="btn btn-primary"
               onClick={() => loginWithKey()}
               disabled={loginLoading || !accessKeyInput}
             >
@@ -124,7 +127,7 @@ export default function Activate() {
 
             <button
               type="button"
-              className="secondaryButton"
+              className="btn btn-secondary"
               onClick={() => {
                 setAccessKeyInput("");
                 setLoggedInUser(null);
@@ -135,7 +138,7 @@ export default function Activate() {
             </button>
           </div>
 
-          {loginError && <div className="loginError">{loginError}</div>}
+          {loginError && <div className="form-error">{loginError}</div>}
 
           {loggedInUser ? (
             <div className="authenticated">
