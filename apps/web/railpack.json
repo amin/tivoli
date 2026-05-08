@@ -1,0 +1,6 @@
+{
+    "$schema": "https://schema.railpack.com",
+    "deploy": {
+        "startCommand": "pnpm exec serve -s dist -l tcp://0.0.0.0:${PORT:-3000}"
+    }
+}
