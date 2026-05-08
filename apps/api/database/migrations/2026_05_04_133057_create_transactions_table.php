@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreign('amusement_id')->references('id')->on('amusements');
 
             $table->decimal('amount', 8, 2);
-            $table->enum('type', ['stake', 'payput', 'owner_revenue', 'exchange']);
+            $table->enum('type', ['fee', 'payout', 'owner_revenue', 'exchange']);
             $table->timestamps();
         });
     }
