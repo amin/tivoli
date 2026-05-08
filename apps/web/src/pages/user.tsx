@@ -24,6 +24,7 @@ type GroupSummary = {
 };
 
 type UserProfile = {
+  id: number;
   uuid: string;
   name: string;
   balance: number;
@@ -138,6 +139,7 @@ function calcVP(stamps: Stamp[]): number {
 const LS_KEY = 'tivoliAccessKey';
 
 const PREVIEW_USER: UserProfile = {
+  id: 0,
   uuid: '00000000-0000-0000-0000-000000000000',
   name: 'Nathalie',
   balance: 42.00,
@@ -180,9 +182,8 @@ export default function User() {
         navigate('/error?message=Your+session+has+expired.+Please+sign+in+again.');
         return;
       }
-      setUser(await userRes.json());
-
-      const userData = await userRes.json();
+      const userData: UserProfile = await userRes.json();
+      setUser(userData);
 
       const stampsRes = await fetch(apiUrl(`/stamps?user_id=${userData.id}`), {
         headers: { 'X-Access-Key': key, Accept: 'application/json' },
@@ -268,6 +269,60 @@ export default function User() {
               <h1 className="user-hero-name">{user!.name}</h1>
               {user!.group && (
                 <p className="user-hero-sub">{user!.group.name} · {user!.group.member_count} members</p>
+      {!loggedIn ? (
+        <section className="user-login-wrap">
+          <div className="modal">
+            <p className="modal-title">Your collection</p>
+            <p className="modal-sub">Enter your access key to view your stamps and balance.</p>
+            <form onSubmit={handleLogin}>
+              <div className="field">
+                <label className="label" htmlFor="ak">Access key</label>
+                <input
+                  id="ak"
+                  className="input"
+                  placeholder="Paste your access key…"
+                  value={keyInput}
+                  onChange={e => setKeyInput(e.target.value)}
+                  required
+                />
+              </div>
+              {error && <p className="form-error">{error}</p>}
+              <button className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+                {loading ? 'Loading…' : 'View my stamps'}
+              </button>
+            </form>
+            <p className="user-login-hint">
+              Don't have a key? <Link to="/login" className="auth-link">Activate your account</Link>
+            </p>
+          </div>
+        </section>
+      ) : (
+        <>
+          <section className="user-hero">
+            <div className="user-balance-card">
+              <span className="balance-label">Balance</span>
+              <span className="balance-amount">€{user!.balance.toFixed(2)}</span>
+            </div>
+            <div className="user-hero-info">
+              <div className="user-hero-name-column">
+                <h1 className="user-hero-name">{displayName}</h1>
+                {user!.group && (
+                  <p className="user-hero-sub">{user!.group.name} · {user!.group.member_count} members</p>
+                )}
+              </div>
+              <div className="user-hero-vp-column">
+                <h3 style={{ marginBottom: 12}}>Victory points</h3>
+                <span className="user-vp-chip">{vp} VP</span>
+              </div>
+              {(user!.github_url || user!.website_url) && (
+                <div className="user-hero-links">
+                  {user!.github_url && (
+                    <a href={user!.github_url} className="auth-link" target="_blank" rel="noreferrer">GitHub</a>
+                  )}
+                  {user!.website_url && (
+                    <a href={user!.website_url} className="auth-link" target="_blank" rel="noreferrer">Website</a>
+                  )}
+                </div>
               )}
             </div>
             <div className="user-hero-vp-column">
