@@ -25,7 +25,7 @@ class GuestSeeder extends Seeder
         User::create([
             'name' => 'Guest',
             'group_id' => null,
-            'startcode' => Str::uuid()->toString(),
+            'startcode' => '4755efcb-6a7d-4013-ac21-fed62bebb265',
             'access_key' => null, // Generates when activated
             'balance' => 90000,
             'github_link' => null,
