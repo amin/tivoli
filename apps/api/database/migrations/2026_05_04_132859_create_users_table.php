@@ -22,8 +22,6 @@ return new class extends Migration
             $table->string('startcode');
             $table->string('access_key')->nullable(); //Filled by users when using startcode
             $table->decimal('balance', 8, 2)->default(25);
-            $table->string('github_link')->nullable(); //Updated by user
-            $table->string('website_link')->nullable(); //Updated by user
             $table->timestamps();
         });
 
