@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./user.css";
 
 import Header from "../components/Header";
@@ -157,14 +157,14 @@ const PREVIEW_STAMPS: Stamp[] = [
 const isPreview = new URLSearchParams(window.location.search).has('preview');
 
 export default function User() {
-  const [accessKey, setAccessKey] = useState<string>(() => localStorage.getItem(LS_KEY) ?? '');
-  const [keyInput, setKeyInput]   = useState('');
-  const [loggedIn, setLoggedIn]   = useState(isPreview);
+  const navigate = useNavigate();
+
+  const [accessKey] = useState<string>(() => localStorage.getItem(LS_KEY) ?? '');
+  const [loggedIn, setLoggedIn] = useState(isPreview);
 
   const [user,   setUser]   = useState<UserProfile | null>(isPreview ? PREVIEW_USER : null);
   const [stamps, setStamps] = useState<Stamp[]>(isPreview ? PREVIEW_STAMPS : []);
   const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
 
   const [exchangeLoading, setExchangeLoading] = useState(false);
   const [exchangeResult,  setExchangeResult]  = useState<string | null>(null);
@@ -172,14 +172,12 @@ export default function User() {
 
   const fetchData = useCallback(async (key: string) => {
     setLoading(true);
-    setError(null);
     try {
       const headers = { 'X-Access-Key': key, Accept: 'application/json' };
       const userRes = await fetch(apiUrl('/user'), { headers });
       if (!userRes.ok) {
-        setError('Invalid access key or session expired.');
-        setLoggedIn(false);
         localStorage.removeItem(LS_KEY);
+        navigate('/error?message=Your+session+has+expired.+Please+sign+in+again.');
         return;
       }
       const userData: UserProfile = await userRes.json();
@@ -192,24 +190,19 @@ export default function User() {
       setStamps(stampsData.data ?? []);
       setLoggedIn(true);
     } catch {
-      setError('Network error — is the API running?');
+      navigate('/error?message=Network+error+—+could+not+reach+the+server.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
+    if (!isPreview && !accessKey) {
+      navigate('/login');
+      return;
+    }
     if (accessKey) fetchData(accessKey);
   }, []);
-
-  async function handleLogin(e: React.SyntheticEvent) {
-    e.preventDefault();
-    const key = keyInput.trim();
-    if (!key) return;
-    localStorage.setItem(LS_KEY, key);
-    setAccessKey(key);
-    await fetchData(key);
-  }
 
   async function doExchange(stampIds: number[], label: string) {
     setExchangeLoading(true);
@@ -256,11 +249,7 @@ export default function User() {
 
   function handleLogout() {
     localStorage.removeItem(LS_KEY);
-    setAccessKey('');
-    setLoggedIn(false);
-    setUser(null);
-    setStamps([]);
-    setExchangeResult(null);
+    navigate('/login');
   }
 
   const exchangeOptions = detectExchangeOptions(stamps);
@@ -270,159 +259,124 @@ export default function User() {
     <>
       <Header user={loggedIn ? user : null} />
 
-      {!loggedIn ? (
-        <section className="user-login-wrap">
-          <div className="modal">
-            <p className="modal-title">Your collection</p>
-            <p className="modal-sub">Enter your access key to view your stamps and balance.</p>
-            <form onSubmit={handleLogin}>
-              <div className="field">
-                <label className="label" htmlFor="ak">Access key</label>
-                <input
-                  id="ak"
-                  className="input"
-                  placeholder="Paste your access key…"
-                  value={keyInput}
-                  onChange={e => setKeyInput(e.target.value)}
-                  required
-                />
-              </div>
-              {error && <p className="form-error">{error}</p>}
-              <button className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-                {loading ? 'Loading…' : 'View my stamps'}
-              </button>
-            </form>
-            <p className="user-login-hint">
-              Don't have a key? <Link to="/login" className="auth-link">Activate your account</Link>
-            </p>
+        <section className="user-hero">
+          <div className="user-hero-info">
+            <div className="user-hero-name-column">
+              <h1 className="user-hero-name">{user!.name}</h1>
+              {user!.group && (
+                <p className="user-hero-sub">{user!.group.name} · {user!.group.member_count} members</p>
+              )}
+            </div>
+            <div className="user-hero-vp-column">
+              <h3 style={{ marginBottom: 12}}>Victory points</h3>
+              <span className="user-vp-chip">{vp} VP</span>
+            </div>
           </div>
         </section>
-      ) : (
-        <>
-          <section className="user-hero">
-            <div className="user-balance-card">
-              <span className="balance-label">Balance</span>
-              <span className="balance-amount">€{user!.balance.toFixed(2)}</span>
+
+        {(exchangeOptions.length > 0 || exchangeResult) && (
+          <section className="section exchange-section">
+            <div className="section-head">
+              <h2>Exchange Stamps</h2>
+              <button
+                className="btn sell-btn"
+                onClick={handleExchangeAll}
+                disabled={exchangeLoading || stamps.length === 0}
+              >
+                {exchangeLoading ? '…' : 'Sell All'}
+              </button>
             </div>
-            <div className="user-hero-info">
-              <div className="user-hero-name-column">
-                <h1 className="user-hero-name">{user!.name}</h1>
-                {user!.group && (
-                  <p className="user-hero-sub">{user!.group.name} · {user!.group.member_count} members</p>
-                )}
-              </div>
-              <div className="user-hero-vp-column">
-                <h3 style={{ marginBottom: 12}}>Victory points</h3>
-                <span className="user-vp-chip">{vp} VP</span>
-              </div>
-            </div>
-          </section>
+            <p className="section-sub">
+              You have complete sets ready to cash in.
+            </p>
 
-          {(exchangeOptions.length > 0 || exchangeResult) && (
-            <section className="section exchange-section">
-              <div className="section-head">
-                <h2>Exchange Stamps</h2>
-                <button
-                  className="btn sell-btn"
-                  onClick={handleExchangeAll}
-                  disabled={exchangeLoading || stamps.length === 0}
-                >
-                  {exchangeLoading ? '…' : 'Sell All'}
-                </button>
-              </div>
-              <p className="section-sub">
-                You have complete sets ready to cash in.
-              </p>
-
-              {exchangeResult && (
-                <div className={`exchange-result ${exchangeOk ? 'exchange-result--ok' : 'exchange-result--err'}`}>
-                  {exchangeResult}
-                </div>
-              )}
-
-              <div className="exchange-grid">
-                {exchangeOptions.map(opt => (
-                  <div key={opt.label} className="exchange-card">
-                    <div className="exchange-card-info">
-                      <span className="exchange-value">€{opt.amount}.00</span>
-                      <p className="exchange-card-title">{opt.label}</p>
-                      <p className="exchange-card-desc">{opt.description}</p>
-                    </div>
-                    <div className="exchange-card-right">
-                      
-                      <button
-                        className="btn sell-btn"
-                        onClick={() => handleExchange(opt)}
-                        disabled={exchangeLoading}
-                      >
-                        {exchangeLoading ? '…' : 'Exchange'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {exchangeResult && exchangeOptions.length === 0 && (
-            <section className="section" style={{ paddingBottom: 8 }}>
+            {exchangeResult && (
               <div className={`exchange-result ${exchangeOk ? 'exchange-result--ok' : 'exchange-result--err'}`}>
                 {exchangeResult}
               </div>
-            </section>
-          )}
-
-          <main className="section">
-            <div className="section-head">
-              <h2>My Stamps</h2>
-              <span className="section-count">{stamps.length} collected · {vp} VP</span>
-            </div>
-            <p className="section-sub">Collect stamps from rides and games, then exchange complete sets for credits.</p>
-
-            {loading ? (
-              <div className="empty-state">
-                <span className="empty-icon">⏳</span>
-                <p className="empty-title">Loading…</p>
-              </div>
-            ) : stamps.length === 0 ? (
-              <div className="empty-state">
-                <span className="empty-icon">🎟️</span>
-                <p className="empty-title">No stamps yet</p>
-                <p className="empty-sub">Visit attractions and play games to earn stamps!</p>
-              </div>
-            ) : (
-              <div className="grid stamp-grid">
-                {stamps.map(stamp => (
-                  <div key={stamp.id} className="card">
-                    <div className="card-illustration stamp-illustration">
-                      <img
-                        src={stampImagePath(stamp)}
-                        alt={stampLabel(stamp)}
-                        className="stamp-img"
-                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                      />
-                    </div>
-                    <div className="card-body">
-                      <p className="card-title">{stampLabel(stamp)}</p>
-                      {stamp.metal ? (
-                        <p className="card-tag" style={{ color: METAL_COLOR[stamp.metal] }}>
-                          {capitalize(stamp.metal)}
-                        </p>
-                      ) : (
-                        <p className="card-tag">Common</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
-          </main>
 
-          <div className="user-logout-wrap">
-            <button className="logout-btn" onClick={handleLogout}>Log out</button>
+            <div className="exchange-grid">
+              {exchangeOptions.map(opt => (
+                <div key={opt.label} className="exchange-card">
+                  <div className="exchange-card-info">
+                    <span className="exchange-value">€{opt.amount}.00</span>
+                    <p className="exchange-card-title">{opt.label}</p>
+                    <p className="exchange-card-desc">{opt.description}</p>
+                  </div>
+                  <div className="exchange-card-right">
+                    
+                    <button
+                      className="btn sell-btn"
+                      onClick={() => handleExchange(opt)}
+                      disabled={exchangeLoading}
+                    >
+                      {exchangeLoading ? '…' : 'Exchange'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {exchangeResult && exchangeOptions.length === 0 && (
+          <section className="section" style={{ paddingBottom: 8 }}>
+            <div className={`exchange-result ${exchangeOk ? 'exchange-result--ok' : 'exchange-result--err'}`}>
+              {exchangeResult}
+            </div>
+          </section>
+        )}
+
+        <main className="section">
+          <div className="section-head">
+            <h2>My Stamps</h2>
+            <span className="section-count">{stamps.length} collected · {vp} VP</span>
           </div>
-        </>
-      )}
+          <p className="section-sub">Collect stamps from rides and games, then exchange complete sets for credits.</p>
+
+          {loading ? (
+            <div className="empty-state">
+              <span className="empty-icon">⏳</span>
+              <p className="empty-title">Loading…</p>
+            </div>
+          ) : stamps.length === 0 ? (
+            <div className="empty-state">
+              <span className="empty-icon">🎟️</span>
+              <p className="empty-title">No stamps yet</p>
+              <p className="empty-sub">Visit attractions and play games to earn stamps!</p>
+            </div>
+          ) : (
+            <div className="grid stamp-grid">
+              {stamps.map(stamp => (
+                <div key={stamp.id} className="card">
+                  <div className="card-illustration stamp-illustration">
+                    <img
+                      src={stampImagePath(stamp)}
+                      alt={stampLabel(stamp)}
+                      className="stamp-img"
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  </div>
+                  <div className="card-body">
+                    <p className="card-title">{stampLabel(stamp)}</p>
+                    {stamp.metal ? (
+                      <p className="card-tag" style={{ color: METAL_COLOR[stamp.metal] }}>
+                        {capitalize(stamp.metal)}
+                      </p>
+                    ) : (
+                      <p className="card-tag">Common</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+
+        <div className="user-logout-wrap">
+          <button className="logout-btn" onClick={handleLogout}>Log out</button>
+        </div>
 
       <Footer />
     </>
