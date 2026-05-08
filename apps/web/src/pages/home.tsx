@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import logoImg from "../assets/logo_transparent.svg";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { apiUrl } from "../lib/api";
 
 type Amusement = {
   id: number;
@@ -21,7 +22,7 @@ export default function Home() {
 
   useEffect(() => {
     const accessKey = localStorage.getItem("access_key") ?? "";
-    fetch("/api/amusements", {
+    fetch(apiUrl("/api/amusements"), {
       headers: { "X-Access-Key": accessKey, Accept: "application/json" },
     })
       .then((r) => r.ok ? r.json() : Promise.reject())

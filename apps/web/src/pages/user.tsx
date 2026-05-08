@@ -4,6 +4,7 @@ import "./user.css";
 
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { apiUrl } from "../lib/api";
 
 type Animal = 'lion' | 'dolphin' | 'toucan' | 'beetlebug' | 'snake';
 type Metal  = 'silver' | 'gold' | 'platinum';
@@ -145,7 +146,7 @@ export default function User() {
     setError(null);
     try {
       const headers = { 'X-Access-Key': key, Accept: 'application/json' };
-      const userRes = await fetch('/api/user', { headers });
+      const userRes = await fetch(apiUrl('/api/user'), { headers });
       if (!userRes.ok) {
         setError('Invalid access key or session expired.');
         setLoggedIn(false);
@@ -155,7 +156,7 @@ export default function User() {
       const userData: UserProfile = await userRes.json();
       setUser(userData);
 
-      const stampsRes = await fetch(`/api/stamps?user_id=${userData.id}`, {
+      const stampsRes = await fetch(apiUrl(`/api/stamps?user_id=${userData.id}`), {
         headers: { Accept: 'application/json' },
       });
       const stampsData = await stampsRes.json();
@@ -186,7 +187,7 @@ export default function User() {
     setExchangeLoading(true);
     setExchangeResult(null);
     try {
-      const res = await fetch('/api/exchanges', {
+      const res = await fetch(apiUrl('/api/exchanges'), {
         method: 'POST',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({

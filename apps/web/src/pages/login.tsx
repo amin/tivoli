@@ -4,6 +4,7 @@ import "./login.css";
 
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { apiUrl } from "../lib/api";
 
 function InfoTip({ id, children }: { id: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -64,7 +65,7 @@ export default function Login() {
     setResultType(null);
 
     try {
-      const res = await fetch("/api/activate", {
+      const res = await fetch(apiUrl("/api/activate"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +98,7 @@ export default function Login() {
     const k = (key ?? accessKeyInput).trim();
     try {
       // Authenticate using name + access_key
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
