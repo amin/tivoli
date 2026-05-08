@@ -137,7 +137,7 @@ function calcVP(stamps: Stamp[]): number {
 const LS_KEY = 'tivoliAccessKey';
 
 const PREVIEW_USER: UserProfile = {
-  id: 1,
+  id: 0,
   uuid: '00000000-0000-0000-0000-000000000000',
   name: 'Nathalie',
   balance: 42.00,
@@ -182,9 +182,8 @@ export default function User() {
         localStorage.removeItem(LS_KEY);
         return;
       }
-      setUser(await userRes.json());
-
-      const userData = await userRes.json();
+      const userData: UserProfile = await userRes.json();
+      setUser(userData);
 
       const stampsRes = await fetch(apiUrl(`/stamps?user_id=${userData.id}`), {
         headers: { 'X-Access-Key': key, Accept: 'application/json' },
@@ -301,6 +300,10 @@ export default function User() {
       ) : (
         <>
           <section className="user-hero">
+            <div className="user-balance-card">
+              <span className="balance-label">Balance</span>
+              <span className="balance-amount">€{user!.balance.toFixed(2)}</span>
+            </div>
             <div className="user-hero-info">
               <div className="user-hero-name-column">
                 <h1 className="user-hero-name">{user!.name}</h1>
