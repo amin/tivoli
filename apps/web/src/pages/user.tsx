@@ -305,7 +305,7 @@ export default function User() {
             </div>
             <div className="user-hero-info">
               <div className="user-hero-name-column">
-                <h1 className="user-hero-name">{displayName}</h1>
+                <h1 className="user-hero-name">{user!.name}</h1>
                 {user!.group && (
                   <p className="user-hero-sub">{user!.group.name} · {user!.group.member_count} members</p>
                 )}
