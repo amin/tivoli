@@ -59,7 +59,9 @@ info:
     For attractions (rides), only step 3 is needed — no payout.
 
 servers:
-  - url: http://localhost:8000/api
+  - url: https://api-develop-b059.up.railway.app
+    description: Staging (Railway)
+  - url: http://localhost:8000
     description: Local development
 
 tags:
