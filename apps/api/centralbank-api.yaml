@@ -21,8 +21,10 @@ info:
 
     **Amusements** authenticate with `X-Api-Key: <key>`. Each amusement gets
     a unique API key when registered. Use this key for transaction endpoints
-    (`POST /transactions`, `POST /transactions/{id}/payout`). To act on behalf
-    of a user, pass their `user_uuid` in the request body.
+    (`POST /transactions`, `POST /transactions/{id}/payout`). To act on
+    behalf of a user, pass their short-lived `identity_token` (issued by
+    `POST /identity-tokens` and forwarded via URL query parameter) in the
+    request body. Identity tokens are single-use and expire in 5 minutes.
 
     ## Key concepts
 
@@ -45,21 +47,30 @@ info:
     its group members' personal balances.
 
     ### User flow (amusements)
-    1. User clicks a link in the Tivoli frontend and is redirected to the
-       amusement with the user's identifier as a query parameter.
-    2. Amusement reads the user's UUID from that parameter.
-    3. Amusement calls `POST /transactions` with `{ user_uuid, amount }`.
-    4. Central bank deducts the amount from the user, credits the amusement,
-       generates a random stamp, and returns `{ id, stamp }`.
-    5. Amusement runs its own game logic.
-    6. If the user wins, amusement calls `POST /transactions/{id}/payout`
+    1. User clicks an amusement link in the Tivoli frontend. The frontend
+       calls `POST /identity-tokens` to mint a short-lived (5 min, single-use)
+       token bound to the logged-in user.
+    2. The frontend redirects to the amusement with `?identity_token=<token>`
+       in the query string.
+    3. The amusement reads the token from the URL, then immediately rewrites
+       the URL (e.g. `history.replaceState`) to scrub the token. It stores
+       the token in memory until ready to charge.
+    4. When the user starts paying, the amusement calls `POST /transactions`
+       with `{ identity_token, amount }`.
+    5. Central bank validates the token (consuming it), deducts the amount
+       from the user, credits the amusement, generates a random stamp, and
+       returns `{ id, stamp }`.
+    6. Amusement runs its own game logic.
+    7. If the user wins, amusement calls `POST /transactions/{id}/payout`
        with `{ amount }`. Central bank deducts from the amusement and credits
        the user.
 
-    For attractions (rides), only step 3 is needed — no payout.
+    For attractions (rides), only steps 4–5 are needed — no payout.
 
 servers:
-  - url: http://localhost:8000/api
+  - url: https://api-develop-b059.up.railway.app
+    description: Staging (Railway)
+  - url: http://localhost:8000
     description: Local development
 
 tags:
@@ -170,6 +181,93 @@ paths:
                 $ref: "#/components/schemas/User"
         "401":
           $ref: "#/components/responses/Unauthorized"
+
+  /identity-tokens:
+    post:
+      tags: [Auth]
+      operationId: issueIdentityToken
+      summary: Issue a short-lived identity token for amusement redirects
+      description: >
+        Generates a single-use, 5-minute identity token bound to the
+        authenticated user. The token is intended to be passed as a
+        `?identity_token=<token>` query parameter when redirecting the
+        user to an amusement. The amusement then uses the token in a
+        `POST /transactions` body to identify the user without exposing
+        their long-lived access key.
+
+        The amusement should immediately strip the parameter from the URL
+        (e.g. via `history.replaceState`) so it doesn't leak via referer
+        headers, browser history, or server logs.
+      security: [{ accessKeyAuth: [] }]
+      responses:
+        "201":
+          description: Identity token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [identity_token, expires_at]
+                properties:
+                  identity_token:
+                    type: string
+                    format: uuid
+                    example: "0b3c8a4e-7f7a-4b4d-9c9c-2a4a6b6c8d8e"
+                  expires_at:
+                    type: string
+                    format: date-time
+                    example: "2026-05-09T11:25:00+00:00"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /identity-tokens/{token}:
+    get:
+      tags: [Transactions]
+      operationId: resolveIdentityToken
+      summary: Resolve an identity token to its user (without consuming it)
+      description: >
+        Used by an amusement after the user lands on its page. The amusement
+        reads the `identity_token` from the URL, calls this endpoint with its
+        own `X-Api-Key`, and gets back minimal user info (id and name) so it
+        can greet the rider before charging. The token is **not** consumed —
+        only `POST /transactions` consumes it.
+      security: [{ apiKeyAuth: [] }]
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: The identity token from the URL query parameter.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Token is valid; user attached
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, expires_at]
+                properties:
+                  user:
+                    type: object
+                    required: [id, name]
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: "Amin"
+                  expires_at:
+                    type: string
+                    format: date-time
+                    example: "2026-05-09T11:25:00+00:00"
+        "401":
+          description: Token is missing, invalid, expired, or already consumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   # ── User ───────────────────────────────────────────────────────────────
 
@@ -524,12 +622,14 @@ paths:
           application/json:
             schema:
               type: object
-              required: [user_uuid, amount]
+              required: [identity_token, amount]
               properties:
-                user_uuid:
+                identity_token:
                   type: string
                   format: uuid
-                  description: UUID of the user (read from the URL parameter)
+                  description: >
+                    Short-lived identity token from the URL query parameter.
+                    Single-use; consumed by this call.
                 amount:
                   type: number
                   multipleOf: 0.01

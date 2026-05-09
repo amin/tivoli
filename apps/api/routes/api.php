@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivateUserController;
 use App\Http\Controllers\AmusementController;
 use App\Http\Controllers\ExchangeController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\IdentityTokenController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MeController;
@@ -15,19 +16,33 @@ use App\Http\Controllers\UpdateUserInfoController;
 use App\Http\Controllers\VictoryPointsController;
 use App\Http\Controllers\VoteController;
 use App\Http\Middleware\AccessKeyAuth;
+use App\Http\Middleware\AmusementApiKeyAuth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+
+// ── Status ─────────────────────────────────────────────────────────────
+Route::get('/', fn () => response()->json([
+    'name' => 'Tivoli CentralBank API',
+    'status' => 'ok',
+    'docs' => null,
+]));
 
 // ── Auth ───────────────────────────────────────────────────────────────
 Route::post('/activate', [ActivateUserController::class, 'store']);
 Route::post('/auth/login', [LoginController::class, 'store']);
 
 // ── Transactions (amusement API key auth) ──────────────────────────────
-Route::post('/transactions', [TransactionController::class, 'store']);
-Route::post('/transactions/{id}/payout', [TransactionController::class, 'payout']);
+Route::middleware(AmusementApiKeyAuth::class)->group(function () {
+    Route::get('/identity-tokens/{token}', [IdentityTokenController::class, 'show']);
+    Route::post('/transactions', [TransactionController::class, 'store']);
+    Route::post('/transactions/{id}/payout', [TransactionController::class, 'payout']);
+});
 
 // ── Authenticated user routes ──────────────────────────────────────────
 Route::middleware(AccessKeyAuth::class)->group(function () {
+    // Identity tokens (short-lived, for amusement redirects)
+    Route::post('/identity-tokens', [IdentityTokenController::class, 'store']);
+
     // User
     Route::get('/me', [MeController::class, 'show']);
     Route::patch('/me', [UpdateUserInfoController::class, 'update']);
