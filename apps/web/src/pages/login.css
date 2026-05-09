@@ -1,5 +1,25 @@
 /* Activate page styles — reuse global tokens/classes from App.css */
 
+.activatePage h1 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--c-blue);
+  border-bottom: 3px solid var(--c-red);
+  padding-bottom: 4px;
+  text-align: center;
+  line-height: normal;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.desc-text {
+  font-size: 16px;
+  color: var(--c-orange);
+  margin-bottom: 1rem;
+}
+
 .activatePage {
   padding: 36px 24px;
   display: flex;
@@ -48,6 +68,10 @@
   margin-bottom: 6px;
 }
 
+.loginSection {
+  width: 100%;
+}
+
 .result {
   margin-top: 16px;
   width: 100%;
@@ -83,15 +107,6 @@
   background: rgba(0, 0, 0, 0.03);
   border-radius: 6px;
   word-break: break-all;
-}
-
-.loginSection {
-  margin-top: 28px;
-  width: 100%;
-  max-width: 520px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border-soft);
-  margin-bottom: 20px;
 }
 
 .loginActions {
