@@ -21,7 +21,7 @@
 
 .label {
   display: block;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-ink);
   margin-bottom: 6px;
@@ -33,7 +33,7 @@
   border: 1px solid var(--border-soft);
   border-radius: var(--r-md);
   font-family: inherit;
-  font-size: 14px;
+  font-size: var(--text-input);
   color: var(--text-ink);
   background: white;
   outline: none;
@@ -78,7 +78,7 @@
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New",
     monospace;
-  font-size: 13px;
+  font-size: var(--text-sm);
   padding: 6px 8px;
   background: rgba(0, 0, 0, 0.03);
   border-radius: 6px;
@@ -101,7 +101,7 @@
 }
 
 .form-error {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--c-red);
   margin-top: 8px;
 }
@@ -187,7 +187,7 @@
   width: 220px;
   background: var(--c-night);
   color: white;
-  font-size: 12px;
+  font-size: var(--text-xs);
   padding: 10px 12px;
   border-radius: var(--r-md);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
