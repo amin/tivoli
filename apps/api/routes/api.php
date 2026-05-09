@@ -33,6 +33,7 @@ Route::post('/auth/login', [LoginController::class, 'store']);
 
 // ── Transactions (amusement API key auth) ──────────────────────────────
 Route::middleware(AmusementApiKeyAuth::class)->group(function () {
+    Route::get('/identity-tokens/{token}', [IdentityTokenController::class, 'show']);
     Route::post('/transactions', [TransactionController::class, 'store']);
     Route::post('/transactions/{id}/payout', [TransactionController::class, 'payout']);
 });

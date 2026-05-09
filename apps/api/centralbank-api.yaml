@@ -219,6 +219,56 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /identity-tokens/{token}:
+    get:
+      tags: [Transactions]
+      operationId: resolveIdentityToken
+      summary: Resolve an identity token to its user (without consuming it)
+      description: >
+        Used by an amusement after the user lands on its page. The amusement
+        reads the `identity_token` from the URL, calls this endpoint with its
+        own `X-Api-Key`, and gets back minimal user info (id and name) so it
+        can greet the rider before charging. The token is **not** consumed —
+        only `POST /transactions` consumes it.
+      security: [{ apiKeyAuth: [] }]
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: The identity token from the URL query parameter.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Token is valid; user attached
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, expires_at]
+                properties:
+                  user:
+                    type: object
+                    required: [id, name]
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: "Amin"
+                  expires_at:
+                    type: string
+                    format: date-time
+                    example: "2026-05-09T11:25:00+00:00"
+        "401":
+          description: Token is missing, invalid, expired, or already consumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   # ── User ───────────────────────────────────────────────────────────────
 
   /me:
