@@ -272,7 +272,7 @@ export default function User() {
             )}
           </div>
           <div className="user-hero-vp-column">
-            <h3 style={{ marginBottom: 12}}>Victory points</h3>
+            <h3 className="vp-text">Victory points</h3>
             <span className="user-vp-chip">{vp} VP</span>
           </div>
         </div>
