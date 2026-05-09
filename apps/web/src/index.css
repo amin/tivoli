@@ -50,6 +50,20 @@
 
   --font-display: "Luckiest Guy", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Typography scale */
+  --text-xs: 13px;                    /* small secondary info, tags, hints */
+  --text-sm: 14px;                    /* labels, nav, chips, footer */
+  --text-base: 15px;                  /* buttons, subtitle text */
+  --text-input: 16px;                 /* form inputs — prevents iOS auto-zoom */
+  --text-md: 17px;                    /* hero paragraph, card descriptions */
+  --text-lg: 18px;                    /* card titles */
+  --text-xl: 22px;                    /* empty state titles, exchange values */
+  --text-2xl: 26px;                   /* modal titles */
+  --text-3xl: 28px;                   /* user hero name, balance amount */
+  --text-4xl: 32px;                   /* section headings */
+  --text-brand: 36px;                 /* header brand logo */
+  --text-hero: clamp(40px, 5vw, 56px); /* hero h1 */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -69,9 +83,6 @@ html, body {
   flex-direction: column;
 }
 
-.lights {
-  margin-top: auto;
-}
 
 a { color: inherit; text-decoration: none; }
 

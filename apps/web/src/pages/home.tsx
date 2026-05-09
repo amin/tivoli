@@ -98,12 +98,6 @@ export default function Home() {
         )}
       </main>
 
-      <div className="lights">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <span key={i} className="light" />
-        ))}
-      </div>
-
       <Footer />
     </>
   );

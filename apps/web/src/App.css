@@ -15,7 +15,7 @@
 
 .brand-name {
   font-family: var(--font-display);
-  font-size: 36px;
+  font-size: var(--text-brand);
   text-align: center;
   text-shadow: 2px 2px white;
   text-decoration: none;
@@ -32,7 +32,7 @@
 }
 
 .nav a {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--c-sky);
   transition: color 0.15s;
 }
@@ -56,17 +56,17 @@
   border-radius: 50%;
   background: var(--c-yellow);
   color: var(--c-night);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.auth-text    { font-size: 13px; color: var(--text-ink); }
+.auth-text    { font-size: var(--text-sm); color: var(--text-ink); }
 .auth-divider { color: var(--text-faint); }
-.auth-link    { font-size: 13px; color: var(--c-orange); font-weight: 500; font-family: inherit; }
-.auth-balance { font-size: 13px; color: var(--c-green-dark); font-weight: 500; }
+.auth-link    { font-size: var(--text-sm); color: var(--c-orange); font-weight: 500; font-family: inherit; }
+.auth-balance { font-size: var(--text-sm); color: var(--c-green-dark); font-weight: 500; }
 
 /* ---------- Hero ---------- */
 .hero {
@@ -83,7 +83,7 @@
 
 .hero h1 {
   font-family: var(--font-display), cursive;
-  font-size: clamp(34px, 5vw, 56px);
+  font-size: var(--text-hero);
   font-weight: 600;
   line-height: 1.05;
   letter-spacing: 0.2rem;
@@ -95,7 +95,7 @@
 .hero h1 .pixel { color: var(--c-orange); font-style: italic; }
 
 .hero p {
-  font-size: 17px;
+  font-size: var(--text-md);
   color: var(--text-muted);
   line-height: 1.55;
   margin-bottom: 28px;
@@ -124,7 +124,7 @@
 .btn {
   padding: 10px 14px;
   border-radius: var(--r-pill);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 500;
   cursor: pointer;
   border: none;
@@ -166,7 +166,7 @@
 
 .section-head h2 {
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: var(--text-4xl);
   font-weight: 500;
   letter-spacing: -0.01em;
   color: var(--c-blue);
@@ -175,7 +175,7 @@
 }
 
 .section-sub {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--c-orange);
   margin-bottom: 22px;
 }
@@ -192,7 +192,7 @@
   background: white;
   border: 1px solid var(--border-soft);
   border-radius: var(--r-pill);
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   cursor: pointer;
 }
@@ -234,7 +234,7 @@
 
 .card-title {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 500;
   letter-spacing: -0.01em;
   margin-bottom: 4px;
@@ -242,12 +242,12 @@
 }
 
 .card-tag {
-  font-size: 13px;
+  font-size: var(--text-xs);
   color: var(--c-orange);
 }
 
 .card-group {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-faint);
   margin-top: 4px;
 }
@@ -269,14 +269,14 @@
 
 .empty-title {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: var(--text-xl);
   font-weight: 500;
   color: var(--c-blue);
   margin-bottom: 6px;
 }
 
 .empty-sub {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
@@ -304,7 +304,7 @@
 
 .modal-title {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: var(--text-2xl);
   font-weight: 500;
   letter-spacing: -0.01em;
   margin-bottom: 6px;
@@ -312,7 +312,7 @@
 }
 
 .modal-sub {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text-muted);
   margin-bottom: 24px;
 }
@@ -321,7 +321,7 @@
 
 .label {
   display: block;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-ink);
   margin-bottom: 6px;
@@ -333,7 +333,7 @@
   border: 1px solid var(--border-soft);
   border-radius: var(--r-md);
   font-family: inherit;
-  font-size: 14px;
+  font-size: var(--text-input);
   color: var(--text-ink);
   background: white;
   outline: none;
@@ -343,7 +343,7 @@
 .input:focus { border-color: var(--c-blue); }
 
 .form-error {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--c-red);
   margin-bottom: 12px;
 }
@@ -377,9 +377,19 @@
 
 /* ---------- Footer ---------- */
 .footer {
-  padding: 22px 20px;
+  margin-top: auto;
   background: var(--c-night);
   color: var(--c-yellow-soft);
+  display: flex;
+  flex-direction: column;
+}
+
+.footer .lights {
+  padding: 20px 0;
+}
+
+.footer-content {
+  padding: 22px 20px;
   border-top: 3px solid var(--c-yellow);
   display: flex;
   flex-direction: row;
@@ -389,7 +399,7 @@
 }
 
 .footer-left {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--c-yellow);
 }
 
@@ -399,18 +409,18 @@
 }
 
 .footer-links a {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--c-sky);
   transition: color 0.15s;
   align-items: end;
 }
 /* ---------- Responsive (mobile-first, min-width) ---------- */
 @media (min-width: 560px) {
+  :root { --text-brand: 46px; }
   .header { padding: 16px 28px; }
   .hero { padding: 48px 28px 56px; }
   .grid { grid-template-columns: repeat(2, 1fr); }
-  .footer { padding: 28px 40px; flex-direction: row; align-items: center; }
-  .brand-name { font-size: 46px; }
+  .footer-content { padding: 28px 40px; flex-direction: row; align-items: center; }
 }
 
 @media (min-width: 880px) {
