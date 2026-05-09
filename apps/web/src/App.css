@@ -377,9 +377,19 @@
 
 /* ---------- Footer ---------- */
 .footer {
-  padding: 22px 20px;
+  margin-top: auto;
   background: var(--c-night);
   color: var(--c-yellow-soft);
+  display: flex;
+  flex-direction: column;
+}
+
+.footer .lights {
+  padding: 20px 0;
+}
+
+.footer-content {
+  padding: 22px 20px;
   border-top: 3px solid var(--c-yellow);
   display: flex;
   flex-direction: row;
@@ -409,7 +419,7 @@
   .header { padding: 16px 28px; }
   .hero { padding: 48px 28px 56px; }
   .grid { grid-template-columns: repeat(2, 1fr); }
-  .footer { padding: 28px 40px; flex-direction: row; align-items: center; }
+  .footer-content { padding: 28px 40px; flex-direction: row; align-items: center; }
   .brand-name { font-size: 46px; }
 }
 
