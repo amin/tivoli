@@ -271,10 +271,10 @@ paths:
 
   # ── User ───────────────────────────────────────────────────────────────
 
-  /me:
+  /user:
     get:
       tags: [User]
-      operationId: getMe
+      operationId: getCurrentUser
       summary: Current user profile
       security: [{ accessKeyAuth: [] }]
       responses:
@@ -289,7 +289,7 @@ paths:
 
     patch:
       tags: [User]
-      operationId: updateMe
+      operationId: updateCurrentUser
       summary: Update profile information
       security: [{ accessKeyAuth: [] }]
       requestBody:

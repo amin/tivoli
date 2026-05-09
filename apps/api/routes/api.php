@@ -7,7 +7,6 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\IdentityTokenController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\MeController;
 use App\Http\Controllers\SettleController;
 use App\Http\Controllers\StampController;
 use App\Http\Controllers\StoreAmusementController;
@@ -44,8 +43,8 @@ Route::middleware(AccessKeyAuth::class)->group(function () {
     Route::post('/identity-tokens', [IdentityTokenController::class, 'store']);
 
     // User
-    Route::get('/me', [MeController::class, 'show']);
-    Route::patch('/me', [UpdateUserInfoController::class, 'update']);
+    Route::get('/user', fn(Request $request) => response()->json($request->user()));
+    Route::patch('/user', [UpdateUserInfoController::class, 'update']);
 
     // Groups
     Route::get('/groups', [GroupController::class, 'index']);
@@ -70,9 +69,6 @@ Route::middleware(AccessKeyAuth::class)->group(function () {
     // Settlement & leaderboard
     Route::post('/settle', [SettleController::class, 'store']);
     Route::get('/leaderboard', [LeaderboardController::class, 'show']);
-
-    // Existing utility route (kept; not in spec)
-    Route::get('/user', fn(Request $request) => response()->json($request->user()));
 });
 
 // Existing routes not in the spec (kept untouched)
