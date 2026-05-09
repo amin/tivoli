@@ -109,10 +109,10 @@ export default function Login() {
 
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setLoginError(body.error || `Login failed (${res.status})`);
+        setLoginError(body.error || body.message || `Login failed (${res.status})`);
       } else {
         setLoginError(null);
-        // Redirect to user's admin dashboard
+        localStorage.setItem("tivoliAccessKey", k);
         navigate("/user");
       }
     } catch (err) {
