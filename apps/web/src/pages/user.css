@@ -27,8 +27,11 @@
 }
 
 .user-hero-info {
+  display: flex;
   flex: 1;
-  min-width: 0;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .user-hero-name {
@@ -37,7 +40,7 @@
   font-weight: 500;
   color: var(--c-night);
   letter-spacing: 0.05em;
-  text-shadow: 1px 1px var(--c-yellow-soft);
+  text-shadow: 1px 1px var(--c-orange);
 }
 
 .user-hero-sub {
@@ -46,16 +49,9 @@
   margin-top: 4px;
 }
 
-.user-balance-card {
+.user-hero-name-column {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  background: white;
-  border: 1px solid var(--c-green);
-  border-radius: var(--r-lg);
-  padding: 12px 20px;
-  min-width: 120px;
 }
 
 .balance-label {
@@ -66,11 +62,17 @@
   text-transform: uppercase;
 }
 
-.balance-amount {
+.user-vp-chip {
+  display: flex;
   font-family: var(--font-display);
   font-size: var(--text-3xl);
   color: var(--c-green-dark);
   letter-spacing: 0.02em;
+}
+
+.vp-text {
+  text-align: center;
+  margin-bottom: 12px;
 }
 
 /* ---------- Login ---------- */
@@ -97,8 +99,8 @@
 }
 
 .exchange-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -123,7 +125,7 @@
   font-family: var(--font-display);
   font-size: var(--text-md);
   color: var(--c-night);
-  margin-bottom: 2px;
+  margin-top: 0.5rem;
 }
 
 .exchange-card-desc {
@@ -142,6 +144,7 @@
   font-family: var(--font-display);
   font-size: var(--text-xl);
   color: var(--c-green-dark);
+  margin-bottom: 1rem;
 }
 
 .exchange-result {
@@ -176,15 +179,13 @@
 
 .stamp-img {
   width: 100%;
-  height: 100%;
+  height: auto;
   object-fit: contain;
   border-radius: 1rem 1rem 0 0;
 }
 
 /* ---------- Sell button ---------- */
 .sell-btn {
-  padding: 6px 16px;
-  border-radius: var(--r-pill);
   background: var(--c-orange);
   color: white;
   font-size: var(--text-sm);
@@ -222,6 +223,31 @@
   padding: 8px 22px;
   cursor: pointer;
   min-height: 44px;
+}
+
+@media (min-width: 560px) {
+  .stamp-grid { grid-template-columns: repeat(4, 1fr); }
+  .user-hero-name { font-size: 32px; }
+}
+
+@media (min-width: 880px) {
+  .user-hero { padding: 48px 40px; }
+  .stamp-grid { grid-template-columns: repeat(6, 1fr); }
+}
+
+@media (min-width: 560px) {
+  .stamp-grid { grid-template-columns: repeat(4, 1fr); }
+  .exchange-grid { grid-template-columns: repeat(2, 1fr); }
+  .user-hero-name { font-size: 40px; }
+  .user-vp-chip { font-size: 40px; padding: 4px 14px; }
+}
+
+@media (min-width: 880px) {
+  .user-hero { padding: 48px 40px; }
+  .stamp-grid { grid-template-columns: repeat(6, 1fr); }
+  .exchange-grid { grid-template-columns: repeat(3, 1fr); }
+  .user-hero-name { font-size: 45px; }
+  .user-vp-chip { font-size: 45px; padding: 5px 16px; }
 }
 
 @media (hover: hover) {
