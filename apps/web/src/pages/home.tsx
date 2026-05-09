@@ -22,7 +22,7 @@ export default function Home() {
 
   useEffect(() => {
     const accessKey = localStorage.getItem("access_key") ?? "";
-    fetch(apiUrl("/api/amusements"), {
+    fetch(apiUrl("/amusements"), {
       headers: { "X-Access-Key": accessKey, Accept: "application/json" },
     })
       .then((r) => r.ok ? r.json() : Promise.reject())

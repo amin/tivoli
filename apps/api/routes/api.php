@@ -18,6 +18,13 @@ use App\Http\Middleware\AccessKeyAuth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
+// ── Status ─────────────────────────────────────────────────────────────
+Route::get('/', fn () => response()->json([
+    'name' => 'Tivoli CentralBank API',
+    'status' => 'ok',
+    'docs' => null,
+]));
+
 // ── Auth ───────────────────────────────────────────────────────────────
 Route::post('/activate', [ActivateUserController::class, 'store']);
 Route::post('/auth/login', [LoginController::class, 'store']);
