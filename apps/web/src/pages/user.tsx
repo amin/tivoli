@@ -154,7 +154,7 @@ export default function User() {
       setUser(userData);
 
       const stampsRes = await fetch(apiUrl(`/stamps?user_id=${userData.id}`), {
-        headers: { Accept: 'application/json' },
+        headers: { 'X-Access-Key': key, Accept: 'application/json' },
       });
       const stampsData = await stampsRes.json();
       setStamps(stampsData.data ?? []);
