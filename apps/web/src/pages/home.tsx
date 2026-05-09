@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logoImg from "../assets/logo_transparent.svg";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { apiUrl } from "../lib/api";
+
+const LS_KEY = "tivoliAccessKey";
 
 type Amusement = {
   id: number;
@@ -19,9 +21,10 @@ type Filter = "all" | "game" | "attraction";
 export default function Home() {
   const [amusements, setAmusements] = useState<Amusement[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const accessKey = localStorage.getItem("access_key") ?? "";
+    const accessKey = localStorage.getItem(LS_KEY) ?? "";
     fetch(apiUrl("/amusements"), {
       headers: { "X-Access-Key": accessKey, Accept: "application/json" },
     })
@@ -29,6 +32,31 @@ export default function Home() {
       .then((body) => setAmusements(body.data ?? []))
       .catch(() => {});
   }, []);
+
+  async function openAmusement(e: React.MouseEvent, a: Amusement) {
+    e.preventDefault();
+    const accessKey = localStorage.getItem(LS_KEY) ?? "";
+    if (!accessKey) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const res = await fetch(apiUrl("/identity-tokens"), {
+        method: "POST",
+        headers: { "X-Access-Key": accessKey, Accept: "application/json" },
+      });
+      if (!res.ok) {
+        navigate("/login");
+        return;
+      }
+      const body = await res.json();
+      const url = new URL(a.url);
+      url.searchParams.set("identity_token", body.identity_token);
+      window.open(url.toString(), "_blank", "noreferrer");
+    } catch {
+      // Network error — silently no-op; user can retry
+    }
+  }
 
   const visible = filter === "all" ? amusements : amusements.filter((a) => a.type === filter);
 
@@ -85,7 +113,14 @@ export default function Home() {
         ) : (
           <div className="grid">
             {visible.map((a) => (
-              <a key={a.id} className="card" href={a.url} target="_blank" rel="noreferrer">
+              <a
+                key={a.id}
+                className="card"
+                href={a.url}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => openAmusement(e, a)}
+              >
                 <div className="card-illustration" />
                 <div className="card-body">
                   <p className="card-title">{a.name}</p>
