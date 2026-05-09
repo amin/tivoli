@@ -126,11 +126,15 @@ export default function Login() {
     <>
       <Header />
       <section className="activatePage">
-        <h1>Activate your account</h1>
+        <h1>
+          Log in or Activate 
+          <br />
+          your account
+        </h1>
 
         {/* Primary: Login form */}
         <section className="loginSection">
-          <h2>Log in with name & access key</h2>
+          <h2 className="desc-text">Log in with name & access key</h2>
           <form className="loginGrid" onSubmit={(e) => { e.preventDefault(); loginWithKey(); }}>
             <label className="label">Name</label>
             <input
@@ -189,6 +193,7 @@ export default function Login() {
         {/* Activation form: toggled below login */}
         {showActivate && (
           <form onSubmit={handleSubmit} className="activateForm">
+            <h2 className="desc-text">Activate your account</h2>
             <div className="field">
               <label className="label">Name</label>
               <input
