@@ -15,8 +15,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'name',          // set in seedern
-    'github_link',   // updated by user
-    'website_link',  // updated by user
     'access_key',    // set by backend when activated
 ])]
 #[Hidden(['access_key'])]

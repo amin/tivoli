@@ -29,8 +29,6 @@ type UserProfile = {
   id: number;
   name: string;
   balance: number;
-  github_link: string | null;
-  website_link: string | null;
 };
 
 type ExchangeOption = {
@@ -114,7 +112,6 @@ const LS_KEY = 'tivoliAccessKey';
 
 const PREVIEW_USER: UserProfile = {
   id: 0, name: 'Nathalie', balance: 42.00,
-  github_link: null, website_link: null,
 };
 
 const PREVIEW_STAMPS: Stamp[] = [

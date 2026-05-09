@@ -23,7 +23,6 @@ class UpdateUserInfoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'github_link' => 'nullable|url|max:255',
             'website' => 'nullable|url|max:255',
         ];
     }

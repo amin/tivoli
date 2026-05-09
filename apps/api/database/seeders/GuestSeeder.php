@@ -18,19 +18,16 @@ class GuestSeeder extends Seeder
         // Used by students during development for testing their applications
         // Will then be used by guests (will not trigger any transactions)
 
-
         // Delete old guest if exists
-        User::where('name', 'Guest')->delete();
+        User::where("name", "Guest")->delete();
 
         User::create([
-            'name' => 'Guest',
-            'group_id' => null,
-            'startcode' => '4755efcb-6a7d-4013-ac21-fed62bebb265',
-            'access_key' => null, // Generates when activated
-            'balance' => 90000,
-            'github_link' => null,
-            'website_link' => null,
-            'is_active' => true, // Toggle to false to inactive account
+            "name" => "Guest",
+            "group_id" => null,
+            "startcode" => "4755efcb-6a7d-4013-ac21-fed62bebb265",
+            "access_key" => null, // Generates when activated
+            "balance" => 90000,
+            "is_active" => true, // Toggle to false to inactive account
         ]);
     }
 }
