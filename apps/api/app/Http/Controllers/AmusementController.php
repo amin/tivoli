@@ -2,34 +2,105 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Amusement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AmusementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $amusements = \App\Models\Amusement::select('id', 'name', 'type')->orderBy('type')->orderBy('name')->get();
+        $amusements = Amusement::select('id', 'name', 'type')
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get();
+
         return response()->json(['data' => $amusements]);
     }
 
     public function show(Request $request, int $id): JsonResponse
     {
-        return response()->json(['message' => 'Not implemented'], 501);
+        $amusement = Amusement::find($id);
+
+        if (!$amusement) {
+            return response()->json(['error' => 'Amusement not found'], 404);
+        }
+
+        if ($request->user()->group_id === $amusement->group_id) {
+            $amusement->makeVisible('access_key');
+        }
+
+        return response()->json($amusement);
     }
 
     public function update(Request $request, int $id): JsonResponse
     {
-        return response()->json(['message' => 'Not implemented'], 501);
+        $amusement = Amusement::find($id);
+
+        if (!$amusement) {
+            return response()->json(['error' => 'Amusement not found'], 404);
+        }
+
+        if ($request->user()->group_id !== $amusement->group_id) {
+            return response()->json(['error' => 'You do not own this amusement'], 403);
+        }
+
+        $data = $request->validate([
+            'name' => 'sometimes|string|max:100',
+            'description' => 'sometimes|nullable|string|max:300',
+            'url' => 'sometimes|url|max:300',
+            'image_url' => 'sometimes|nullable|url|max:300',
+            'price' => 'sometimes|nullable|numeric|min:0|max:999.99',
+            'player_payout' => 'sometimes|nullable|numeric|min:0|max:999.99',
+            'type' => 'sometimes|in:game,attraction',
+        ]);
+
+        $amusement->update($data);
+
+        return response()->json($amusement->makeVisible('access_key'));
     }
 
     public function destroy(Request $request, int $id): JsonResponse
     {
-        return response()->json(['message' => 'Not implemented'], 501);
+        $amusement = Amusement::find($id);
+
+        if (!$amusement) {
+            return response()->json(['error' => 'Amusement not found'], 404);
+        }
+
+        if ($request->user()->group_id !== $amusement->group_id) {
+            return response()->json(['error' => 'You do not own this amusement'], 403);
+        }
+
+        if ((float) $amusement->amusement_balance != 0.0) {
+            return response()->json([
+                'error' => "Cannot delete amusement with balance €" . number_format($amusement->amusement_balance, 2) . ". Settle first.",
+            ], 409);
+        }
+
+        $amusement->delete();
+
+        return response()->json(null, 204);
     }
 
     public function regenerateKey(Request $request, int $id): JsonResponse
     {
-        return response()->json(['message' => 'Not implemented'], 501);
+        $amusement = Amusement::find($id);
+
+        if (!$amusement) {
+            return response()->json(['error' => 'Amusement not found'], 404);
+        }
+
+        if ($request->user()->group_id !== $amusement->group_id) {
+            return response()->json(['error' => 'You do not own this amusement'], 403);
+        }
+
+        $amusement->access_key = (string) Str::uuid();
+        $amusement->save();
+
+        return response()->json([
+            'access_key' => $amusement->access_key,
+        ]);
     }
 }
