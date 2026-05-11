@@ -19,6 +19,6 @@ class VoteController extends Controller
             'amusement_id' => $request->amusement_id,
         ]);
 
-        return response()->json(['message' => 'Vote registered', 'vote' => $vote]);
+        return response()->json(['message' => 'Vote recorded', 'vote' => $vote], 201);
     }
 }

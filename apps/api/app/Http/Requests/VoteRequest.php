@@ -12,7 +12,7 @@ class VoteRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,7 @@ class VoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amusement_id' => 'required|exists:amusement_id',
+            'amusement_id' => 'required|exists:amusements,id',
         ];
     }
 }

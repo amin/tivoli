@@ -9,7 +9,8 @@ class AmusementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        return response()->json(['message' => 'Not implemented'], 501);
+        $amusements = \App\Models\Amusement::select('id', 'name', 'type')->orderBy('type')->orderBy('name')->get();
+        return response()->json(['data' => $amusements]);
     }
 
     public function show(Request $request, int $id): JsonResponse

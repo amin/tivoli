@@ -4,6 +4,7 @@ import "./user.css";
 
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import VoteSection from "../components/VoteSection";
 import { apiUrl } from "../lib/api";
 
 type Animal = 'lion' | 'dolphin' | 'toucan' | 'beetlebug' | 'snake';
@@ -188,9 +189,9 @@ export default function User() {
       const stampsRes = await fetch(apiUrl(`/stamps?user_id=${userData.id}`), {
         headers: { 'X-Access-Key': key, Accept: 'application/json' },
       });
-
       const stampsData = await stampsRes.json();
       setStamps(stampsData.data ?? []);
+
       setLoggedIn(true);
     } catch {
       navigate('/error?message=Network+error+—+could+not+reach+the+server.');
@@ -376,6 +377,8 @@ export default function User() {
           </div>
         )}
       </main>
+
+      <VoteSection accessKey={accessKey} userId={user!.id} />
 
       <div className="user-logout-wrap">
         <button className="logout-btn" onClick={handleLogout}>Log out</button>
