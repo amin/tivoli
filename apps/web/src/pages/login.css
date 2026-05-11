@@ -114,6 +114,7 @@
   display: flex;
   gap: 8px;
   margin-top: 8px;
+  justify-content: center;
 }
 
 .form-error {
@@ -137,6 +138,12 @@
 
 .activateForm {
   margin-top: 24px;
+}
+
+.activateToggle {
+  display: flex;
+  margin-top: 12px;
+  justify-content: center;
 }
 
 .btn-link {
