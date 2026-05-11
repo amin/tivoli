@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateAmusementRequest;
 use App\Models\Amusement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class AmusementController extends Controller
         return response()->json($amusement);
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateAmusementRequest $request, int $id): JsonResponse
     {
         $amusement = Amusement::find($id);
 
@@ -46,17 +47,7 @@ class AmusementController extends Controller
             return response()->json(['error' => 'You do not own this amusement'], 403);
         }
 
-        $data = $request->validate([
-            'name' => 'sometimes|string|max:100',
-            'description' => 'sometimes|nullable|string|max:300',
-            'url' => 'sometimes|url|max:300',
-            'image_url' => 'sometimes|nullable|url|max:300',
-            'price' => 'sometimes|nullable|numeric|min:0|max:999.99',
-            'player_payout' => 'sometimes|nullable|numeric|min:0|max:999.99',
-            'type' => 'sometimes|in:game,attraction',
-        ]);
-
-        $amusement->update($data);
+        $amusement->update($request->validated());
 
         return response()->json($amusement->makeVisible('access_key'));
     }
