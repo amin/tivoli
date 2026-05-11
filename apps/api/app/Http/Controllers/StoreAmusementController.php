@@ -11,16 +11,23 @@ class StoreAmusementController extends Controller
 {
     public function store(StoreAmusementRequest $request)
     {
-        $data = $request->validated();
+        $user = $request->user();
 
-        $data['group_id'] = $request->user()->group_id();
-        $data['access_key'] = Str::uuid();
+        if (!$user->group_id) {
+            return response()->json([
+                'error' => 'Your user is not assigned to a group',
+            ], 400);
+        }
+
+        $data = $request->validated();
+        $data['group_id'] = $user->group_id;
+        $data['access_key'] = (string) Str::uuid();
 
         $amusement = Amusement::create($data);
 
         return response()->json([
-            'message' => 'Amusement registered',
-            'amusement' => $amusement,
+            'message' => 'Amusement registered. Save the access_key — it is only shown here.',
+            'amusement' => $amusement->makeVisible('access_key'),
         ], 201);
     }
 }
