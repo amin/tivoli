@@ -23,7 +23,7 @@ class StoreAmusementRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:100',
+            'name' => 'required|string|max:100|unique:amusements,name',
             'description' => 'nullable|string|max:300',
             'url' => 'required|url|max:300',
             'image_url' => 'nullable|url|max:300',

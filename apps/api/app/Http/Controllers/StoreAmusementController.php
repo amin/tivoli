@@ -23,7 +23,7 @@ class StoreAmusementController extends Controller
         $data['group_id'] = $user->group_id;
         $data['access_key'] = (string) Str::uuid();
 
-        $amusement = Amusement::create($data);
+        $amusement = Amusement::forceCreate($data);
 
         return response()->json([
             'message' => 'Amusement registered. Save the access_key — it is only shown here.',
