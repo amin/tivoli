@@ -8,10 +8,10 @@ import ErrorPage from "./pages/error";
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/user" element={<User />} />
       <Route path="/error" element={<ErrorPage />} />
-      <Route path="/" element={<Home />} />
     </Routes>
   );
 }
