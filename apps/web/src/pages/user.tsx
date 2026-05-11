@@ -4,6 +4,7 @@ import "./user.css";
 
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import VoteSection from "../components/VoteSection";
 import { apiUrl } from "../lib/api";
 
 type Animal = 'lion' | 'dolphin' | 'toucan' | 'beetlebug' | 'snake';
@@ -191,6 +192,7 @@ export default function User() {
 
       const stampsData = await stampsRes.json();
       setStamps(stampsData.data ?? []);
+
       setLoggedIn(true);
     } catch {
       navigate('/error?message=Network+error+—+could+not+reach+the+server.');
@@ -258,18 +260,6 @@ export default function User() {
 
   const exchangeOptions = detectExchangeOptions(stamps);
   const vp = calcVP(stamps);
-
-  if (!user) {
-    return (
-      <>
-        <Header user={null} />
-        <section className="user-hero">
-          <p className="user-hero-sub">{loading ? 'Loading…' : ''}</p>
-        </section>
-        <Footer />
-      </>
-    );
-  }
 
   return (
     <>
@@ -388,6 +378,8 @@ export default function User() {
           </div>
         )}
       </main>
+
+      <VoteSection accessKey={accessKey} userId={user!.id} />
 
       <div className="user-logout-wrap">
         <button className="logout-btn" onClick={handleLogout}>Log out</button>

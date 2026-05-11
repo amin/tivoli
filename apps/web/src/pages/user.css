@@ -68,6 +68,12 @@
   font-size: var(--text-3xl);
   color: var(--c-green-dark);
   letter-spacing: 0.02em;
+  justify-content: center;
+}
+
+.vp-text {
+  text-align: center;
+  margin-bottom: 12px;
 }
 
 .vp-text {
@@ -204,6 +210,61 @@
   font-size: var(--text-sm);
   color: var(--text-faint);
   font-weight: 500;
+}
+
+/* ---------- Vote section ---------- */
+.vote-section {
+  border-top: 2px solid var(--c-yellow);
+}
+
+.vote-section h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--c-blue);
+}
+
+.vote-warning {
+  color: var(--c-orange);
+  font-weight: 500;
+  font-size: var(--text-sm);
+}
+
+.vote-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.vote-select {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 14px;
+  border: 1px solid var(--c-blue-soft);
+  border-radius: var(--r-md);
+  font-size: var(--text-input);
+  background: white;
+  color: var(--c-night);
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.vote-select:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.vote-btn {
+  background: var(--c-night);
+  color: white;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+@media (hover: hover) {
+  .vote-btn:not(:disabled):hover { background: var(--c-blue-dark, var(--c-blue)); filter: brightness(0.9); }
 }
 
 /* ---------- Logout ---------- */
