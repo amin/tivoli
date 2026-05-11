@@ -99,19 +99,10 @@
 
 /* ---------- Login ---------- */
 .user-login-wrap {
+.user-cta-section {
   display: flex;
-  justify-content: center;
-  padding: 60px 20px;
-  background: var(--bg-hero);
-  min-height: 60vh;
-  align-items: flex-start;
-}
-
-.user-login-hint {
-  font-size: var(--text-sm);
-  color: var(--text-faint);
-  margin-top: 16px;
-  text-align: center;
+  justify-content: space-around;
+  margin: 1rem;
 }
 
 /* ---------- Exchange section ---------- */
@@ -207,7 +198,7 @@
   border-radius: 1rem 1rem 0 0;
 }
 
-/* ---------- Sell button ---------- */
+/* ---------- buttons ---------- */
 .sell-btn {
   background: var(--c-orange);
   color: white;
@@ -220,6 +211,11 @@
 .sell-btn:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.btn-attraction {
+  background: var(--c-blue);
+  color: white;
 }
 
 /* ---------- Section count ---------- */
