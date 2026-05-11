@@ -19,6 +19,8 @@ class Amusement extends Model
         'type',
     ];
 
+    protected $hidden = ['api_key'];
+
     // An amusement belongs to one group
     public function group(): BelongsTo
     {

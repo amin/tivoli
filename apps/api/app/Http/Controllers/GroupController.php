@@ -11,12 +11,26 @@ class GroupController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        return response()->json(['message' => 'Not implemented'], 501);
+        $groups = Group::withCount('users as member_count')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['data' => $groups]);
     }
 
     public function show(Request $request, int $id): JsonResponse
     {
-        return response()->json(['message' => 'Not implemented'], 501);
+        $group = Group::with(['users:id,name,group_id', 'amusements'])->find($id);
+
+        if (!$group) {
+            return response()->json(['error' => 'Group not found'], 404);
+        }
+
+        if ($request->user()->group_id === $group->id) {
+            $group->amusements->each(fn($a) => $a->makeVisible('api_key'));
+        }
+
+        return response()->json($group);
     }
 
     public function update(RenameGroupRequest $request, int $id): JsonResponse

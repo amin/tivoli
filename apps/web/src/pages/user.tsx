@@ -261,6 +261,18 @@ export default function User() {
   const exchangeOptions = detectExchangeOptions(stamps);
   const vp = calcVP(stamps);
 
+  if (!user) {
+    return (
+      <>
+        <Header user={null} />
+        <section className="user-hero">
+          <p className="user-hero-sub">{loading ? 'Loading…' : ''}</p>
+        </section>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <Header user={loggedIn ? user : null} />

@@ -17,16 +17,16 @@ return new class extends Migration
             $table->unsignedBigInteger('group_id');
             $table->foreign('group_id')->references('id')->on('groups');
 
-            $table->string('name');
-            $table->string('description');
-            $table->decimal('price', 8, 2);
+            $table->string('name')->unique();
+            $table->string('description')->nullable();
+            $table->decimal('price', 8, 2)->nullable();
             $table->decimal('player_payout', 8, 2)->nullable();
             $table->decimal('amusement_balance', 8, 2)->default(0);
             $table->decimal('buffer_required', 8, 2)->default(0);
             $table->decimal('buffer_locked', 8, 2)->default(0);
             $table->string('url');
             $table->string('image_url')->nullable();
-            $table->string('access_key');
+            $table->string('api_key');
             $table->enum('type', ['game', 'attraction']);
             $table->timestamps();
         });
