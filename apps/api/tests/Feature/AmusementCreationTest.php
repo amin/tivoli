@@ -49,7 +49,7 @@ class AmusementCreationTest extends TestCase
         $response->assertStatus(201);
         $response->assertJsonPath('amusement.name', 'Fortune Wheel');
         $response->assertJsonPath('amusement.group_id', $group->id);
-        $response->assertJsonStructure(['amusement' => ['access_key']]);
+        $response->assertJsonStructure(['amusement' => ['api_key']]);
 
         $this->assertDatabaseHas('amusements', [
             'name' => 'Fortune Wheel',
@@ -145,7 +145,7 @@ class AmusementCreationTest extends TestCase
         $response->assertJsonValidationErrors(['type']);
     }
 
-    public function test_response_includes_access_key_only_on_create(): void
+    public function test_response_includes_api_key_only_for_group_members(): void
     {
         $group = Group::forceCreate(['name' => 'Visibility Group']);
         [$user, $key] = $this->makeUser($group->id);
@@ -159,17 +159,17 @@ class AmusementCreationTest extends TestCase
         ]);
 
         $createdId = $createRes->json('amusement.id');
-        $this->assertNotEmpty($createRes->json('amusement.access_key'));
+        $this->assertNotEmpty($createRes->json('amusement.api_key'));
 
-        // Subsequent GET as a group member should include access_key
+        // Subsequent GET as a group member should include api_key
         $showRes = $this->withHeaders([
             'X-Access-Key' => $key,
         ])->getJson("/amusements/{$createdId}");
 
         $showRes->assertStatus(200);
-        $this->assertNotEmpty($showRes->json('access_key'));
+        $this->assertNotEmpty($showRes->json('api_key'));
 
-        // Index endpoint should never include access_key
+        // Index endpoint should never include api_key
         $indexRes = $this->withHeaders([
             'X-Access-Key' => $key,
         ])->getJson('/amusements');
@@ -177,7 +177,7 @@ class AmusementCreationTest extends TestCase
         $indexRes->assertStatus(200);
         $indexJson = $indexRes->json('data');
         foreach ($indexJson as $row) {
-            $this->assertArrayNotHasKey('access_key', $row);
+            $this->assertArrayNotHasKey('api_key', $row);
         }
     }
 }

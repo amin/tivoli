@@ -27,7 +27,7 @@ class GroupController extends Controller
         }
 
         if ($request->user()->group_id === $group->id) {
-            $group->amusements->each(fn($a) => $a->makeVisible('access_key'));
+            $group->amusements->each(fn($a) => $a->makeVisible('api_key'));
         }
 
         return response()->json($group);

@@ -441,8 +441,10 @@ paths:
       summary: Register a new amusement
       description: >
         The amusement is automatically linked to the requesting user's group.
-        Returns the `api_key` — save it, it is only shown once in this response.
-        To retrieve the key later, use `GET /groups/{id}` (group members only).
+        `name` must be globally unique across all amusements; a duplicate
+        returns 422. Returns the `api_key` — save it, it is only shown once
+        in this response. To retrieve the key later, use `GET /groups/{id}`
+        (group members only).
       security: [{ accessKeyAuth: [] }]
       requestBody:
         required: true
@@ -454,10 +456,13 @@ paths:
               properties:
                 name:
                   type: string
+                  maxLength: 100
+                  description: Globally unique amusement name.
                   example: "Fortune Wheel"
                 description:
                   type: string
                   nullable: true
+                  maxLength: 300
                   example: "Spin the wheel and test your luck"
                 type:
                   type: string
@@ -465,7 +470,32 @@ paths:
                 url:
                   type: string
                   format: uri
+                  maxLength: 300
                   example: "https://fortune.example.com"
+                image_url:
+                  type: string
+                  format: uri
+                  nullable: true
+                  maxLength: 300
+                  example: "https://fortune.example.com/banner.png"
+                price:
+                  type: number
+                  multipleOf: 0.01
+                  minimum: 0
+                  maximum: 999.99
+                  nullable: true
+                  description: >
+                    Entrance fee / stake. Leave null for variable-stake
+                    amusements that pass the amount in each transaction body.
+                  example: 5.00
+                player_payout:
+                  type: number
+                  multipleOf: 0.01
+                  minimum: 0
+                  maximum: 999.99
+                  nullable: true
+                  description: Fixed payout amount, if applicable.
+                  example: 20.00
       responses:
         "201":
           description: >
@@ -475,7 +505,22 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Amusement"
+                type: object
+                required: [message, amusement]
+                properties:
+                  message:
+                    type: string
+                    example: "Amusement registered. Save the api_key — it is only shown here."
+                  amusement:
+                    $ref: "#/components/schemas/Amusement"
+        "400":
+          description: User has no group_id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example:
+                  error: "Your user is not assigned to a group"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "422":
@@ -508,7 +553,10 @@ paths:
       tags: [Amusements]
       operationId: updateAmusement
       summary: Update an amusement
-      description: Any member of the amusement's group can update it.
+      description: >
+        Any member of the amusement's group can update it. `name` must stay
+        globally unique; a duplicate (other than this amusement's current
+        name) returns 422.
       security: [{ accessKeyAuth: [] }]
       parameters:
         - $ref: "#/components/parameters/AmusementId"
@@ -520,15 +568,35 @@ paths:
               properties:
                 name:
                   type: string
+                  maxLength: 100
                 description:
                   type: string
                   nullable: true
+                  maxLength: 300
                 type:
                   type: string
                   enum: [game, attraction]
                 url:
                   type: string
                   format: uri
+                  maxLength: 300
+                image_url:
+                  type: string
+                  format: uri
+                  nullable: true
+                  maxLength: 300
+                price:
+                  type: number
+                  multipleOf: 0.01
+                  minimum: 0
+                  maximum: 999.99
+                  nullable: true
+                player_payout:
+                  type: number
+                  multipleOf: 0.01
+                  minimum: 0
+                  maximum: 999.99
+                  nullable: true
       responses:
         "200":
           description: Updated amusement
@@ -594,7 +662,8 @@ paths:
                 properties:
                   api_key:
                     type: string
-                    example: "tiv_xyz789ghi012"
+                    format: uuid
+                    example: "0b3c8a4e-7f7a-4b4d-9c9c-2a4a6b6c8d8e"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1109,6 +1178,7 @@ components:
           readOnly: true
         name:
           type: string
+          description: Globally unique across all amusements.
           example: "Fortune Wheel"
         description:
           type: string
@@ -1120,7 +1190,27 @@ components:
           type: string
           format: uri
           example: "https://fortune.example.com"
-        balance:
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://fortune.example.com/banner.png"
+        price:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          maximum: 999.99
+          nullable: true
+          description: Fixed entrance fee / stake. Null = variable amount per transaction.
+          example: 5.00
+        player_payout:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          maximum: 999.99
+          nullable: true
+          example: 20.00
+        amusement_balance:
           type: number
           multipleOf: 0.01
           description: Current pooled balance of this amusement.
@@ -1128,13 +1218,14 @@ components:
           readOnly: true
         api_key:
           type: string
+          format: uuid
           description: >
-            Only included for group members (via `GET /groups/{id}` or
-            `GET /amusements/{id}`). Never exposed in public listings.
-          example: "tiv_abc123def456"
-        group:
-          allOf:
-            - $ref: "#/components/schemas/GroupSummary"
+            Only included on `POST /amusements` (create response) and for
+            group members via `GET /amusements/{id}` or `GET /groups/{id}`.
+            Never exposed in public listings.
+          example: "0b3c8a4e-7f7a-4b4d-9c9c-2a4a6b6c8d8e"
+        group_id:
+          type: integer
           readOnly: true
         created_at:
           type: string

@@ -29,7 +29,7 @@ class AmusementController extends Controller
         }
 
         if ($request->user()->group_id === $amusement->group_id) {
-            $amusement->makeVisible('access_key');
+            $amusement->makeVisible('api_key');
         }
 
         return response()->json($amusement);
@@ -49,7 +49,7 @@ class AmusementController extends Controller
 
         $amusement->update($request->validated());
 
-        return response()->json($amusement->makeVisible('access_key'));
+        return response()->json($amusement->makeVisible('api_key'));
     }
 
     public function destroy(Request $request, int $id): JsonResponse
@@ -87,11 +87,11 @@ class AmusementController extends Controller
             return response()->json(['error' => 'You do not own this amusement'], 403);
         }
 
-        $amusement->access_key = (string) Str::uuid();
+        $amusement->api_key = (string) Str::uuid();
         $amusement->save();
 
         return response()->json([
-            'access_key' => $amusement->access_key,
+            'api_key' => $amusement->api_key,
         ]);
     }
 }

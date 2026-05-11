@@ -17,7 +17,7 @@ class AmusementApiKeyAuth
             return response()->json(['error' => 'Missing API key'], 401);
         }
 
-        $amusement = Amusement::where('access_key', $apiKey)->first();
+        $amusement = Amusement::where('api_key', $apiKey)->first();
 
         if (!$amusement) {
             return response()->json(['error' => 'Invalid API key'], 401);

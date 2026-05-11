@@ -26,7 +26,7 @@ return new class extends Migration
             $table->decimal('buffer_locked', 8, 2)->default(0);
             $table->string('url');
             $table->string('image_url')->nullable();
-            $table->string('access_key');
+            $table->string('api_key');
             $table->enum('type', ['game', 'attraction']);
             $table->timestamps();
         });

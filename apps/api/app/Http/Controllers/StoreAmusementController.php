@@ -21,13 +21,13 @@ class StoreAmusementController extends Controller
 
         $data = $request->validated();
         $data['group_id'] = $user->group_id;
-        $data['access_key'] = (string) Str::uuid();
+        $data['api_key'] = (string) Str::uuid();
 
         $amusement = Amusement::forceCreate($data);
 
         return response()->json([
-            'message' => 'Amusement registered. Save the access_key — it is only shown here.',
-            'amusement' => $amusement->makeVisible('access_key'),
+            'message' => 'Amusement registered. Save the api_key — it is only shown here.',
+            'amusement' => $amusement->makeVisible('api_key'),
         ], 201);
     }
 }
