@@ -128,7 +128,7 @@
 
 /* ---------- Buttons ---------- */
 .btn {
-  padding: 10px 14px;
+  padding: 10px 20px;
   border-radius: var(--r-pill);
   font-size: var(--text-base);
   font-weight: 500;
@@ -194,11 +194,11 @@
 }
 
 .chip {
-  padding: 10px 14px;
+  padding: 10px 20px;
   background: white;
   border: 1px solid var(--border-soft);
   border-radius: var(--r-pill);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--text-muted);
   cursor: pointer;
 }

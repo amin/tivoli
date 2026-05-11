@@ -176,7 +176,9 @@ export default function Login() {
               >
                 Clear
               </button>
+            </div>
 
+            <div className="activateToggle">
               <button
                 type="button"
                 className="btn btn-link"
@@ -225,9 +227,11 @@ export default function Login() {
               />
             </div>
 
-            <button type="submit" disabled={loading} className="btn btn-primary">
-              {loading ? "Activating…" : "Get access key"}
-            </button>
+            <div className="activateToggle">
+              <button type="submit" disabled={loading} className="btn btn-primary">
+                {loading ? "Activating…" : "Get access key"}
+              </button>
+            </div>
           </form>
         )}
 
