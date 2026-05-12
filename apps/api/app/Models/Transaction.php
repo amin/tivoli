@@ -12,7 +12,13 @@ class Transaction extends Model
         'user_id',
         'amusement_id',
         'amount',
-        'type'
+        'type',
+        'settled_at',
+    ];
+
+    protected $casts = [
+        'amount' => 'float',
+        'settled_at' => 'datetime',
     ];
 
     // A transaction belongs to one user

@@ -22,6 +22,7 @@ return new class extends Migration
 
             $table->decimal('amount', 8, 2);
             $table->enum('type', ['fee', 'payout', 'owner_revenue', 'exchange']);
+            $table->timestamp('settled_at')->nullable();
             $table->timestamps();
         });
     }
