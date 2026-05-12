@@ -744,6 +744,11 @@ paths:
         and credits the user. The transaction is marked as settled — double
         payout is rejected.
 
+        Payouts always succeed regardless of the amusement's balance:
+        `amusement_balance` can go negative and is reconciled at
+        `POST /settle` (group members absorb any debt). This makes
+        player payouts UX-bulletproof.
+
         The API key must belong to the same amusement that created the
         original transaction. Attractions (`type: attraction`) are rejected
         — only games can pay out.
@@ -777,14 +782,6 @@ paths:
                     example: "Payout successful"
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "402":
-          description: Amusement has insufficient balance
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-                example:
-                  message: "Insufficient amusement balance. Balance: €2.00, required: €10.00"
         "403":
           description: API key does not match the transaction's amusement
           content:

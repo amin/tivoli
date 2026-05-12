@@ -85,9 +85,8 @@ class TransactionController extends Controller
             return response()->json(['error' => 'Only fee transactions can be paid out'], 400);
         }
 
-        if ($amusement->amusement_balance < $data['amount']) {
-            return response()->json(['error' => 'Insufficient amusement balance'], 402);
-        }
+        // Amusement balance is allowed to go negative; it's reconciled at
+        // settle (group members absorb the debt).
 
         return DB::transaction(function () use ($original, $amusement, $data) {
             $amusement->decrement('amusement_balance', $data['amount']);
