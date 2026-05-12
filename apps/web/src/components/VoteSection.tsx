@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiUrl } from "../lib/api";
+import CustomSelect from "./CustomSelect";
 
 type Amusement = {
   id: number;
@@ -78,25 +79,21 @@ export default function VoteSection({ accessKey, userId }: Props) {
             <div className="exchange-result exchange-result--err">{voteResult}</div>
           )}
           <div className="vote-form">
-            <select
-              className="vote-select"
+            <CustomSelect
               value={voteChoice}
-              onChange={e => setVoteChoice(e.target.value)}
+              onChange={setVoteChoice}
               disabled={voteLoading}
-            >
-              <option value="">Select an amusement</option>
-              {(['attraction', 'game'] as const).map(type => {
-                const group = amusements.filter(a => a.type === type);
-                if (!group.length) return null;
-                return (
-                  <optgroup key={type} label={type === 'attraction' ? 'Attractions' : 'Games'}>
-                    {group.map(a => (
-                      <option key={a.id} value={a.id}>{a.name}</option>
-                    ))}
-                  </optgroup>
-                );
-              })}
-            </select>
+              placeholder="Select an amusement"
+              groups={(['attraction', 'game'] as const)
+                .map(type => ({
+                  label: type === 'attraction' ? 'Attractions' : 'Games',
+                  options: amusements
+                    .filter(a => a.type === type)
+                    .map(a => ({ value: String(a.id), label: a.name })),
+                }))
+                .filter(g => g.options.length > 0)
+              }
+            />
             <button
               className="btn vote-btn"
               onClick={handleVote}
