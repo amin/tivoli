@@ -37,40 +37,10 @@ const EMPTY_FORM: FormData = {
   price: '',
   player_payout: '',
   type: '',
-  visits: 0,
-  delete: '',
 };
 
-const isPreview = new URLSearchParams(window.location.search).has('preview');
-
-const PREVIEW_AMUSEMENTS: AmusementItem[] = [
-  {
-    id: 1,
-    name: 'Bumper Cars',
-    type: 'attraction',
-    image: '',
-    fee: '€5.00',
-    link: '#',
-    visits: 100,
-    delete: '#',
-  },
-  {
-    id: 2,
-    name: 'Ring Toss',
-    type: 'game',
-    image: '',
-    fee: '€3.00',
-    winnings: '€10.00',
-    link: '#',
-    visits: 200,
-    delete: '#',
-  },
-];
-
 export default function Amusement({ accessKey }: Props) {
-  const [amusements, setAmusements] = useState<AmusementItem[]>(
-    isPreview ? PREVIEW_AMUSEMENTS : []
-  );
+  const [amusements, setAmusements] = useState<AmusementItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
@@ -103,6 +73,7 @@ export default function Amusement({ accessKey }: Props) {
       if (e.key === 'Escape') { setShowModal(false); return; }
       if (e.key !== 'Tab' || !modal) return;
 
+      
       // Don't interfere while a Radix portal (dropdown) is open
       if (document.activeElement?.closest('[data-radix-popper-content-wrapper]')) return;
       const focusable = Array.from(modal.querySelectorAll<HTMLElement>(
