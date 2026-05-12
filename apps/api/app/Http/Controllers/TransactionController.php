@@ -85,12 +85,24 @@ class TransactionController extends Controller
             return response()->json(['error' => 'Only fee transactions can be paid out'], 400);
         }
 
+        if ($amusement->type === 'attraction') {
+            return response()->json(['error' => 'Attractions cannot pay out'], 409);
+        }
+
+        if ($original->settled_at !== null) {
+            return response()->json(
+                ['error' => "Transaction #{$original->id} has already been paid out"],
+                409,
+            );
+        }
+
         // Amusement balance is allowed to go negative; it's reconciled at
         // settle (group members absorb the debt).
 
         return DB::transaction(function () use ($original, $amusement, $data) {
             $amusement->decrement('amusement_balance', $data['amount']);
             $original->user->increment('balance', $data['amount']);
+            $original->update(['settled_at' => now()]);
 
             $payout = Transaction::create([
                 'user_id' => $original->user_id,

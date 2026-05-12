@@ -22,6 +22,14 @@ class Amusement extends Model
 
     protected $hidden = ['api_key'];
 
+    protected $casts = [
+        'price' => 'float',
+        'player_payout' => 'float',
+        'amusement_balance' => 'float',
+        'buffer_required' => 'float',
+        'buffer_locked' => 'float',
+    ];
+
     protected static function booted(): void
     {
         static::creating(function (self $amusement) {
