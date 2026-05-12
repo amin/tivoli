@@ -172,6 +172,39 @@ class TransactionTest extends TestCase
         $response->assertStatus(401);
     }
 
+    public function test_payout_succeeds_into_debt(): void
+    {
+        $group = $this->makeGroup();
+        $player = $this->makeUser($group->id);
+        $amusement = $this->makeAmusement($group->id);
+
+        // Seed a fee transaction to satisfy the payout ownership check.
+        $token = $this->issueToken($player);
+        $feeRes = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
+            ->postJson('/transactions', [
+                'identity_token' => $token->token,
+                'amount' => 5.00,
+                'amusement_uuid' => $amusement->uuid,
+            ]);
+        $feeRes->assertStatus(201);
+        $feeId = $feeRes->json('id');
+
+        // Amusement now has €5. Pay out €20 → balance must go to -€15.
+        $response = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
+            ->postJson("/transactions/{$feeId}/payout", [
+                'amount' => 20.00,
+            ]);
+
+        $response->assertStatus(201);
+
+        $amusement->refresh();
+        $this->assertEquals(-15.00, $amusement->amusement_balance);
+
+        $player->refresh();
+        // Started 100, paid 5, won 20 → 115
+        $this->assertEquals(115.00, $player->balance);
+    }
+
     public function test_expired_token_returns_401(): void
     {
         $group = $this->makeGroup();
