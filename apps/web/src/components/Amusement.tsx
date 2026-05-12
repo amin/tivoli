@@ -7,12 +7,10 @@ type AmusementItem = {
     id: number;
     name: string;
     type: string;
-    image: string;
-    fee?: string;
-    winnings?: string;
-    link: string;
-    visits?: number;
-    delete: string;
+    image_url: string | null;
+    price: number | null;
+    player_payout: number | null;
+    url: string;
 };
 
 type Props = {
@@ -27,8 +25,6 @@ type FormData = {
   price: string;
   player_payout: string;
   type: 'game' | 'attraction' | '';
-  visits: number;
-  delete?: string;
 };
 
 const EMPTY_FORM: FormData = {
@@ -39,8 +35,6 @@ const EMPTY_FORM: FormData = {
   price: '',
   player_payout: '',
   type: '',
-  visits: 0,
-  delete: '',
 };
 
 const isPreview = new URLSearchParams(window.location.search).has('preview');
@@ -50,22 +44,19 @@ const PREVIEW_AMUSEMENTS: AmusementItem[] = [
     id: 1,
     name: 'Bumper Cars',
     type: 'attraction',
-    image: '',
-    fee: '€5.00',
-    link: '#',
-    visits: 100,
-    delete: '#',
+    image_url: null,
+    price: 5.00,
+    player_payout: null,
+    url: '#',
   },
   {
     id: 2,
     name: 'Ring Toss',
     type: 'game',
-    image: '',
-    fee: '€3.00',
-    winnings: '€10.00',
-    link: '#',
-    visits: 200,
-    delete: '#',
+    image_url: null,
+    price: 3.00,
+    player_payout: 10.00,
+    url: '#',
   },
 ];
 
@@ -78,6 +69,7 @@ export default function Amusement({ accessKey }: Props) {
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   function fetchAmusements() {
@@ -122,6 +114,20 @@ export default function Amusement({ accessKey }: Props) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [showModal]);
+
+  async function handleDelete(id: number) {
+    setDeletingId(id);
+    try {
+      await fetch(apiUrl(`/amusements/${id}`), {
+        method: 'DELETE',
+        headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
+      });
+      fetchAmusements();
+    } catch {
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   function openModal() {
     setForm(EMPTY_FORM);
@@ -201,13 +207,18 @@ export default function Amusement({ accessKey }: Props) {
                 <div className="exchange-card-info">
                   <p className="exchange-card-title">{amusement.name}</p>
                   <p className="card-tag">{amusement.type.charAt(0).toUpperCase() + amusement.type.slice(1)}</p>
-                  {amusement.fee && <p className="exchange-card-desc">Entrance Fee: {amusement.fee}</p>}
-                  {amusement.winnings && <p className="exchange-card-desc">Winnings: {amusement.winnings}</p>}
-                  {amusement.visits && <p className="exchange-card-desc">Visited: {amusement.visits}</p>}
+                  {amusement.price != null && <p className="exchange-card-desc">Entrance Fee: €{amusement.price.toFixed(2)}</p>}
+                  {amusement.player_payout != null && <p className="exchange-card-desc">Winnings: €{amusement.player_payout.toFixed(2)}</p>}
                 </div>
                 <div className="exchange-card-right">
                   <Link to={`/edit-amusement/${amusement.id}`} className="btn btn-primary btn-edit">Edit</Link>
-                  <Link to={amusement.delete} className="btn btn-secondary">Delete</Link>
+                  <button
+                    className="btn btn-secondary"
+                    disabled={deletingId === amusement.id}
+                    onClick={() => handleDelete(amusement.id)}
+                  >
+                    {deletingId === amusement.id ? 'Deleting…' : 'Delete'}
+                  </button>
                 </div>
               </div>
             ))}

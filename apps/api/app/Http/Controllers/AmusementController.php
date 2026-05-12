@@ -12,8 +12,7 @@ class AmusementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $amusements = Amusement::select('id', 'name', 'type')
-            ->orderBy('type')
+        $amusements = Amusement::orderBy('type')
             ->orderBy('name')
             ->get();
 
