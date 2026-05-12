@@ -25,8 +25,6 @@ type FormData = {
   price: string;
   player_payout: string;
   type: 'game' | 'attraction' | '';
-  visits: number;
-  delete?: string;
 };
 
 const EMPTY_FORM: FormData = {
@@ -37,8 +35,6 @@ const EMPTY_FORM: FormData = {
   price: '',
   player_payout: '',
   type: '',
-  visits: 0,
-  delete: '',
 };
 
 const isPreview = new URLSearchParams(window.location.search).has('preview');
@@ -48,22 +44,19 @@ const PREVIEW_AMUSEMENTS: AmusementItem[] = [
     id: 1,
     name: 'Bumper Cars',
     type: 'attraction',
-    image: '',
-    fee: '€5.00',
-    link: '#',
-    visits: 100,
-    delete: '#',
+    image_url: null,
+    price: 5.00,
+    player_payout: null,
+    url: '#',
   },
   {
     id: 2,
     name: 'Ring Toss',
     type: 'game',
-    image: '',
-    fee: '€3.00',
-    winnings: '€10.00',
-    link: '#',
-    visits: 200,
-    delete: '#',
+    image_url: null,
+    price: 3.00,
+    player_payout: 10.00,
+    url: '#',
   },
 ];
 
