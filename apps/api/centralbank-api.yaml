@@ -56,7 +56,9 @@ info:
        the URL (e.g. `history.replaceState`) to scrub the token. It stores
        the token in memory until ready to charge.
     4. When the user starts paying, the amusement calls `POST /transactions`
-       with `{ identity_token, amount }`.
+       with `{ identity_token, amount, amusement_uuid }`. The
+       `amusement_uuid` must match the amusement that owns the
+       `X-Api-Key` header — defense in depth against credential mix-ups.
     5. Central bank validates the token (consuming it), deducts the amount
        from the user, credits the amusement, generates a random stamp, and
        returns `{ id, stamp }`.
@@ -691,7 +693,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [identity_token, amount]
+              required: [identity_token, amount, amusement_uuid]
               properties:
                 identity_token:
                   type: string
@@ -705,6 +707,13 @@ paths:
                   minimum: 0.01
                   description: Amount to deduct in euros (2-decimal precision).
                   example: 19.95
+                amusement_uuid:
+                  type: string
+                  format: uuid
+                  description: >
+                    Public uuid of the calling amusement. Must match the
+                    amusement that owns the `X-Api-Key` header. Mismatch
+                    returns 403 and does not consume the identity_token.
       responses:
         "201":
           description: Money deducted and stamp awarded

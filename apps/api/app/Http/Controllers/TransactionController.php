@@ -17,9 +17,17 @@ class TransactionController extends Controller
         $data = $request->validate([
             'identity_token' => ['required', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
+            'amusement_uuid' => ['required', 'string', 'uuid'],
         ]);
 
         $amusement = $request->attributes->get('amusement');
+
+        if ($amusement->uuid !== $data['amusement_uuid']) {
+            return response()->json(
+                ['error' => 'amusement_uuid does not match the authenticated amusement'],
+                403,
+            );
+        }
 
         $token = IdentityToken::where('token', $data['identity_token'])->first();
 
