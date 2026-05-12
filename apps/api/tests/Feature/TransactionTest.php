@@ -222,4 +222,85 @@ class TransactionTest extends TestCase
 
         $response->assertStatus(401);
     }
+
+    public function test_group_member_can_list_amusement_transactions(): void
+    {
+        $group = $this->makeGroup();
+        $member = $this->makeUser($group->id, 100.0, 'Member');
+        $player = $this->makeUser($group->id, 100.0, 'Player');
+        $amusement = $this->makeAmusement($group->id);
+
+        $token = $this->issueToken($player);
+        $this->withHeaders(['X-Api-Key' => $amusement->api_key])
+            ->postJson('/transactions', [
+                'identity_token' => $token->token,
+                'amount' => 5.00,
+                'amusement_uuid' => $amusement->uuid,
+            ])->assertStatus(201);
+
+        $memberKey = (string) Str::uuid();
+        $member->update(['access_key' => Hash::make($memberKey)]);
+
+        $response = $this->withHeaders(['X-Access-Key' => $memberKey])
+            ->getJson("/amusements/{$amusement->id}/transactions");
+
+        $response->assertStatus(200);
+        $this->assertCount(1, $response->json('data'));
+        $this->assertEquals('fee', $response->json('data.0.type'));
+    }
+
+    public function test_non_group_member_cannot_list_amusement_transactions(): void
+    {
+        $ownerGroup = $this->makeGroup('Owners');
+        $otherGroup = $this->makeGroup('Outsiders');
+        $amusement = $this->makeAmusement($ownerGroup->id);
+
+        $outsiderKey = (string) Str::uuid();
+        $outsider = $this->makeUser($otherGroup->id, 100.0, 'Outsider');
+        $outsider->update(['access_key' => Hash::make($outsiderKey)]);
+
+        $response = $this->withHeaders(['X-Access-Key' => $outsiderKey])
+            ->getJson("/amusements/{$amusement->id}/transactions");
+
+        $response->assertStatus(403);
+    }
+
+    public function test_stats_returns_correct_totals(): void
+    {
+        $group = $this->makeGroup();
+        $member = $this->makeUser($group->id, 100.0, 'Member');
+        $player = $this->makeUser($group->id, 100.0, 'Player');
+        $amusement = $this->makeAmusement($group->id);
+
+        // Two fees of €5 each, then a payout of €3.
+        foreach ([5.0, 5.0] as $amount) {
+            $token = $this->issueToken($player);
+            $this->withHeaders(['X-Api-Key' => $amusement->api_key])
+                ->postJson('/transactions', [
+                    'identity_token' => $token->token,
+                    'amount' => $amount,
+                    'amusement_uuid' => $amusement->uuid,
+                ])->assertStatus(201);
+        }
+        $firstFeeId = $amusement->transactions()->where('type', 'fee')->orderBy('id')->first()->id;
+        $this->withHeaders(['X-Api-Key' => $amusement->api_key])
+            ->postJson("/transactions/{$firstFeeId}/payout", ['amount' => 3.00])
+            ->assertStatus(201);
+
+        $memberKey = (string) Str::uuid();
+        $member->update(['access_key' => Hash::make($memberKey)]);
+
+        $response = $this->withHeaders(['X-Access-Key' => $memberKey])
+            ->getJson("/amusements/{$amusement->id}/stats");
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'fees_total' => 10.0,
+            'fees_count' => 2,
+            'payouts_total' => 3.0,
+            'payouts_count' => 1,
+            'net' => 7.0,
+            'amusement_balance' => 7.0,
+        ]);
+    }
 }

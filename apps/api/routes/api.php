@@ -58,6 +58,8 @@ Route::middleware(AccessKeyAuth::class)->group(function () {
     Route::patch('/amusements/{id}', [AmusementController::class, 'update']);
     Route::delete('/amusements/{id}', [AmusementController::class, 'destroy']);
     Route::post('/amusements/{id}/regenerate-key', [AmusementController::class, 'regenerateKey']);
+    Route::get('/amusements/{id}/transactions', [AmusementController::class, 'transactions']);
+    Route::get('/amusements/{id}/stats', [AmusementController::class, 'stats']);
 
     // Stamps & exchanges
     Route::get('/stamps', [StampController::class, 'index']);

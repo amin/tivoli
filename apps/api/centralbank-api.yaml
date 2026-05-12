@@ -673,6 +673,62 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /amusements/{id}/transactions:
+    get:
+      tags: [Amusements]
+      operationId: listAmusementTransactions
+      summary: List all fees and payouts for an amusement
+      description: >
+        Returns every transaction (fees in + payouts out) for an amusement,
+        newest first. Only members of the amusement's group can access it.
+        Useful for live monitoring during the event.
+      security: [{ accessKeyAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AmusementId"
+      responses:
+        "200":
+          description: Transaction list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TransactionListItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /amusements/{id}/stats:
+    get:
+      tags: [Amusements]
+      operationId: getAmusementStats
+      summary: Aggregated P&L stats for an amusement
+      description: >
+        Returns the live balance plus total fees in, total payouts out, and
+        net for an amusement. Group members only.
+      security: [{ accessKeyAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AmusementId"
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AmusementStats"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   # ── Transactions ───────────────────────────────────────────────────────
 
   /transactions:
@@ -1243,6 +1299,57 @@ components:
           type: string
           format: date-time
           readOnly: true
+
+    TransactionListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user_id:
+          type: integer
+          readOnly: true
+        amount:
+          type: number
+          multipleOf: 0.01
+          example: 5.00
+        type:
+          type: string
+          enum: [fee, payout, owner_revenue, exchange]
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    AmusementStats:
+      type: object
+      properties:
+        amusement_balance:
+          type: number
+          multipleOf: 0.01
+          description: Current pooled balance. Can be negative (debt).
+          example: -15.50
+        fees_total:
+          type: number
+          multipleOf: 0.01
+          description: Sum of all fee transactions.
+          example: 50.00
+        fees_count:
+          type: integer
+          example: 10
+        payouts_total:
+          type: number
+          multipleOf: 0.01
+          description: Sum of all payout transactions.
+          example: 65.50
+        payouts_count:
+          type: integer
+          example: 3
+        net:
+          type: number
+          multipleOf: 0.01
+          description: fees_total minus payouts_total.
+          example: -15.50
 
     # ── Stamp ───────────────────────────────────────────────────────
 
