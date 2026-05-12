@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Amusement extends Model
 {
@@ -20,6 +21,15 @@ class Amusement extends Model
     ];
 
     protected $hidden = ['api_key'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $amusement) {
+            if (!$amusement->uuid) {
+                $amusement->uuid = (string) Str::uuid();
+            }
+        });
+    }
 
     // An amusement belongs to one group
     public function group(): BelongsTo

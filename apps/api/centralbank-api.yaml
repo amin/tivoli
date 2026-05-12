@@ -1176,6 +1176,12 @@ components:
         id:
           type: integer
           readOnly: true
+        uuid:
+          type: string
+          format: uuid
+          description: Public identifier — safe to include in URLs and logs.
+          readOnly: true
+          example: "0b3c8a4e-7f7a-4b4d-9c9c-2a4a6b6c8d8e"
         name:
           type: string
           description: Globally unique across all amusements.
