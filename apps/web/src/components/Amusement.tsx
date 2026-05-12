@@ -11,6 +11,8 @@ type AmusementItem = {
     fee?: string;
     winnings?: string;
     link: string;
+    visits?: number;
+    delete: string;
 };
 
 type Props = {
@@ -25,6 +27,8 @@ type FormData = {
   price: string;
   player_payout: string;
   type: 'game' | 'attraction' | '';
+  visits: number;
+  delete?: string;
 };
 
 const EMPTY_FORM: FormData = {
@@ -35,10 +39,40 @@ const EMPTY_FORM: FormData = {
   price: '',
   player_payout: '',
   type: '',
+  visits: 0,
+  delete: '',
 };
 
+const isPreview = new URLSearchParams(window.location.search).has('preview');
+
+const PREVIEW_AMUSEMENTS: AmusementItem[] = [
+  {
+    id: 1,
+    name: 'Bumper Cars',
+    type: 'attraction',
+    image: '',
+    fee: '€5.00',
+    link: '#',
+    visits: 100,
+    delete: '#',
+  },
+  {
+    id: 2,
+    name: 'Ring Toss',
+    type: 'game',
+    image: '',
+    fee: '€3.00',
+    winnings: '€10.00',
+    link: '#',
+    visits: 200,
+    delete: '#',
+  },
+];
+
 export default function Amusement({ accessKey }: Props) {
-  const [amusements, setAmusements] = useState<AmusementItem[]>([]);
+  const [amusements, setAmusements] = useState<AmusementItem[]>(
+    isPreview ? PREVIEW_AMUSEMENTS : []
+  );
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
@@ -69,7 +103,7 @@ export default function Amusement({ accessKey }: Props) {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') { setShowModal(false); return; }
       if (e.key !== 'Tab' || !modal) return;
-      
+
       // Don't interfere while a Radix portal (dropdown) is open
       if (document.activeElement?.closest('[data-radix-popper-content-wrapper]')) return;
       const focusable = Array.from(modal.querySelectorAll<HTMLElement>(
@@ -100,7 +134,7 @@ export default function Amusement({ accessKey }: Props) {
     setForm(prev => ({ ...prev, [name]: value }));
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!form.type) { setFormError('Please select a type.'); return; }
     setSubmitting(true);
@@ -145,6 +179,7 @@ export default function Amusement({ accessKey }: Props) {
       <main className="section">
         <div className="section-head">
           <h2>My Amusements</h2>
+          <button className="btn btn-primary" onClick={openModal}>+ New</button>
         </div>
         <p className="section-sub">Rides and games you manage.</p>
 
@@ -158,33 +193,21 @@ export default function Amusement({ accessKey }: Props) {
             <span className="empty-icon">🎪</span>
             <p className="empty-title">No amusements yet</p>
             <p className="empty-sub">Create your first amusement to get started.</p>
-            <button className="btn btn-primary" onClick={openModal}>
-              + New
-          </button>
           </div>
         ) : (
-          <div className="grid">
+          <div className="exchange-grid">
             {amusements.map((amusement) => (
-              <div key={amusement.id} className="card">
-                {amusement.image && (
-                  <div className="card-illustration">
-                    <img
-                      src={amusement.image}
-                      alt={amusement.name}
-                      className="stamp-img"
-                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                    />
-                  </div>
-                )}
-                <div className="card-body">
-                  <p className="card-title">{amusement.name}</p>
-                  <p className="card-tag">{amusement.type}</p>
-                  {amusement.fee && <p className="card-group">Fee: {amusement.fee}</p>}
-                  {amusement.winnings && <p className="card-group">Winnings: {amusement.winnings}</p>}
-                  <div className="amusement-actions">
-                    <Link to={`/edit-amusement/${amusement.id}`} className="btn btn-secondary">Edit</Link>
-                    <Link to={amusement.link} className="btn btn-primary">Visit</Link>
-                  </div>
+              <div key={amusement.id} className="exchange-card">
+                <div className="exchange-card-info">
+                  <p className="exchange-card-title">{amusement.name}</p>
+                  <p className="card-tag">{amusement.type.charAt(0).toUpperCase() + amusement.type.slice(1)}</p>
+                  {amusement.fee && <p className="exchange-card-desc">Entrance Fee: {amusement.fee}</p>}
+                  {amusement.winnings && <p className="exchange-card-desc">Winnings: {amusement.winnings}</p>}
+                  {amusement.visits && <p className="exchange-card-desc">Visited: {amusement.visits}</p>}
+                </div>
+                <div className="exchange-card-right">
+                  <Link to={`/edit-amusement/${amusement.id}`} className="btn btn-primary btn-edit">Edit</Link>
+                  <Link to={amusement.delete} className="btn btn-secondary">Delete</Link>
                 </div>
               </div>
             ))}
@@ -207,7 +230,7 @@ export default function Amusement({ accessKey }: Props) {
 
             <form onSubmit={handleSubmit}>
               <div className="field">
-                <label className="label" htmlFor="am-name">Name you ride or game</label>
+                <label className="label" htmlFor="am-name">Name you ride or game <span className="required-star">*</span></label>
                 <input
                   id="am-name"
                   className="input"
@@ -221,11 +244,11 @@ export default function Amusement({ accessKey }: Props) {
               </div>
 
               <div className="field">
-                <label className="label" htmlFor="am-type">Choose a type</label>
+                <label className="label" htmlFor="am-type">Choose a type <span className="required-star">*</span></label>
                 <CustomSelect
                   id="am-type"
                   value={form.type}
-                  onChange={v => setForm(prev => ({ ...prev, type: v as 'game' | 'attraction' }))}
+                  onChange={v => setForm(prev => ({ ...prev, type: v as "game" | "attraction" }))}
                   placeholder="Select type…"
                   options={[
                     { value: 'attraction', label: 'Attraction' },
@@ -235,7 +258,7 @@ export default function Amusement({ accessKey }: Props) {
               </div>
 
               <div className="field">
-                <label className="label" htmlFor="am-url">Add your amusements URL</label>
+                <label className="label" htmlFor="am-url">Add your amusements URL <span className="required-star">*</span></label>
                 <input
                   id="am-url"
                   className="input"
