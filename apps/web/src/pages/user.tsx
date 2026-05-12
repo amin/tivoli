@@ -5,6 +5,7 @@ import "./user.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import VoteSection from "../components/VoteSection";
+import Amusement from "../components/Amusement";
 import { apiUrl } from "../lib/api";
 
 type Animal = 'lion' | 'dolphin' | 'toucan' | 'beetlebug' | 'snake';
@@ -169,6 +170,8 @@ export default function User() {
   const [stamps, setStamps] = useState<Stamp[]>(isPreview ? PREVIEW_STAMPS : []);
   const [loading, setLoading] = useState(false);
 
+  const [view, setView] = useState<'stamps' | 'amusements'>('stamps');
+
   const [exchangeLoading, setExchangeLoading] = useState(false);
   const [exchangeResult,  setExchangeResult]  = useState<string | null>(null);
   const [exchangeOk,      setExchangeOk]      = useState(false);
@@ -280,9 +283,9 @@ export default function User() {
       <section className="user-hero">
         <div className="user-hero-info">
           <div className="user-hero-name-column">
-            <h1 className="user-hero-name">{user!.name}</h1>
-            {user!.group && (
-              <p className="user-hero-sub">{user!.group.name} · {user!.group.member_count} members</p>
+            <h1 className="user-hero-name">{user.name}</h1>
+            {user.group && (
+              <p className="user-hero-sub">{user.group.name} · {user.group.member_count} members</p>
             )}
           </div>
           <div className="user-hero-vp-column">
@@ -292,7 +295,24 @@ export default function User() {
         </div>
       </section>
 
-      {(exchangeOptions.length > 0 || exchangeResult) && (
+      <nav className="view-tabs">
+        <button
+          className={`view-tab${view === 'stamps' ? ' active' : ''}`}
+          onClick={() => setView('stamps')}
+        >
+          My Stamps
+        </button>
+        <button
+          className={`view-tab${view === 'amusements' ? ' active' : ''}`}
+          onClick={() => setView('amusements')}
+        >
+          My Amusements
+        </button>
+      </nav>
+
+      {view === 'amusements' && <Amusement accessKey={accessKey} />}
+
+      {view === 'stamps' && (exchangeOptions.length > 0 || exchangeResult) && (
         <section className="section exchange-section">
           <div className="section-head">
             <h2>Exchange Stamps</h2>
@@ -337,7 +357,7 @@ export default function User() {
         </section>
       )}
 
-      {exchangeResult && exchangeOptions.length === 0 && (
+      {view === 'stamps' && exchangeResult && exchangeOptions.length === 0 && (
         <section className="section" style={{ paddingBottom: 8 }}>
           <div className={`exchange-result ${exchangeOk ? 'exchange-result--ok' : 'exchange-result--err'}`}>
             {exchangeResult}
@@ -345,53 +365,57 @@ export default function User() {
         </section>
       )}
 
-      <main className="section">
-        <div className="section-head">
-          <h2>My Stamps</h2>
-          <span className="section-count">{stamps.length} collected · {vp} VP</span>
-        </div>
-        <p className="section-sub">Collect stamps from rides and games, then exchange complete sets for credits.</p>
+      {view === 'stamps' && (
+        <>
+          <main className="section">
+            <div className="section-head">
+              <h2>My Stamps</h2>
+              <span className="section-count">{stamps.length} collected · {vp} VP</span>
+            </div>
+            <p className="section-sub">Collect stamps from rides and games, then exchange complete sets for credits.</p>
 
-        {loading ? (
-          <div className="empty-state">
-            <span className="empty-icon">⏳</span>
-            <p className="empty-title">Loading…</p>
-          </div>
-        ) : stamps.length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-icon">🎟️</span>
-            <p className="empty-title">No stamps yet</p>
-            <p className="empty-sub">Visit attractions and play games to earn stamps!</p>
-          </div>
-        ) : (
-          <div className="grid stamp-grid">
-            {stamps.map(stamp => (
-              <div key={stamp.id} className="card">
-                <div className="card-illustration stamp-illustration">
-                  <img
-                    src={stampImagePath(stamp)}
-                    alt={stampLabel(stamp)}
-                    className="stamp-img"
-                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                  />
-                </div>
-                <div className="card-body">
-                  <p className="card-title">{stampLabel(stamp)}</p>
-                  {stamp.metal ? (
-                    <p className="card-tag" style={{ color: METAL_COLOR[stamp.metal] }}>
-                      {capitalize(stamp.metal)}
-                    </p>
-                  ) : (
-                    <p className="card-tag">Common</p>
-                  )}
-                </div>
+            {loading ? (
+              <div className="empty-state">
+                <span className="empty-icon">⏳</span>
+                <p className="empty-title">Loading…</p>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
+            ) : stamps.length === 0 ? (
+              <div className="empty-state">
+                <span className="empty-icon">🎟️</span>
+                <p className="empty-title">No stamps yet</p>
+                <p className="empty-sub">Visit attractions and play games to earn stamps!</p>
+              </div>
+            ) : (
+              <div className="grid stamp-grid">
+                {stamps.map(stamp => (
+                  <div key={stamp.id} className="card">
+                    <div className="card-illustration stamp-illustration">
+                      <img
+                        src={stampImagePath(stamp)}
+                        alt={stampLabel(stamp)}
+                        className="stamp-img"
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </div>
+                    <div className="card-body">
+                      <p className="card-title">{stampLabel(stamp)}</p>
+                      {stamp.metal ? (
+                        <p className="card-tag" style={{ color: METAL_COLOR[stamp.metal] }}>
+                          {capitalize(stamp.metal)}
+                        </p>
+                      ) : (
+                        <p className="card-tag">Common</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </main>
 
-      <VoteSection accessKey={accessKey} userId={user!.id} />
+          <VoteSection accessKey={accessKey} userId={user.id} />
+        </>
+      )}
 
       <div className="user-logout-wrap">
         <button className="logout-btn" onClick={handleLogout}>Log out</button>
