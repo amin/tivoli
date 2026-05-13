@@ -140,34 +140,14 @@ function calcVP(stamps: Stamp[]): number {
 
 const LS_KEY = 'tivoliAccessKey';
 
-const PREVIEW_USER: UserProfile = {
-  id: 0,
-  uuid: '00000000-0000-0000-0000-000000000000',
-  name: 'Nathalie',
-  balance: 42.00,
-  group: { id: 1, name: 'Centralbank', member_count: 3 },
-  stamp_count: 6,
-};
-
-const PREVIEW_STAMPS: Stamp[] = [
-  { id: 1, animal: 'lion',      metal: 'gold',     source_amusement_id: 1, created_at: '' },
-  { id: 2, animal: 'dolphin',   metal: 'silver',   source_amusement_id: 1, created_at: '' },
-  { id: 3, animal: 'toucan',    metal: 'platinum', source_amusement_id: 1, created_at: '' },
-  { id: 4, animal: 'beetlebug', metal: null,       source_amusement_id: 1, created_at: '' },
-  { id: 5, animal: 'snake',     metal: null,       source_amusement_id: 1, created_at: '' },
-  { id: 6, animal: 'lion',      metal: null,       source_amusement_id: 1, created_at: '' },
-];
-
-const isPreview = new URLSearchParams(window.location.search).has('preview');
-
 export default function User() {
   const navigate = useNavigate();
 
   const [accessKey] = useState<string>(() => localStorage.getItem(LS_KEY) ?? '');
-  const [loggedIn, setLoggedIn] = useState(isPreview);
+  const [loggedIn, setLoggedIn] = useState(false);
 
-  const [user,   setUser]   = useState<UserProfile | null>(isPreview ? PREVIEW_USER : null);
-  const [stamps, setStamps] = useState<Stamp[]>(isPreview ? PREVIEW_STAMPS : []);
+  const [user,   setUser]   = useState<UserProfile | null>(null);
+  const [stamps, setStamps] = useState<Stamp[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [view, setView] = useState<'stamps' | 'amusements'>('stamps');
@@ -205,7 +185,7 @@ export default function User() {
   }, [navigate]);
 
   useEffect(() => {
-    if (!isPreview && !accessKey) {
+    if (!accessKey) {
       navigate('/login');
       return;
     }
