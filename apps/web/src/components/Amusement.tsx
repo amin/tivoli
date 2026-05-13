@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "../lib/api";
 import CustomSelect from "./CustomSelect";
@@ -11,6 +10,7 @@ type AmusementItem = {
     price: number | null;
     player_payout: number | null;
     url: string;
+    description: string | null;
 };
 
 type Props = {
@@ -41,6 +41,7 @@ export default function Amusement({ accessKey }: Props) {
   const [amusements, setAmusements] = useState<AmusementItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -71,8 +72,6 @@ export default function Amusement({ accessKey }: Props) {
       if (e.key === 'Escape') { setShowModal(false); return; }
       if (e.key !== 'Tab' || !modal) return;
 
-      
-      // Don't interfere while a Radix portal (dropdown) is open
       if (document.activeElement?.closest('[data-radix-popper-content-wrapper]')) return;
       const focusable = Array.from(modal.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -105,9 +104,37 @@ export default function Amusement({ accessKey }: Props) {
     }
   }
 
-  function openModal() {
+  function openCreateModal() {
+    setEditingId(null);
     setForm(EMPTY_FORM);
     setFormError(null);
+    setShowModal(true);
+  }
+
+  async function openEditModal(amusement: AmusementItem) {
+    setFormError(null);
+    setEditingId(amusement.id);
+
+    let description = amusement.description ?? '';
+    try {
+      const res = await fetch(apiUrl(`/amusements/${amusement.id}`), {
+        headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        description = data.description ?? '';
+      }
+    } catch {}
+
+    setForm({
+      name: amusement.name,
+      description,
+      url: amusement.url,
+      image_url: amusement.image_url ?? '',
+      price: amusement.price != null ? String(amusement.price) : '',
+      player_payout: amusement.player_payout != null ? String(amusement.player_payout) : '',
+      type: amusement.type as 'game' | 'attraction',
+    });
     setShowModal(true);
   }
 
@@ -126,21 +153,25 @@ export default function Amusement({ accessKey }: Props) {
         name: form.name,
         description: form.description,
         url: form.url,
-        price: parseFloat(form.price),
+        price: form.price ? parseFloat(form.price) : null,
         type: form.type,
+        image_url: form.image_url || null,
+        player_payout: form.player_payout ? parseFloat(form.player_payout) : null,
       };
-      if (form.image_url) body.image_url = form.image_url;
-      if (form.player_payout) body.player_payout = parseFloat(form.player_payout);
 
-      const res = await fetch(apiUrl('/amusements'), {
-        method: 'POST',
-        headers: {
-          'X-Access-Key': accessKey,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
+      const isEdit = editingId !== null;
+      const res = await fetch(
+        isEdit ? apiUrl(`/amusements/${editingId}`) : apiUrl('/amusements'),
+        {
+          method: isEdit ? 'PATCH' : 'POST',
+          headers: {
+            'X-Access-Key': accessKey,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        }
+      );
 
       if (res.ok) {
         setShowModal(false);
@@ -156,12 +187,14 @@ export default function Amusement({ accessKey }: Props) {
     }
   }
 
+  const isEdit = editingId !== null;
+
   return (
     <>
       <main className="section">
         <div className="section-head">
           <h2>My Amusements</h2>
-          <button className="btn btn-primary" onClick={openModal}>+ New</button>
+          <button className="btn btn-primary" onClick={openCreateModal}>+ New</button>
         </div>
         <p className="section-sub">Rides and games you manage.</p>
 
@@ -187,7 +220,12 @@ export default function Amusement({ accessKey }: Props) {
                   {amusement.player_payout != null && <p className="exchange-card-desc">Winnings: €{amusement.player_payout.toFixed(2)}</p>}
                 </div>
                 <div className="exchange-card-right">
-                  <Link to={`/edit-amusement/${amusement.id}`} className="btn btn-primary btn-edit">Edit</Link>
+                  <button
+                    className="btn btn-primary btn-edit"
+                    onClick={() => openEditModal(amusement)}
+                  >
+                    Edit
+                  </button>
                   <button
                     className="btn btn-secondary"
                     disabled={deletingId === amusement.id}
@@ -212,8 +250,8 @@ export default function Amusement({ accessKey }: Props) {
             style={{ maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}
             onClick={e => e.stopPropagation()}
           >
-            <h2 className="modal-title">New Amusement</h2>
-            <p className="modal-sub">Register a new ride or game.</p>
+            <h2 className="modal-title">{isEdit ? 'Edit Amusement' : 'New Amusement'}</h2>
+            <p className="modal-sub">{isEdit ? 'Update your ride or game.' : 'Register a new ride or game.'}</p>
 
             <form onSubmit={handleSubmit}>
               <div className="field">
@@ -315,7 +353,7 @@ export default function Amusement({ accessKey }: Props) {
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={submitting}>
-                  {submitting ? 'Creating…' : 'Create'}
+                  {submitting ? (isEdit ? 'Saving…' : 'Creating…') : (isEdit ? 'Save' : 'Create')}
                 </button>
               </div>
             </form>
