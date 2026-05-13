@@ -37,33 +37,8 @@ const EMPTY_FORM: FormData = {
   type: '',
 };
 
-const isPreview = new URLSearchParams(window.location.search).has('preview');
-
-const PREVIEW_AMUSEMENTS: AmusementItem[] = [
-  {
-    id: 1,
-    name: 'Bumper Cars',
-    type: 'attraction',
-    image_url: null,
-    price: 5.00,
-    player_payout: null,
-    url: '#',
-  },
-  {
-    id: 2,
-    name: 'Ring Toss',
-    type: 'game',
-    image_url: null,
-    price: 3.00,
-    player_payout: 10.00,
-    url: '#',
-  },
-];
-
 export default function Amusement({ accessKey }: Props) {
-  const [amusements, setAmusements] = useState<AmusementItem[]>(
-    isPreview ? PREVIEW_AMUSEMENTS : []
-  );
+  const [amusements, setAmusements] = useState<AmusementItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
