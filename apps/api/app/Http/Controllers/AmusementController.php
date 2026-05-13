@@ -12,9 +12,19 @@ class AmusementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $amusements = Amusement::orderBy('type')
-            ->orderBy('name')
-            ->get();
+        $userGroupId = $request->user()->group_id;
+
+        $query = Amusement::orderBy('type')->orderBy('name');
+
+        if ($request->boolean('owned')) {
+            $query->where('group_id', $userGroupId);
+        }
+
+        $amusements = $query->get()->each(function ($amusement) use ($userGroupId) {
+            if ($amusement->group_id === $userGroupId) {
+                $amusement->makeVisible('api_key');
+            }
+        });
 
         return response()->json(['data' => $amusements]);
     }

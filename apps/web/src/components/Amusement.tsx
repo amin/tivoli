@@ -29,7 +29,7 @@ const EMPTY_FORM: FormData = {
 };
 
 export default function Amusement({ accessKey }: Props) {
-  const { amusements, loading, refetch } = useAmusements(accessKey);
+  const { amusements, loading, refetch } = useAmusements(accessKey, true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
@@ -190,6 +190,7 @@ export default function Amusement({ accessKey }: Props) {
               <AmusementCard
                 key={amusement.id}
                 amusement={amusement}
+                apiKey={amusement.api_key}
                 actions={
                   <>
                     <button

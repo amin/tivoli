@@ -2,12 +2,13 @@ import type { AmusementItem } from "../hooks/useAmusements";
 
 type Props = {
   amusement: AmusementItem;
+  apiKey?: string;
   showImage?: boolean;
   onCardClick?: (e: React.MouseEvent, amusement: AmusementItem) => void;
   actions?: React.ReactNode;
 };
 
-export default function AmusementCard({ amusement, showImage = false, onCardClick, actions }: Props) {
+export default function AmusementCard({ amusement, apiKey, showImage = false, onCardClick, actions }: Props) {
   const content = (
     <div className="card-body">
       {showImage && (
@@ -29,6 +30,12 @@ export default function AmusementCard({ amusement, showImage = false, onCardClic
       )}
       {amusement.description && <p className="card-description">{amusement.description}</p>}
       {!showImage && <p className="card-url">{amusement.url}</p>}
+      {apiKey && (
+        <div className="card-api-key">
+          <span className="card-api-key-label">API Key</span>
+          <code className="card-api-key-value">{apiKey}</code>
+        </div>
+      )}
       {actions && <div className="card-actions">{actions}</div>}
     </div>
   );
