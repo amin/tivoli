@@ -1,17 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "../lib/api";
 import CustomSelect from "./CustomSelect";
-
-type AmusementItem = {
-    id: number;
-    name: string;
-    type: string;
-    image_url: string | null;
-    price: number | null;
-    player_payout: number | null;
-    url: string;
-    description: string | null;
-};
+import AmusementCard from "./AmusementCard";
+import { useAmusements, type AmusementItem } from "../hooks/useAmusements";
 
 type Props = {
   accessKey: string;
@@ -38,8 +29,7 @@ const EMPTY_FORM: FormData = {
 };
 
 export default function Amusement({ accessKey }: Props) {
-  const [amusements, setAmusements] = useState<AmusementItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { amusements, loading, refetch } = useAmusements(accessKey);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
@@ -47,21 +37,6 @@ export default function Amusement({ accessKey }: Props) {
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
-
-  function fetchAmusements() {
-    setLoading(true);
-    fetch(apiUrl('/amusements'), {
-      headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
-    })
-      .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data) setAmusements(data.data ?? []); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }
-
-  useEffect(() => {
-    fetchAmusements();
-  }, [accessKey]);
 
   useEffect(() => {
     if (!showModal) return;
@@ -97,7 +72,7 @@ export default function Amusement({ accessKey }: Props) {
         method: 'DELETE',
         headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
       });
-      fetchAmusements();
+      refetch();
     } catch {
     } finally {
       setDeletingId(null);
@@ -175,7 +150,7 @@ export default function Amusement({ accessKey }: Props) {
 
       if (res.ok) {
         setShowModal(false);
-        fetchAmusements();
+        refetch();
       } else {
         const data = await res.json();
         setFormError(data.message ?? 'Something went wrong. Please try again.');
@@ -196,7 +171,7 @@ export default function Amusement({ accessKey }: Props) {
           <h2>My Amusements</h2>
           <button className="btn btn-primary" onClick={openCreateModal}>+ New</button>
         </div>
-        <p className="section-sub">Rides and games you manage.</p>
+        <p className="section-sub">Attractions and games you manage.</p>
 
         {loading ? (
           <div className="empty-state">
@@ -210,31 +185,29 @@ export default function Amusement({ accessKey }: Props) {
             <p className="empty-sub">Create your first amusement to get started.</p>
           </div>
         ) : (
-          <div className="exchange-grid">
+          <div className="grid">
             {amusements.map((amusement) => (
-              <div key={amusement.id} className="exchange-card">
-                <div className="exchange-card-info">
-                  <p className="exchange-card-title">{amusement.name}</p>
-                  <p className="card-tag">{amusement.type.charAt(0).toUpperCase() + amusement.type.slice(1)}</p>
-                  {amusement.price != null && <p className="exchange-card-desc">Entrance Fee: €{amusement.price.toFixed(2)}</p>}
-                  {amusement.player_payout != null && <p className="exchange-card-desc">Winnings: €{amusement.player_payout.toFixed(2)}</p>}
-                </div>
-                <div className="exchange-card-right">
-                  <button
-                    className="btn btn-primary btn-edit"
-                    onClick={() => openEditModal(amusement)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    disabled={deletingId === amusement.id}
-                    onClick={() => handleDelete(amusement.id)}
-                  >
-                    {deletingId === amusement.id ? 'Deleting…' : 'Delete'}
-                  </button>
-                </div>
-              </div>
+              <AmusementCard
+                key={amusement.id}
+                amusement={amusement}
+                actions={
+                  <>
+                    <button
+                      className="btn btn-primary btn-edit"
+                      onClick={() => openEditModal(amusement)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      disabled={deletingId === amusement.id}
+                      onClick={() => handleDelete(amusement.id)}
+                    >
+                      {deletingId === amusement.id ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </>
+                }
+              />
             ))}
           </div>
         )}

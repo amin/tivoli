@@ -1,39 +1,23 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logoImg from "../assets/logo_transparent.svg";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import AmusementCard from "../components/AmusementCard";
+import { useAmusements, type AmusementItem } from "../hooks/useAmusements";
 import { apiUrl } from "../lib/api";
 
 const LS_KEY = "tivoliAccessKey";
 
-type Amusement = {
-  id: number;
-  name: string;
-  description: string | null;
-  type: "game" | "attraction";
-  url: string;
-  price: string;
-};
-
 type Filter = "all" | "game" | "attraction";
 
 export default function Home() {
-  const [amusements, setAmusements] = useState<Amusement[]>([]);
+  const accessKey = localStorage.getItem(LS_KEY) ?? "";
+  const { amusements } = useAmusements(accessKey);
   const [filter, setFilter] = useState<Filter>("all");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const accessKey = localStorage.getItem(LS_KEY) ?? "";
-    fetch(apiUrl("/amusements"), {
-      headers: { "X-Access-Key": accessKey, Accept: "application/json" },
-    })
-      .then((r) => r.ok ? r.json() : Promise.reject())
-      .then((body) => setAmusements(body.data ?? []))
-      .catch(() => {});
-  }, []);
-
-  async function openAmusement(e: React.MouseEvent, a: Amusement) {
+  async function openAmusement(e: React.MouseEvent, a: AmusementItem) {
     e.preventDefault();
     const accessKey = localStorage.getItem(LS_KEY) ?? "";
     if (!accessKey) {
@@ -75,7 +59,7 @@ export default function Home() {
             <span className="pixel">playground</span>
           </h1>
           <p>
-            Games, rides, and attractions - all in one place. Grab a ticket and
+            Attractions and games - all in one place. Grab a ticket and
             explore.
           </p>
           <div className="hero-ctas">
@@ -98,7 +82,7 @@ export default function Home() {
         <div className="filters">
           <button className={`chip${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>All</button>
           <button className={`chip${filter === "game" ? " active" : ""}`} onClick={() => setFilter("game")}>Games</button>
-          <button className={`chip${filter === "attraction" ? " active" : ""}`} onClick={() => setFilter("attraction")}>Rides</button>
+          <button className={`chip${filter === "attraction" ? " active" : ""}`} onClick={() => setFilter("attraction")}>Attractions</button>
         </div>
 
         {visible.length === 0 ? (
@@ -113,21 +97,12 @@ export default function Home() {
         ) : (
           <div className="grid">
             {visible.map((a) => (
-              <a
+              <AmusementCard
                 key={a.id}
-                className="card"
-                href={a.url}
-                target="_blank"
-                rel="noreferrer"
-                onClick={(e) => openAmusement(e, a)}
-              >
-                <div className="card-illustration" />
-                <div className="card-body">
-                  <p className="card-title">{a.name}</p>
-                  <p className="card-tag">{a.type}</p>
-                  <p className="card-price">{a.price}</p>
-                </div>
-              </a>
+                amusement={a}
+                showImage
+                onCardClick={openAmusement}
+              />
             ))}
           </div>
         )}
