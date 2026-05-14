@@ -15,7 +15,6 @@ use App\Http\Controllers\UpdateUserInfoController;
 use App\Http\Controllers\VictoryPointsController;
 use App\Http\Controllers\VoteController;
 use App\Http\Middleware\AccessKeyAuth;
-use App\Http\Middleware\AmusementApiKeyAuth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -30,12 +29,10 @@ Route::get('/', fn () => response()->json([
 Route::post('/activate', [ActivateUserController::class, 'store']);
 Route::post('/auth/login', [LoginController::class, 'store']);
 
-// ── Transactions (amusement API key auth) ──────────────────────────────
-Route::middleware(AmusementApiKeyAuth::class)->group(function () {
-    Route::get('/identity-tokens/{token}', [IdentityTokenController::class, 'show']);
-    Route::post('/transactions', [TransactionController::class, 'store']);
-    Route::post('/transactions/{id}/payout', [TransactionController::class, 'payout']);
-});
+// ── Transactions (amusement api_key in request body) ───────────────────
+Route::get('/identity-tokens/{token}', [IdentityTokenController::class, 'show']);
+Route::post('/transactions', [TransactionController::class, 'store']);
+Route::post('/transactions/{id}/payout', [TransactionController::class, 'payout']);
 
 // ── Authenticated user routes ──────────────────────────────────────────
 Route::middleware(AccessKeyAuth::class)->group(function () {
@@ -58,6 +55,8 @@ Route::middleware(AccessKeyAuth::class)->group(function () {
     Route::patch('/amusements/{id}', [AmusementController::class, 'update']);
     Route::delete('/amusements/{id}', [AmusementController::class, 'destroy']);
     Route::post('/amusements/{id}/regenerate-key', [AmusementController::class, 'regenerateKey']);
+    Route::get('/amusements/{id}/transactions', [AmusementController::class, 'transactions']);
+    Route::get('/amusements/{id}/stats', [AmusementController::class, 'stats']);
 
     // Stamps & exchanges
     Route::get('/stamps', [StampController::class, 'index']);

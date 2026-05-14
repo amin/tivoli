@@ -17,9 +17,14 @@ class TransactionController extends Controller
         $data = $request->validate([
             'identity_token' => ['required', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
+            'api_key' => ['required', 'string'],
         ]);
 
-        $amusement = $request->attributes->get('amusement');
+        $amusement = Amusement::where('api_key', $data['api_key'])->first();
+
+        if (!$amusement) {
+            return response()->json(['error' => 'Invalid api_key'], 401);
+        }
 
         $token = IdentityToken::where('token', $data['identity_token'])->first();
 
@@ -59,9 +64,14 @@ class TransactionController extends Controller
     {
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0'],
+            'api_key' => ['required', 'string'],
         ]);
 
-        $amusement = $request->attributes->get('amusement');
+        $amusement = Amusement::where('api_key', $data['api_key'])->first();
+
+        if (!$amusement) {
+            return response()->json(['error' => 'Invalid api_key'], 401);
+        }
 
         $original = Transaction::find($id);
 
@@ -77,13 +87,24 @@ class TransactionController extends Controller
             return response()->json(['error' => 'Only fee transactions can be paid out'], 400);
         }
 
-        if ($amusement->amusement_balance < $data['amount']) {
-            return response()->json(['error' => 'Insufficient amusement balance'], 402);
+        if ($amusement->type === 'attraction') {
+            return response()->json(['error' => 'Attractions cannot pay out'], 409);
         }
+
+        if ($original->settled_at !== null) {
+            return response()->json(
+                ['error' => "Transaction #{$original->id} has already been paid out"],
+                409,
+            );
+        }
+
+        // Amusement balance is allowed to go negative; it's reconciled at
+        // settle (group members absorb the debt).
 
         return DB::transaction(function () use ($original, $amusement, $data) {
             $amusement->decrement('amusement_balance', $data['amount']);
             $original->user->increment('balance', $data['amount']);
+            $original->update(['settled_at' => now()]);
 
             $payout = Transaction::create([
                 'user_id' => $original->user_id,

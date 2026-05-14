@@ -21,6 +21,14 @@ class Amusement extends Model
 
     protected $hidden = ['api_key'];
 
+    protected $casts = [
+        'price' => 'float',
+        'player_payout' => 'float',
+        'amusement_balance' => 'float',
+        'buffer_required' => 'float',
+        'buffer_locked' => 'float',
+    ];
+
     // An amusement belongs to one group
     public function group(): BelongsTo
     {
