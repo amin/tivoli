@@ -6,20 +6,18 @@ import Footer from "../components/Footer";
 import AmusementCard from "../components/AmusementCard";
 import { useAmusements, type AmusementItem } from "../hooks/useAmusements";
 import { apiUrl } from "../lib/api";
-
-const LS_KEY = "tivoliAccessKey";
+import { useAuth } from "../auth/AuthContext";
 
 type Filter = "all" | "game" | "attraction";
 
 export default function Home() {
-  const accessKey = localStorage.getItem(LS_KEY) ?? "";
+  const { accessKey } = useAuth();
   const { amusements } = useAmusements(accessKey);
   const [filter, setFilter] = useState<Filter>("all");
   const navigate = useNavigate();
 
   async function openAmusement(e: React.MouseEvent, a: AmusementItem) {
     e.preventDefault();
-    const accessKey = localStorage.getItem(LS_KEY) ?? "";
     if (!accessKey) {
       navigate("/login");
       return;

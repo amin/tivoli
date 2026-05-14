@@ -7,6 +7,7 @@ import Footer from "../components/Footer";
 import VoteSection from "../components/VoteSection";
 import Amusement from "../components/Amusement";
 import { apiUrl } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 
 type Animal = 'lion' | 'dolphin' | 'toucan' | 'beetlebug' | 'snake';
 type Metal  = 'silver' | 'gold' | 'platinum';
@@ -17,21 +18,6 @@ type Stamp = {
   metal: Metal | null;
   source_amusement_id: number;
   created_at: string;
-};
-
-type GroupSummary = {
-  id: number;
-  name: string;
-  member_count: number;
-};
-
-type UserProfile = {
-  id: number;
-  uuid: string;
-  name: string;
-  balance: number;
-  group: GroupSummary | null;
-  stamp_count: number;
 };
 
 type ExchangeOption = {
@@ -138,17 +124,12 @@ function calcVP(stamps: Stamp[]): number {
   return 40 * metalSets + 25 * animalSets + (loose * (loose + 1)) / 2;
 }
 
-const LS_KEY = 'tivoliAccessKey';
-
 export default function User() {
   const navigate = useNavigate();
+  const { user, accessKey, refresh, logout } = useAuth();
 
-  const [accessKey] = useState<string>(() => localStorage.getItem(LS_KEY) ?? '');
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  const [user,   setUser]   = useState<UserProfile | null>(null);
   const [stamps, setStamps] = useState<Stamp[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [stampsLoading, setStampsLoading] = useState(false);
 
   const [view, setView] = useState<'stamps' | 'amusements'>('stamps');
 
@@ -156,41 +137,24 @@ export default function User() {
   const [exchangeResult,  setExchangeResult]  = useState<string | null>(null);
   const [exchangeOk,      setExchangeOk]      = useState(false);
 
-  const fetchData = useCallback(async (key: string) => {
-    setLoading(true);
+  const fetchStamps = useCallback(async (userId: number) => {
+    setStampsLoading(true);
     try {
-      const headers = { 'X-Access-Key': key, Accept: 'application/json' };
-      const userRes = await fetch(apiUrl('/user'), { headers });
-      if (!userRes.ok) {
-        localStorage.removeItem(LS_KEY);
-        navigate('/error?message=Your+session+has+expired.+Please+sign+in+again.');
-        return;
-      }
-      const userData: UserProfile = await userRes.json();
-      setUser(userData);
-
-      const stampsRes = await fetch(apiUrl(`/stamps?user_id=${userData.id}`), {
-        headers: { 'X-Access-Key': key, Accept: 'application/json' },
+      const stampsRes = await fetch(apiUrl(`/stamps?user_id=${userId}`), {
+        headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
       });
-
       const stampsData = await stampsRes.json();
       setStamps(stampsData.data ?? []);
-
-      setLoggedIn(true);
     } catch {
       navigate('/error?message=Network+error+—+could+not+reach+the+server.');
     } finally {
-      setLoading(false);
+      setStampsLoading(false);
     }
-  }, [navigate]);
+  }, [accessKey, navigate]);
 
   useEffect(() => {
-    if (!accessKey) {
-      navigate('/login');
-      return;
-    }
-    if (accessKey) fetchData(accessKey);
-  }, []);
+    if (user) fetchStamps(user.id);
+  }, [user, fetchStamps]);
 
   async function doExchange(stampIds: number[], label: string) {
     setExchangeLoading(true);
@@ -215,7 +179,8 @@ export default function User() {
           setExchangeOk(true);
           setExchangeResult(`Earned €${data.amount.toFixed(2)} for your ${label}!`);
         }
-        await fetchData(accessKey);
+        await refresh();
+        if (user) await fetchStamps(user.id);
       } else {
         setExchangeOk(false);
         setExchangeResult(data.message ?? 'Exchange failed.');
@@ -237,19 +202,21 @@ export default function User() {
   }
 
   function handleLogout() {
-    localStorage.removeItem(LS_KEY);
+    logout();
     navigate('/login');
   }
 
   const exchangeOptions = detectExchangeOptions(stamps);
   const vp = calcVP(stamps);
 
+  // ProtectedRoute guarantees user is non-null here, but keep a guard
+  // in case the context becomes stale during navigation.
   if (!user) {
     return (
       <>
-        <Header user={null} />
+        <Header />
         <section className="user-hero">
-          <p className="user-hero-sub">{loading ? 'Loading…' : ''}</p>
+          <p className="user-hero-sub">{stampsLoading ? 'Loading…' : ''}</p>
         </section>
         <Footer />
       </>
@@ -258,7 +225,7 @@ export default function User() {
 
   return (
     <>
-      <Header user={loggedIn ? user : null} />
+      <Header />
 
       <section className="user-hero">
         <div className="user-hero-info">
@@ -354,7 +321,7 @@ export default function User() {
             </div>
             <p className="section-sub">Collect stamps from rides and games, then exchange complete sets for credits.</p>
 
-            {loading ? (
+            {stampsLoading ? (
               <div className="empty-state">
                 <span className="empty-icon">⏳</span>
                 <p className="empty-title">Loading…</p>

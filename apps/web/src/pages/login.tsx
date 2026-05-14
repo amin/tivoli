@@ -5,6 +5,7 @@ import "./login.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { apiUrl } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 
 function InfoTip({ id, children }: { id: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -43,6 +44,7 @@ function InfoTip({ id, children }: { id: string; children: React.ReactNode }) {
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   // Activation form state
   const [activationName, setActivationName] = useState("");
   const [startcode, setStartcode] = useState("");
@@ -112,7 +114,7 @@ export default function Login() {
         setLoginError(body.error || body.message || `Login failed (${res.status})`);
       } else {
         setLoginError(null);
-        localStorage.setItem("tivoliAccessKey", k);
+        login(k);
         navigate("/user");
       }
     } catch (err) {
