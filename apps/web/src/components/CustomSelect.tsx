@@ -1,7 +1,7 @@
 import * as Select from "@radix-ui/react-select";
 import "./CustomSelect.css";
 
-type Option = { value: string; label: string };
+type Option = { value: string; label: string; image?: string };
 type OptionGroup = { label: string; options: Option[] };
 
 type Props = {
@@ -15,6 +15,16 @@ type Props = {
   className?: string;
 };
 
+function findOption(value: string, options?: Option[], groups?: OptionGroup[]): Option | undefined {
+  if (options) return options.find(o => o.value === value);
+  if (groups) {
+    for (const g of groups) {
+      const found = g.options.find(o => o.value === value);
+      if (found) return found;
+    }
+  }
+}
+
 export default function CustomSelect({
   value,
   onChange,
@@ -25,6 +35,8 @@ export default function CustomSelect({
   id,
   className = "",
 }: Props) {
+  const selectedOption = value ? findOption(value, options, groups) : undefined;
+
   return (
     <Select.Root value={value} onValueChange={onChange} disabled={disabled}>
       <Select.Trigger
@@ -32,7 +44,12 @@ export default function CustomSelect({
         className={`cs-trigger${className ? ` ${className}` : ""}`}
         aria-label={placeholder}
       >
-        <Select.Value placeholder={<span className="cs-placeholder">{placeholder}</span>} />
+        <span className="cs-trigger-value">
+          {selectedOption?.image && (
+            <img src={selectedOption.image} className="cs-option-img" alt="" aria-hidden />
+          )}
+          <Select.Value placeholder={<span className="cs-placeholder">{placeholder}</span>} />
+        </span>
         <Select.Icon className="cs-icon">
           <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden>
             <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -46,6 +63,7 @@ export default function CustomSelect({
             {options &&
               options.map((opt) => (
                 <Select.Item key={opt.value} value={opt.value} className="cs-item">
+                  {opt.image && <img src={opt.image} className="cs-option-img" alt="" aria-hidden />}
                   <Select.ItemText>{opt.label}</Select.ItemText>
                 </Select.Item>
               ))}
@@ -56,6 +74,7 @@ export default function CustomSelect({
                   <Select.Label className="cs-group-label">{g.label}</Select.Label>
                   {g.options.map((opt) => (
                     <Select.Item key={opt.value} value={opt.value} className="cs-item">
+                      {opt.image && <img src={opt.image} className="cs-option-img" alt="" aria-hidden />}
                       <Select.ItemText>{opt.label}</Select.ItemText>
                     </Select.Item>
                   ))}

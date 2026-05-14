@@ -98,7 +98,7 @@
 }
 
 /* ---------- Login ---------- */
-.user-login-wrap {
+.user-login-wrap,
 .user-cta-section {
   display: flex;
   justify-content: space-around;
