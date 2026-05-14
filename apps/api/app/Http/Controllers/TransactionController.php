@@ -17,16 +17,13 @@ class TransactionController extends Controller
         $data = $request->validate([
             'identity_token' => ['required', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
-            'amusement_uuid' => ['required', 'string', 'uuid'],
+            'api_key' => ['required', 'string'],
         ]);
 
-        $amusement = $request->attributes->get('amusement');
+        $amusement = Amusement::where('api_key', $data['api_key'])->first();
 
-        if ($amusement->uuid !== $data['amusement_uuid']) {
-            return response()->json(
-                ['error' => 'amusement_uuid does not match the authenticated amusement'],
-                403,
-            );
+        if (!$amusement) {
+            return response()->json(['error' => 'Invalid api_key'], 401);
         }
 
         $token = IdentityToken::where('token', $data['identity_token'])->first();
@@ -67,9 +64,14 @@ class TransactionController extends Controller
     {
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0'],
+            'api_key' => ['required', 'string'],
         ]);
 
-        $amusement = $request->attributes->get('amusement');
+        $amusement = Amusement::where('api_key', $data['api_key'])->first();
+
+        if (!$amusement) {
+            return response()->json(['error' => 'Invalid api_key'], 401);
+        }
 
         $original = Transaction::find($id);
 

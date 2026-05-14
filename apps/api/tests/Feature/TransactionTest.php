@@ -50,7 +50,7 @@ class TransactionTest extends TestCase
         ]);
     }
 
-    private function makeAmusement(int $groupId, string $name = 'Fortune Wheel'): Amusement
+    private function makeAmusement(int $groupId, string $name = 'Fortune Wheel', string $type = 'game'): Amusement
     {
         return Amusement::forceCreate([
             'group_id' => $groupId,
@@ -59,7 +59,7 @@ class TransactionTest extends TestCase
             'price' => 5.00,
             'url' => 'https://example.com',
             'api_key' => (string) Str::uuid(),
-            'type' => 'game',
+            'type' => $type,
         ]);
     }
 
@@ -75,12 +75,11 @@ class TransactionTest extends TestCase
         $amusement = $this->makeAmusement($group->id);
         $token = $this->issueToken($player);
 
-        $response = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson('/transactions', [
-                'identity_token' => $token->token,
-                'amount' => 5.00,
-                'amusement_uuid' => $amusement->uuid,
-            ]);
+        $response = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 5.00,
+            'api_key' => $amusement->api_key,
+        ]);
 
         $response->assertStatus(201);
         $response->assertJsonStructure(['id', 'stamp']);
@@ -95,63 +94,37 @@ class TransactionTest extends TestCase
         $this->assertEquals(5.00, $amusement->amusement_balance);
     }
 
-    public function test_uuid_mismatch_rejects_with_403_and_does_not_consume_token(): void
+    public function test_invalid_api_key_returns_401(): void
     {
         $group = $this->makeGroup();
         $player = $this->makeUser($group->id);
-        $amusement = $this->makeAmusement($group->id, 'Authed Amusement');
-        $otherAmusement = $this->makeAmusement($group->id, 'Other Amusement');
         $token = $this->issueToken($player);
 
-        $response = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson('/transactions', [
-                'identity_token' => $token->token,
-                'amount' => 5.00,
-                'amusement_uuid' => $otherAmusement->uuid,
-            ]);
+        $response = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 5.00,
+            'api_key' => (string) Str::uuid(), // random, not an amusement's
+        ]);
 
-        $response->assertStatus(403);
+        $response->assertStatus(401);
 
         $token->refresh();
-        $this->assertNull($token->consumed_at, 'Token must not be consumed on mismatch');
-
-        $player->refresh();
-        $this->assertEquals(100.00, $player->balance, 'Balance must be unchanged');
+        $this->assertNull($token->consumed_at);
     }
 
-    public function test_missing_amusement_uuid_returns_422(): void
+    public function test_missing_api_key_returns_422(): void
     {
         $group = $this->makeGroup();
         $player = $this->makeUser($group->id);
-        $amusement = $this->makeAmusement($group->id);
         $token = $this->issueToken($player);
 
-        $response = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson('/transactions', [
-                'identity_token' => $token->token,
-                'amount' => 5.00,
-            ]);
+        $response = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 5.00,
+        ]);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['amusement_uuid']);
-    }
-
-    public function test_invalid_uuid_format_returns_422(): void
-    {
-        $group = $this->makeGroup();
-        $player = $this->makeUser($group->id);
-        $amusement = $this->makeAmusement($group->id);
-        $token = $this->issueToken($player);
-
-        $response = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson('/transactions', [
-                'identity_token' => $token->token,
-                'amount' => 5.00,
-                'amusement_uuid' => 'not-a-uuid',
-            ]);
-
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['amusement_uuid']);
+        $response->assertJsonValidationErrors(['api_key']);
     }
 
     public function test_already_consumed_token_returns_401(): void
@@ -162,47 +135,13 @@ class TransactionTest extends TestCase
         $token = $this->issueToken($player);
         $token->update(['consumed_at' => now()]);
 
-        $response = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson('/transactions', [
-                'identity_token' => $token->token,
-                'amount' => 5.00,
-                'amusement_uuid' => $amusement->uuid,
-            ]);
+        $response = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 5.00,
+            'api_key' => $amusement->api_key,
+        ]);
 
         $response->assertStatus(401);
-    }
-
-    public function test_payout_succeeds_into_debt(): void
-    {
-        $group = $this->makeGroup();
-        $player = $this->makeUser($group->id);
-        $amusement = $this->makeAmusement($group->id);
-
-        // Seed a fee transaction to satisfy the payout ownership check.
-        $token = $this->issueToken($player);
-        $feeRes = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson('/transactions', [
-                'identity_token' => $token->token,
-                'amount' => 5.00,
-                'amusement_uuid' => $amusement->uuid,
-            ]);
-        $feeRes->assertStatus(201);
-        $feeId = $feeRes->json('id');
-
-        // Amusement now has €5. Pay out €20 → balance must go to -€15.
-        $response = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson("/transactions/{$feeId}/payout", [
-                'amount' => 20.00,
-            ]);
-
-        $response->assertStatus(201);
-
-        $amusement->refresh();
-        $this->assertEquals(-15.00, $amusement->amusement_balance);
-
-        $player->refresh();
-        // Started 100, paid 5, won 20 → 115
-        $this->assertEquals(115.00, $player->balance);
     }
 
     public function test_expired_token_returns_401(): void
@@ -213,43 +152,87 @@ class TransactionTest extends TestCase
         $token = $this->issueToken($player);
         $token->update(['expires_at' => now()->subMinute()]);
 
-        $response = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson('/transactions', [
-                'identity_token' => $token->token,
-                'amount' => 5.00,
-                'amusement_uuid' => $amusement->uuid,
-            ]);
+        $response = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 5.00,
+            'api_key' => $amusement->api_key,
+        ]);
 
         $response->assertStatus(401);
+    }
+
+    public function test_payout_succeeds_into_debt(): void
+    {
+        $group = $this->makeGroup();
+        $player = $this->makeUser($group->id);
+        $amusement = $this->makeAmusement($group->id);
+
+        $token = $this->issueToken($player);
+        $feeRes = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 5.00,
+            'api_key' => $amusement->api_key,
+        ]);
+        $feeRes->assertStatus(201);
+        $feeId = $feeRes->json('id');
+
+        $response = $this->postJson("/transactions/{$feeId}/payout", [
+            'amount' => 20.00,
+            'api_key' => $amusement->api_key,
+        ]);
+
+        $response->assertStatus(201);
+
+        $amusement->refresh();
+        $this->assertEquals(-15.00, $amusement->amusement_balance);
+
+        $player->refresh();
+        $this->assertEquals(115.00, $player->balance);
+    }
+
+    public function test_payout_with_wrong_api_key_returns_403(): void
+    {
+        $group = $this->makeGroup();
+        $player = $this->makeUser($group->id);
+        $amusement = $this->makeAmusement($group->id, 'Owner');
+        $other = $this->makeAmusement($group->id, 'Stranger');
+
+        $token = $this->issueToken($player);
+        $feeRes = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 5.00,
+            'api_key' => $amusement->api_key,
+        ]);
+        $feeId = $feeRes->json('id');
+
+        // Different amusement tries to claim the payout.
+        $response = $this->postJson("/transactions/{$feeId}/payout", [
+            'amount' => 10.00,
+            'api_key' => $other->api_key,
+        ]);
+
+        $response->assertStatus(403);
     }
 
     public function test_attraction_cannot_payout(): void
     {
         $group = $this->makeGroup();
         $player = $this->makeUser($group->id);
-        $attraction = Amusement::forceCreate([
-            'group_id' => $group->id,
-            'name' => 'Ferris Wheel',
-            'description' => null,
-            'price' => 3.00,
-            'url' => 'https://example.com/ferris',
-            'api_key' => (string) Str::uuid(),
-            'type' => 'attraction',
-        ]);
+        $attraction = $this->makeAmusement($group->id, 'Ferris Wheel', 'attraction');
 
-        // Seed a fee.
         $token = $this->issueToken($player);
-        $feeRes = $this->withHeaders(['X-Api-Key' => $attraction->api_key])
-            ->postJson('/transactions', [
-                'identity_token' => $token->token,
-                'amount' => 3.00,
-                'amusement_uuid' => $attraction->uuid,
-            ]);
+        $feeRes = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 3.00,
+            'api_key' => $attraction->api_key,
+        ]);
         $feeRes->assertStatus(201);
         $feeId = $feeRes->json('id');
 
-        $response = $this->withHeaders(['X-Api-Key' => $attraction->api_key])
-            ->postJson("/transactions/{$feeId}/payout", ['amount' => 5.00]);
+        $response = $this->postJson("/transactions/{$feeId}/payout", [
+            'amount' => 5.00,
+            'api_key' => $attraction->api_key,
+        ]);
 
         $response->assertStatus(409);
         $response->assertJsonFragment(['error' => 'Attractions cannot pay out']);
@@ -262,24 +245,24 @@ class TransactionTest extends TestCase
         $amusement = $this->makeAmusement($group->id);
 
         $token = $this->issueToken($player);
-        $feeRes = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson('/transactions', [
-                'identity_token' => $token->token,
-                'amount' => 5.00,
-                'amusement_uuid' => $amusement->uuid,
-            ]);
+        $feeRes = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 5.00,
+            'api_key' => $amusement->api_key,
+        ]);
         $feeId = $feeRes->json('id');
 
-        // First payout succeeds.
-        $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson("/transactions/{$feeId}/payout", ['amount' => 7.00])
-            ->assertStatus(201);
+        $this->postJson("/transactions/{$feeId}/payout", [
+            'amount' => 7.00,
+            'api_key' => $amusement->api_key,
+        ])->assertStatus(201);
 
-        // Second payout on the same fee → 409.
-        $second = $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson("/transactions/{$feeId}/payout", ['amount' => 7.00])
-            ->assertStatus(409);
+        $second = $this->postJson("/transactions/{$feeId}/payout", [
+            'amount' => 7.00,
+            'api_key' => $amusement->api_key,
+        ]);
 
+        $second->assertStatus(409);
         $second->assertJsonFragment(['error' => "Transaction #{$feeId} has already been paid out"]);
     }
 
@@ -310,12 +293,11 @@ class TransactionTest extends TestCase
         $amusement = $this->makeAmusement($group->id);
 
         $token = $this->issueToken($player);
-        $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson('/transactions', [
-                'identity_token' => $token->token,
-                'amount' => 5.00,
-                'amusement_uuid' => $amusement->uuid,
-            ])->assertStatus(201);
+        $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 5.00,
+            'api_key' => $amusement->api_key,
+        ])->assertStatus(201);
 
         $memberKey = (string) Str::uuid();
         $member->update(['access_key' => Hash::make($memberKey)]);
@@ -351,20 +333,19 @@ class TransactionTest extends TestCase
         $player = $this->makeUser($group->id, 100.0, 'Player');
         $amusement = $this->makeAmusement($group->id);
 
-        // Two fees of €5 each, then a payout of €3.
         foreach ([5.0, 5.0] as $amount) {
             $token = $this->issueToken($player);
-            $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-                ->postJson('/transactions', [
-                    'identity_token' => $token->token,
-                    'amount' => $amount,
-                    'amusement_uuid' => $amusement->uuid,
-                ])->assertStatus(201);
+            $this->postJson('/transactions', [
+                'identity_token' => $token->token,
+                'amount' => $amount,
+                'api_key' => $amusement->api_key,
+            ])->assertStatus(201);
         }
         $firstFeeId = $amusement->transactions()->where('type', 'fee')->orderBy('id')->first()->id;
-        $this->withHeaders(['X-Api-Key' => $amusement->api_key])
-            ->postJson("/transactions/{$firstFeeId}/payout", ['amount' => 3.00])
-            ->assertStatus(201);
+        $this->postJson("/transactions/{$firstFeeId}/payout", [
+            'amount' => 3.00,
+            'api_key' => $amusement->api_key,
+        ])->assertStatus(201);
 
         $memberKey = (string) Str::uuid();
         $member->update(['access_key' => Hash::make($memberKey)]);

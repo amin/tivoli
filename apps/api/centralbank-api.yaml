@@ -19,12 +19,19 @@ info:
     The frontend can call `POST /auth/login` with the access_key to fetch the
     user profile on sign-in.
 
-    **Amusements** authenticate with `X-Api-Key: <key>`. Each amusement gets
-    a unique API key when registered. Use this key for transaction endpoints
-    (`POST /transactions`, `POST /transactions/{id}/payout`). To act on
-    behalf of a user, pass their short-lived `identity_token` (issued by
-    `POST /identity-tokens` and forwarded via URL query parameter) in the
-    request body. Identity tokens are single-use and expire in 5 minutes.
+    **Amusements** authenticate by including their `api_key` in the
+    **request body** of transaction endpoints (`POST /transactions`,
+    `POST /transactions/{id}/payout`). Each amusement gets a unique
+    `api_key` at registration. To act on behalf of a user, also pass
+    their short-lived `identity_token` (issued by `POST /identity-tokens`
+    and forwarded via URL query parameter) in the body of
+    `POST /transactions`. Identity tokens are single-use and expire in
+    5 minutes.
+
+    `GET /identity-tokens/{token}` is unauthenticated — possession of a
+    valid (unexpired, unconsumed) token is sufficient to resolve it to
+    the user's id and name. Useful for the amusement to greet the player
+    on page load.
 
     ## Key concepts
 
@@ -56,9 +63,8 @@ info:
        the URL (e.g. `history.replaceState`) to scrub the token. It stores
        the token in memory until ready to charge.
     4. When the user starts paying, the amusement calls `POST /transactions`
-       with `{ identity_token, amount, amusement_uuid }`. The
-       `amusement_uuid` must match the amusement that owns the
-       `X-Api-Key` header — defense in depth against credential mix-ups.
+       with `{ identity_token, amount, api_key }`. The `api_key` in the
+       body identifies and authenticates the calling amusement.
     5. Central bank validates the token (consuming it), deducts the amount
        from the user, credits the amusement, generates a random stamp, and
        returns `{ id, stamp }`.
@@ -228,11 +234,14 @@ paths:
       summary: Resolve an identity token to its user (without consuming it)
       description: >
         Used by an amusement after the user lands on its page. The amusement
-        reads the `identity_token` from the URL, calls this endpoint with its
-        own `X-Api-Key`, and gets back minimal user info (id and name) so it
-        can greet the rider before charging. The token is **not** consumed —
-        only `POST /transactions` consumes it.
-      security: [{ apiKeyAuth: [] }]
+        reads the `identity_token` from the URL and calls this endpoint to
+        get back minimal user info (id and name) so it can greet the rider
+        before charging. The token is **not** consumed — only
+        `POST /transactions` consumes it.
+
+        Unauthenticated: possession of a valid (unexpired, unconsumed)
+        token is sufficient.
+      security: []
       parameters:
         - name: token
           in: path
@@ -742,14 +751,14 @@ paths:
 
         The returned `id` is required for `POST /transactions/{id}/payout` if
         the user wins.
-      security: [{ apiKeyAuth: [] }]
+      security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [identity_token, amount, amusement_uuid]
+              required: [identity_token, amount, api_key]
               properties:
                 identity_token:
                   type: string
@@ -763,13 +772,12 @@ paths:
                   minimum: 0.01
                   description: Amount to deduct in euros (2-decimal precision).
                   example: 19.95
-                amusement_uuid:
+                api_key:
                   type: string
                   format: uuid
                   description: >
-                    Public uuid of the calling amusement. Must match the
-                    amusement that owns the `X-Api-Key` header. Mismatch
-                    returns 403 and does not consume the identity_token.
+                    The calling amusement's `api_key`. Identifies and
+                    authenticates the amusement. Invalid key returns 401.
       responses:
         "201":
           description: Money deducted and stamp awarded
@@ -805,10 +813,10 @@ paths:
         `POST /settle` (group members absorb any debt). This makes
         player payouts UX-bulletproof.
 
-        The API key must belong to the same amusement that created the
-        original transaction. Attractions (`type: attraction`) are rejected
-        — only games can pay out.
-      security: [{ apiKeyAuth: [] }]
+        The `api_key` in the body must belong to the same amusement that
+        created the original transaction. Attractions (`type: attraction`)
+        are rejected — only games can pay out.
+      security: []
       parameters:
         - $ref: "#/components/parameters/TransactionId"
       requestBody:
@@ -817,7 +825,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [amount]
+              required: [amount, api_key]
               properties:
                 amount:
                   type: number
@@ -825,6 +833,12 @@ paths:
                   minimum: 0.01
                   description: Winnings to pay out in euros (2-decimal precision).
                   example: 10.00
+                api_key:
+                  type: string
+                  format: uuid
+                  description: >
+                    The calling amusement's `api_key`. Must match the
+                    amusement that owns the original transaction.
       responses:
         "200":
           description: Payout completed
@@ -1069,14 +1083,6 @@ components:
         UUID access key obtained from `POST /activate`. Stored hashed (bcrypt)
         server-side. Sent in the `X-Access-Key` header on every authenticated
         user request.
-    apiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-Api-Key
-      description: >
-        API key obtained when registering an amusement. Also visible to group
-        members via `GET /groups/{id}`.
-
   parameters:
     GroupId:
       name: id
@@ -1238,12 +1244,6 @@ components:
         id:
           type: integer
           readOnly: true
-        uuid:
-          type: string
-          format: uuid
-          description: Public identifier — safe to include in URLs and logs.
-          readOnly: true
-          example: "0b3c8a4e-7f7a-4b4d-9c9c-2a4a6b6c8d8e"
         name:
           type: string
           description: Globally unique across all amusements.
