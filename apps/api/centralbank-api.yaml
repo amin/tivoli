@@ -70,8 +70,8 @@ info:
        returns `{ id, stamp }`.
     6. Amusement runs its own game logic.
     7. If the user wins, amusement calls `POST /transactions/{id}/payout`
-       with `{ amount }`. Central bank deducts from the amusement and credits
-       the user.
+       with `{ amount, api_key }`. Central bank deducts from the amusement
+       and credits the user.
 
     For attractions (rides), only steps 4–5 are needed — no payout.
 
