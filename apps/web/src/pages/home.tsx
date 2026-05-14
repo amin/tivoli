@@ -11,7 +11,7 @@ import { useAuth } from "../auth/AuthContext";
 type Filter = "all" | "game" | "attraction";
 
 export default function Home() {
-  const { accessKey } = useAuth();
+  const { accessKey, user } = useAuth();
   const { amusements } = useAmusements(accessKey);
   const [filter, setFilter] = useState<Filter>("all");
   const navigate = useNavigate();
@@ -61,9 +61,15 @@ export default function Home() {
             explore.
           </p>
           <div className="hero-ctas">
-            <Link to="/login" className="btn btn-primary">
-              Enter the park
-            </Link>
+            {user ? (
+              <Link to="/user" className="btn btn-primary">
+                My Account
+              </Link>
+            ) : (
+              <Link to="/login" className="btn btn-primary">
+                Enter the park
+              </Link>
+            )}
             <Link to="/how-it-works" className="btn btn-secondary">
               How it works
             </Link>

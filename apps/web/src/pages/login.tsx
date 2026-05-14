@@ -44,7 +44,14 @@ function InfoTip({ id, children }: { id: string; children: React.ReactNode }) {
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user, loading: authLoading, login } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/user", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
   // Activation form state
   const [activationName, setActivationName] = useState("");
   const [startcode, setStartcode] = useState("");
