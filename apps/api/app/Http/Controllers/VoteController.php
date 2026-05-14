@@ -12,7 +12,7 @@ class VoteController extends Controller
         $user = $request->user();
 
         if ($user->vote) {
-            return response()->json(['error' => 'User has already voted'], 400);
+            return response()->json(['message' => 'User has already voted'], 400);
         }
 
         $vote = $user->vote()->create([

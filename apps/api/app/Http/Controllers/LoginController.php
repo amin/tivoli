@@ -24,19 +24,19 @@ class LoginController extends Controller
         $user = User::whereRaw('LOWER(name) = ?', [Str::lower($name)])->first();
 
         if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
+            return response()->json(['message' => 'User not found'], 404);
         }
 
         if ($user->access_key === null) {
-            return response()->json(['error' => 'User not activated'], 400);
+            return response()->json(['message' => 'User not activated'], 400);
         }
 
         if (!Hash::check($accessKey, $user->access_key)) {
-            return response()->json(['error' => 'Invalid access key'], 401);
+            return response()->json(['message' => 'Invalid access key'], 401);
         }
 
         if (!$user->is_active) {
-            return response()->json(['error' => 'User is inactive'], 403);
+            return response()->json(['message' => 'User is inactive'], 403);
         }
 
         return response()->json($user);

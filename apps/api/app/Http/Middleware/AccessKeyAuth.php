@@ -20,7 +20,7 @@ class AccessKeyAuth
         $accessKey = $request->header('x-access-key');
 
         if (!$accessKey) {
-            return response()->json(['error' => 'Missing access key'], 401);
+            return response()->json(['message' => 'Missing access key'], 401);
         }
 
         $user = null;
@@ -33,11 +33,11 @@ class AccessKeyAuth
             });
 
         if (!$user) {
-            return response()->json(['error' => 'Invalid access key'], 401);
+            return response()->json(['message' => 'Invalid access key'], 401);
         }
 
         if (!$user->is_active) {
-            return response()->json(['error' => 'User is inactive'], 403);
+            return response()->json(['message' => 'User is inactive'], 403);
         }
 
         $request->setUserResolver(fn() => $user);

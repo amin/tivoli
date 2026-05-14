@@ -20,15 +20,15 @@ class ActivateUserController extends Controller
             ->first();
 
         if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
+            return response()->json(['message' => 'User not found'], 404);
         }
 
         if ($user->access_key !== null) {
-            return response()->json(['error' => 'User already activated'], 400);
+            return response()->json(['message' => 'User already activated'], 400);
         }
 
         if ($user->startcode !== $request->startcode) {
-            return response()->json(['error' => 'Invalid startcode'], 401);
+            return response()->json(['message' => 'Invalid startcode'], 401);
         }
 
         // If everything seems fine, generate access key
