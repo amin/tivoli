@@ -163,11 +163,6 @@
   flex-direction: column;
 }
 
-.btn-edit {
-  width: 100%;
-  text-align: center;
-}
-
 .exchange-value {
   font-family: var(--font-display);
   font-size: var(--text-xl);

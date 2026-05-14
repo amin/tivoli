@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             GroupSeeder::class,
             UserSeeder::class,
             GuestSeeder::class,
+            AmusementSeeder::class,
         ]);
         // User::factory(10)->create();
 
