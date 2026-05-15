@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\ActivateUserController;
 use App\Http\Controllers\AmusementController;
+use App\Http\Controllers\Auth\AuthSessionController;
 use App\Http\Controllers\ExchangeController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\IdentityTokenController;
 use App\Http\Controllers\LeaderboardController;
-use App\Http\Controllers\LoginController;
 use App\Http\Controllers\SettleController;
 use App\Http\Controllers\StampController;
 use App\Http\Controllers\StoreAmusementController;
@@ -14,7 +14,6 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UpdateUserInfoController;
 use App\Http\Controllers\VictoryPointsController;
 use App\Http\Controllers\VoteController;
-use App\Http\Middleware\AccessKeyAuth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -27,7 +26,7 @@ Route::get('/', fn () => response()->json([
 
 // ── Auth ───────────────────────────────────────────────────────────────
 Route::post('/activate', [ActivateUserController::class, 'store']);
-Route::post('/auth/login', [LoginController::class, 'store']);
+Route::post('/login', [AuthSessionController::class, 'store']);
 
 // ── Transactions (amusement api_key in request body) ───────────────────
 Route::get('/identity-tokens/{token}', [IdentityTokenController::class, 'show']);
@@ -35,7 +34,9 @@ Route::post('/transactions', [TransactionController::class, 'store']);
 Route::post('/transactions/{id}/payout', [TransactionController::class, 'payout']);
 
 // ── Authenticated user routes ──────────────────────────────────────────
-Route::middleware(AccessKeyAuth::class)->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthSessionController::class, 'destroy']);
+
     // Identity tokens (short-lived, for amusement redirects)
     Route::post('/identity-tokens', [IdentityTokenController::class, 'store']);
 
