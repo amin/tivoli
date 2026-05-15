@@ -38,7 +38,7 @@ info:
     ### Stamps
     Each transaction (game play *or* attraction visit) rewards the user with
     a random stamp as a participation trophy: one of five animals (lion,
-    dolphin, tucan, beetlebug, snake) with a 50% chance of a metal tier
+    dolphin, toucan, beetlebug, snake) with a 50% chance of a metal tier
     (silver, gold, platinum). Stamps are generated server-side by the central
     bank.
 
@@ -1361,7 +1361,7 @@ components:
           readOnly: true
         animal:
           type: string
-          enum: [lion, dolphin, tucan, beetlebug, snake]
+          enum: [lion, dolphin, toucan, beetlebug, snake]
           example: "dolphin"
         metal:
           type: string
