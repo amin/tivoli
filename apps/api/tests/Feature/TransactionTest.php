@@ -235,7 +235,7 @@ class TransactionTest extends TestCase
         ]);
 
         $response->assertStatus(409);
-        $response->assertJsonFragment(['error' => 'Attractions cannot pay out']);
+        $response->assertJsonFragment(['message' => 'Attractions cannot pay out']);
     }
 
     public function test_double_payout_is_rejected(): void
@@ -263,7 +263,7 @@ class TransactionTest extends TestCase
         ]);
 
         $second->assertStatus(409);
-        $second->assertJsonFragment(['error' => "Transaction #{$feeId} has already been paid out"]);
+        $second->assertJsonFragment(['message' => "Transaction #{$feeId} has already been paid out"]);
     }
 
     public function test_amusement_balance_serializes_as_number(): void
@@ -272,10 +272,7 @@ class TransactionTest extends TestCase
         $member = $this->makeUser($group->id, 100.0, 'Member');
         $amusement = $this->makeAmusement($group->id);
 
-        $memberKey = (string) Str::uuid();
-        $member->update(['access_key' => Hash::make($memberKey)]);
-
-        $response = $this->withHeaders(['X-Access-Key' => $memberKey])
+        $response = $this->actingAs($member)
             ->getJson("/amusements/{$amusement->id}");
 
         $response->assertStatus(200);
@@ -299,10 +296,7 @@ class TransactionTest extends TestCase
             'api_key' => $amusement->api_key,
         ])->assertStatus(201);
 
-        $memberKey = (string) Str::uuid();
-        $member->update(['access_key' => Hash::make($memberKey)]);
-
-        $response = $this->withHeaders(['X-Access-Key' => $memberKey])
+        $response = $this->actingAs($member)
             ->getJson("/amusements/{$amusement->id}/transactions");
 
         $response->assertStatus(200);
@@ -316,11 +310,9 @@ class TransactionTest extends TestCase
         $otherGroup = $this->makeGroup('Outsiders');
         $amusement = $this->makeAmusement($ownerGroup->id);
 
-        $outsiderKey = (string) Str::uuid();
         $outsider = $this->makeUser($otherGroup->id, 100.0, 'Outsider');
-        $outsider->update(['access_key' => Hash::make($outsiderKey)]);
 
-        $response = $this->withHeaders(['X-Access-Key' => $outsiderKey])
+        $response = $this->actingAs($outsider)
             ->getJson("/amusements/{$amusement->id}/transactions");
 
         $response->assertStatus(403);
@@ -347,10 +339,7 @@ class TransactionTest extends TestCase
             'api_key' => $amusement->api_key,
         ])->assertStatus(201);
 
-        $memberKey = (string) Str::uuid();
-        $member->update(['access_key' => Hash::make($memberKey)]);
-
-        $response = $this->withHeaders(['X-Access-Key' => $memberKey])
+        $response = $this->actingAs($member)
             ->getJson("/amusements/{$amusement->id}/stats");
 
         $response->assertStatus(200);

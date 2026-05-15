@@ -23,7 +23,7 @@ class GroupController extends Controller
         $group = Group::with(['users:id,name,group_id', 'amusements'])->find($id);
 
         if (!$group) {
-            return response()->json(['error' => 'Group not found'], 404);
+            return response()->json(['message' => 'Group not found'], 404);
         }
 
         if ($request->user()->group_id === $group->id) {
@@ -39,12 +39,12 @@ class GroupController extends Controller
         $user = $request->user();
 
         if (!$user || !$user->group_id) {
-            return response()->json(['error' => 'User does not belong to a group'], 403);
+            return response()->json(['message' => 'User does not belong to a group'], 403);
         }
 
         $group = Group::find($user->group_id);
         if (!$group) {
-            return response()->json(['error' => 'Group not found'], 404);
+            return response()->json(['message' => 'Group not found'], 404);
         }
 
         $data = $request->validated();

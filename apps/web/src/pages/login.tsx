@@ -4,7 +4,8 @@ import "./login.css";
 
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { apiUrl } from "../lib/api";
+import { apiFetch } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 
 function InfoTip({ id, children }: { id: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -43,6 +44,14 @@ function InfoTip({ id, children }: { id: string; children: React.ReactNode }) {
 
 export default function Login() {
   const navigate = useNavigate();
+  const { user, loading: authLoading, login } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/user", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
   // Activation form state
   const [activationName, setActivationName] = useState("");
   const [startcode, setStartcode] = useState("");
@@ -65,12 +74,8 @@ export default function Login() {
     setResultType(null);
 
     try {
-      const res = await fetch(apiUrl("/activate"), {
+      const res = await apiFetch("/activate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
         body: JSON.stringify({ name: activationName, startcode }),
       });
 
@@ -81,7 +86,7 @@ export default function Login() {
         // Auto-fill access key into login input for convenience
         if (json.access_key) setAccessKeyInput(json.access_key);
       } else {
-        setResult(json.error || "Activation failed");
+        setResult(json.error || json.message || "Activation failed");
         setResultType("error");
       }
     } catch (err) {
@@ -97,26 +102,10 @@ export default function Login() {
     setLoginLoading(true);
     const k = (key ?? accessKeyInput).trim();
     try {
-      // Authenticate using name + access_key
-      const res = await fetch(apiUrl("/auth/login"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ name: loginName.trim(), access_key: k }),
-      });
-
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setLoginError(body.error || body.message || `Login failed (${res.status})`);
-      } else {
-        setLoginError(null);
-        localStorage.setItem("tivoliAccessKey", k);
-        navigate("/user");
-      }
+      await login(loginName.trim(), k);
+      navigate("/user");
     } catch (err) {
-      setLoginError("Network error");
+      setLoginError(err instanceof Error ? err.message : "Network error");
     } finally {
       setLoginLoading(false);
     }

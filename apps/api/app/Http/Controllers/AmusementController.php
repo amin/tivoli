@@ -34,7 +34,7 @@ class AmusementController extends Controller
         $amusement = Amusement::find($id);
 
         if (!$amusement) {
-            return response()->json(['error' => 'Amusement not found'], 404);
+            return response()->json(['message' => 'Amusement not found'], 404);
         }
 
         if ($request->user()->group_id === $amusement->group_id) {
@@ -49,11 +49,11 @@ class AmusementController extends Controller
         $amusement = Amusement::find($id);
 
         if (!$amusement) {
-            return response()->json(['error' => 'Amusement not found'], 404);
+            return response()->json(['message' => 'Amusement not found'], 404);
         }
 
         if ($request->user()->group_id !== $amusement->group_id) {
-            return response()->json(['error' => 'You do not own this amusement'], 403);
+            return response()->json(['message' => 'You do not own this amusement'], 403);
         }
 
         $amusement->update($request->validated());
@@ -66,16 +66,16 @@ class AmusementController extends Controller
         $amusement = Amusement::find($id);
 
         if (!$amusement) {
-            return response()->json(['error' => 'Amusement not found'], 404);
+            return response()->json(['message' => 'Amusement not found'], 404);
         }
 
         if ($request->user()->group_id !== $amusement->group_id) {
-            return response()->json(['error' => 'You do not own this amusement'], 403);
+            return response()->json(['message' => 'You do not own this amusement'], 403);
         }
 
         if ((float) $amusement->amusement_balance != 0.0) {
             return response()->json([
-                'error' => "Cannot delete amusement with balance €" . number_format($amusement->amusement_balance, 2) . ". Settle first.",
+                'message' => "Cannot delete amusement with balance €" . number_format($amusement->amusement_balance, 2) . ". Settle first.",
             ], 409);
         }
 
@@ -89,11 +89,11 @@ class AmusementController extends Controller
         $amusement = Amusement::find($id);
 
         if (!$amusement) {
-            return response()->json(['error' => 'Amusement not found'], 404);
+            return response()->json(['message' => 'Amusement not found'], 404);
         }
 
         if ($request->user()->group_id !== $amusement->group_id) {
-            return response()->json(['error' => 'You do not own this amusement'], 403);
+            return response()->json(['message' => 'You do not own this amusement'], 403);
         }
 
         $amusement->api_key = (string) Str::uuid();
@@ -108,10 +108,10 @@ class AmusementController extends Controller
     {
         $amusement = Amusement::find($id);
         if (!$amusement) {
-            return response()->json(['error' => 'Amusement not found'], 404);
+            return response()->json(['message' => 'Amusement not found'], 404);
         }
         if ($request->user()->group_id !== $amusement->group_id) {
-            return response()->json(['error' => "Not in this amusement's group"], 403);
+            return response()->json(['message' => "Not in this amusement's group"], 403);
         }
 
         $tx = $amusement->transactions()
@@ -126,10 +126,10 @@ class AmusementController extends Controller
     {
         $amusement = Amusement::find($id);
         if (!$amusement) {
-            return response()->json(['error' => 'Amusement not found'], 404);
+            return response()->json(['message' => 'Amusement not found'], 404);
         }
         if ($request->user()->group_id !== $amusement->group_id) {
-            return response()->json(['error' => "Not in this amusement's group"], 403);
+            return response()->json(['message' => "Not in this amusement's group"], 403);
         }
 
         $rows = $amusement->transactions()

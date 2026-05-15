@@ -23,19 +23,19 @@ class TransactionController extends Controller
         $amusement = Amusement::where('api_key', $data['api_key'])->first();
 
         if (!$amusement) {
-            return response()->json(['error' => 'Invalid api_key'], 401);
+            return response()->json(['message' => 'Invalid api_key'], 401);
         }
 
         $token = IdentityToken::where('token', $data['identity_token'])->first();
 
         if (!$token || !$token->isValid()) {
-            return response()->json(['error' => 'Invalid or expired identity token'], 401);
+            return response()->json(['message' => 'Invalid or expired identity token'], 401);
         }
 
         $user = $token->user;
 
         if ($user->balance < $data['amount']) {
-            return response()->json(['error' => 'Insufficient balance'], 402);
+            return response()->json(['message' => 'Insufficient balance'], 402);
         }
 
         return DB::transaction(function () use ($user, $amusement, $data, $token) {
@@ -70,30 +70,30 @@ class TransactionController extends Controller
         $amusement = Amusement::where('api_key', $data['api_key'])->first();
 
         if (!$amusement) {
-            return response()->json(['error' => 'Invalid api_key'], 401);
+            return response()->json(['message' => 'Invalid api_key'], 401);
         }
 
         $original = Transaction::find($id);
 
         if (!$original) {
-            return response()->json(['error' => 'Transaction not found'], 404);
+            return response()->json(['message' => 'Transaction not found'], 404);
         }
 
         if ($original->amusement_id !== $amusement->id) {
-            return response()->json(['error' => 'Transaction does not belong to this amusement'], 403);
+            return response()->json(['message' => 'Transaction does not belong to this amusement'], 403);
         }
 
         if ($original->type !== 'fee') {
-            return response()->json(['error' => 'Only fee transactions can be paid out'], 400);
+            return response()->json(['message' => 'Only fee transactions can be paid out'], 400);
         }
 
         if ($amusement->type === 'attraction') {
-            return response()->json(['error' => 'Attractions cannot pay out'], 409);
+            return response()->json(['message' => 'Attractions cannot pay out'], 409);
         }
 
         if ($original->settled_at !== null) {
             return response()->json(
-                ['error' => "Transaction #{$original->id} has already been paid out"],
+                ['message' => "Transaction #{$original->id} has already been paid out"],
                 409,
             );
         }

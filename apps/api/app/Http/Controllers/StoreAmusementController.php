@@ -15,7 +15,7 @@ class StoreAmusementController extends Controller
 
         if (!$user->group_id) {
             return response()->json([
-                'error' => 'Your user is not assigned to a group',
+                'message' => 'Your user is not assigned to a group',
             ], 400);
         }
 

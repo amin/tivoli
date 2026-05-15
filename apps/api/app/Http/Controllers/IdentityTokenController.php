@@ -23,7 +23,7 @@ class IdentityTokenController extends Controller
         $identityToken = IdentityToken::where('token', $token)->first();
 
         if (!$identityToken || !$identityToken->isValid()) {
-            return response()->json(['error' => 'Invalid or expired identity token'], 401);
+            return response()->json(['message' => 'Invalid or expired identity token'], 401);
         }
 
         $user = $identityToken->user;

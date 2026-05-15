@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { apiUrl } from "../lib/api";
+import { apiFetch } from "../lib/api";
 import CustomSelect from "./CustomSelect";
 
 type Amusement = {
@@ -10,11 +10,10 @@ type Amusement = {
 };
 
 type Props = {
-  accessKey: string;
   userId: number;
 };
 
-export default function VoteSection({ accessKey, userId }: Props) {
+export default function VoteSection({ userId }: Props) {
   const [amusements,  setAmusements]  = useState<Amusement[]>([]);
   const [voteChoice,  setVoteChoice]  = useState('');
   const [voteLoading, setVoteLoading] = useState(false);
@@ -25,26 +24,19 @@ export default function VoteSection({ accessKey, userId }: Props) {
   );
 
   useEffect(() => {
-    fetch(apiUrl('/amusements'), {
-      headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
-    })
+    apiFetch('/amusements')
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setAmusements(data.data ?? []); })
       .catch(() => {});
-  }, [accessKey]);
+  }, []);
 
   async function handleVote() {
     if (!voteChoice) return;
     setVoteLoading(true);
     setVoteResult(null);
     try {
-      const res = await fetch(apiUrl('/votes'), {
+      const res = await apiFetch('/votes', {
         method: 'POST',
-        headers: {
-          'X-Access-Key': accessKey,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ amusement_id: Number(voteChoice) }),
       });
       const data = await res.json();

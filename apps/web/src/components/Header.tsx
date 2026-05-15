@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
 const BRAND_LETTERS = [
   ["T", "red"],
@@ -9,9 +10,9 @@ const BRAND_LETTERS = [
   ["i", "blue"],
 ] as const;
 
-type HeaderUser = { name: string; balance: number };
+export default function Header() {
+  const { user } = useAuth();
 
-export default function Header({ user }: { user?: HeaderUser | null }) {
   return (
     <header className="header">
       <Link to="/" className="brand-name">
@@ -23,12 +24,12 @@ export default function Header({ user }: { user?: HeaderUser | null }) {
       </Link>
       <nav className="nav">
         {user ? (
-          <div className="auth-pill">
+          <Link to="/user" className="auth-pill">
             <span className="avatar">{user.name[0].toUpperCase()}</span>
             <span className="auth-text">{user.name}</span>
             <span className="auth-divider">·</span>
             <span className="auth-balance">€{user.balance.toFixed(2)}</span>
-          </div>
+          </Link>
         ) : (
           <Link to="/login" className="auth-pill">
             <span className="avatar">G</span>
