@@ -11,8 +11,8 @@ type Props = {
 export default function AmusementCard({ amusement, apiKey, showImage = false, onCardClick, actions }: Props) {
   const content = (
     <div className="card-body">
-      {showImage && (
-        <img className="card-image" src={amusement.image_url ?? ""} alt={amusement.name} />
+      {showImage && amusement.image_url && (
+        <img className="card-image" src={amusement.image_url} alt={amusement.name} />
       )}
       <div className="card-meta">
         <p className="card-title">{amusement.name}</p>
@@ -29,7 +29,12 @@ export default function AmusementCard({ amusement, apiKey, showImage = false, on
         </div>
       )}
       {amusement.description && <p className="card-description">{amusement.description}</p>}
-      {!showImage && <p className="card-url">{amusement.url}</p>}
+      {!showImage && amusement.url && (
+        <div className="card-api-key">
+          <span className="card-api-key-label">URL</span>
+          <code className="card-api-key-value">{amusement.url}</code>
+        </div>
+      )}
       {apiKey && (
         <div className="card-api-key">
           <span className="card-api-key-label">API Key</span>

@@ -6,6 +6,7 @@ type Amusement = {
   id: number;
   name: string;
   type: 'game' | 'attraction';
+  image_url: string | null;
 };
 
 type Props = {
@@ -89,7 +90,7 @@ export default function VoteSection({ accessKey, userId }: Props) {
                   label: type === 'attraction' ? 'Attractions' : 'Games',
                   options: amusements
                     .filter(a => a.type === type)
-                    .map(a => ({ value: String(a.id), label: a.name })),
+                    .map(a => ({ value: String(a.id), label: a.name, image: a.image_url ?? undefined })),
                 }))
                 .filter(g => g.options.length > 0)
               }

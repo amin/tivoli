@@ -234,6 +234,17 @@
 
 .card-body {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
 }
 
 .card-title {
@@ -323,12 +334,6 @@
   word-break: break-all;
 }
 
-.card-actions {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  margin-top: 12px;
-}
 
 .card-group {
   font-size: var(--text-xs);
