@@ -235,7 +235,7 @@ class TransactionTest extends TestCase
         ]);
 
         $response->assertStatus(409);
-        $response->assertJsonFragment(['error' => 'Attractions cannot pay out']);
+        $response->assertJsonFragment(['message' => 'Attractions cannot pay out']);
     }
 
     public function test_double_payout_is_rejected(): void
@@ -263,7 +263,7 @@ class TransactionTest extends TestCase
         ]);
 
         $second->assertStatus(409);
-        $second->assertJsonFragment(['error' => "Transaction #{$feeId} has already been paid out"]);
+        $second->assertJsonFragment(['message' => "Transaction #{$feeId} has already been paid out"]);
     }
 
     public function test_amusement_balance_serializes_as_number(): void

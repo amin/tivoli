@@ -134,10 +134,12 @@ class AmusementCreationTest extends TestCase
 
     public function test_response_includes_api_key_only_for_group_members(): void
     {
-        $group = Group::forceCreate(['name' => 'Visibility Group']);
-        $user = $this->makeUser($group->id);
+        $ownerGroup = Group::forceCreate(['name' => 'Owner Group']);
+        $outsiderGroup = Group::forceCreate(['name' => 'Outsider Group']);
+        $owner = $this->makeUser($ownerGroup->id, 'Owner');
+        $outsider = $this->makeUser($outsiderGroup->id, 'Outsider');
 
-        $createRes = $this->actingAs($user)->postJson('/amusements', [
+        $createRes = $this->actingAs($owner)->postJson('/amusements', [
             'name' => 'Test',
             'url' => 'https://example.com',
             'type' => 'game',
@@ -146,19 +148,25 @@ class AmusementCreationTest extends TestCase
         $createdId = $createRes->json('amusement.id');
         $this->assertNotEmpty($createRes->json('amusement.api_key'));
 
-        // Subsequent GET as a group member should include api_key
-        $showRes = $this->actingAs($user)->getJson("/amusements/{$createdId}");
+        // Group member sees api_key on show
+        $ownerShow = $this->actingAs($owner)->getJson("/amusements/{$createdId}");
+        $ownerShow->assertStatus(200);
+        $this->assertNotEmpty($ownerShow->json('api_key'));
 
-        $showRes->assertStatus(200);
-        $this->assertNotEmpty($showRes->json('api_key'));
+        // Group member sees api_key on index (used by the "My Amusements" page)
+        $ownerIndex = $this->actingAs($owner)->getJson('/amusements');
+        $ownerIndex->assertStatus(200);
+        $ownerRow = collect($ownerIndex->json('data'))->firstWhere('id', $createdId);
+        $this->assertNotEmpty($ownerRow['api_key'] ?? null);
 
-        // Index endpoint should never include api_key
-        $indexRes = $this->actingAs($user)->getJson('/amusements');
+        // Outsider does NOT see api_key on show or index
+        $outsiderShow = $this->actingAs($outsider)->getJson("/amusements/{$createdId}");
+        $outsiderShow->assertStatus(200);
+        $this->assertArrayNotHasKey('api_key', $outsiderShow->json());
 
-        $indexRes->assertStatus(200);
-        $indexJson = $indexRes->json('data');
-        foreach ($indexJson as $row) {
-            $this->assertArrayNotHasKey('api_key', $row);
-        }
+        $outsiderIndex = $this->actingAs($outsider)->getJson('/amusements');
+        $outsiderIndex->assertStatus(200);
+        $outsiderRow = collect($outsiderIndex->json('data'))->firstWhere('id', $createdId);
+        $this->assertArrayNotHasKey('api_key', $outsiderRow);
     }
 }
