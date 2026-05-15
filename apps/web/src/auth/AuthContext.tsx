@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { apiFetch, getCsrfCookie } from "../lib/api";
+import { apiFetch } from "../lib/api";
 
 export type GroupSummary = {
   id: number;
@@ -62,7 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchUser]);
 
   const login = useCallback(async (name: string, accessKey: string) => {
-    await getCsrfCookie();
     const res = await apiFetch("/login", {
       method: "POST",
       body: JSON.stringify({ name, access_key: accessKey }),

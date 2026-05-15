@@ -4,36 +4,32 @@ const BASE =
 
 export const apiUrl = (path: string) => `${BASE}${path}`;
 
-function readCookie(name: string): string | null {
-  const prefix = `${name}=`;
-  for (const part of document.cookie.split("; ")) {
-    if (part.startsWith(prefix)) {
-      return decodeURIComponent(part.slice(prefix.length));
-    }
-  }
-  return null;
+let csrfTokenPromise: Promise<string> | null = null;
+
+function fetchCsrfToken(): Promise<string> {
+  return fetch(apiUrl("/csrf-token"), { credentials: "include" })
+    .then((res) => res.json())
+    .then((data) => data.csrf_token as string);
 }
 
-let csrfPromise: Promise<void> | null = null;
-export function getCsrfCookie(): Promise<void> {
-  if (!csrfPromise) {
-    csrfPromise = fetch(apiUrl("/sanctum/csrf-cookie"), {
-      credentials: "include",
-    }).then(() => undefined);
+function getCsrfToken(): Promise<string> {
+  if (!csrfTokenPromise) {
+    csrfTokenPromise = fetchCsrfToken();
   }
-  return csrfPromise;
+  return csrfTokenPromise;
+}
+
+function invalidateCsrfToken(): void {
+  csrfTokenPromise = null;
 }
 
 export async function apiFetch(
   path: string,
   init: RequestInit = {},
+  isRetry = false,
 ): Promise<Response> {
   const method = (init.method ?? "GET").toUpperCase();
   const isMutating = method !== "GET" && method !== "HEAD";
-
-  if (isMutating) {
-    await getCsrfCookie();
-  }
 
   const headers = new Headers(init.headers);
   if (!headers.has("Accept")) headers.set("Accept", "application/json");
@@ -41,13 +37,21 @@ export async function apiFetch(
     headers.set("Content-Type", "application/json");
   }
   if (isMutating) {
-    const xsrf = readCookie("XSRF-TOKEN");
-    if (xsrf) headers.set("X-XSRF-TOKEN", xsrf);
+    headers.set("X-CSRF-TOKEN", await getCsrfToken());
   }
 
-  return fetch(apiUrl(path), {
+  const res = await fetch(apiUrl(path), {
     ...init,
     headers,
     credentials: "include",
   });
+
+  // After /login the session regenerates and the CSRF token rotates;
+  // also covers any other token drift. Retry once with a fresh token.
+  if (res.status === 419 && isMutating && !isRetry) {
+    invalidateCsrfToken();
+    return apiFetch(path, init, true);
+  }
+
+  return res;
 }

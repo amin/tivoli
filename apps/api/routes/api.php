@@ -28,6 +28,11 @@ Route::get('/', fn () => response()->json([
 Route::post('/activate', [ActivateUserController::class, 'store']);
 Route::post('/login', [AuthSessionController::class, 'store']);
 
+// CSRF token endpoint — returns the current session's CSRF token in JSON so
+// the SPA can read it across origins (document.cookie can't see the
+// XSRF-TOKEN cookie when the API is on a different PSL subdomain).
+Route::get('/csrf-token', fn () => response()->json(['csrf_token' => csrf_token()]));
+
 // ── Transactions (amusement api_key in request body) ───────────────────
 Route::get('/identity-tokens/{token}', [IdentityTokenController::class, 'show']);
 Route::post('/transactions', [TransactionController::class, 'store']);
