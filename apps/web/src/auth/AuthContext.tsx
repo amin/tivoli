@@ -33,12 +33,6 @@ type AuthValue = {
 
 const AuthContext = createContext<AuthValue | null>(null);
 
-class LoginError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -75,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
-      throw new LoginError(res.status, body.message ?? `Login failed (${res.status})`);
+      throw new Error(body.message ?? `Login failed (${res.status})`);
     }
     setUser(body);
   }, []);
