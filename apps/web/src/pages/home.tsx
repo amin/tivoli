@@ -5,28 +5,25 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AmusementCard from "../components/AmusementCard";
 import { useAmusements, type AmusementItem } from "../hooks/useAmusements";
-import { apiUrl } from "../lib/api";
+import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 
 type Filter = "all" | "game" | "attraction";
 
 export default function Home() {
-  const { accessKey, user } = useAuth();
-  const { amusements } = useAmusements(accessKey);
+  const { user } = useAuth();
+  const { amusements } = useAmusements();
   const [filter, setFilter] = useState<Filter>("all");
   const navigate = useNavigate();
 
   async function openAmusement(e: React.MouseEvent, a: AmusementItem) {
     e.preventDefault();
-    if (!accessKey) {
+    if (!user) {
       navigate("/login");
       return;
     }
     try {
-      const res = await fetch(apiUrl("/identity-tokens"), {
-        method: "POST",
-        headers: { "X-Access-Key": accessKey, Accept: "application/json" },
-      });
+      const res = await apiFetch("/identity-tokens", { method: "POST" });
       if (!res.ok) {
         navigate("/login");
         return;

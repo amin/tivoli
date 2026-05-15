@@ -1,12 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { apiUrl } from "../lib/api";
+import { apiFetch } from "../lib/api";
 import CustomSelect from "./CustomSelect";
 import AmusementCard from "./AmusementCard";
 import { useAmusements, type AmusementItem } from "../hooks/useAmusements";
-
-type Props = {
-  accessKey: string;
-};
 
 type FormData = {
   name: string;
@@ -28,8 +24,8 @@ const EMPTY_FORM: FormData = {
   type: '',
 };
 
-export default function Amusement({ accessKey }: Props) {
-  const { amusements, loading, refetch } = useAmusements(accessKey, true);
+export default function Amusement() {
+  const { amusements, loading, refetch } = useAmusements(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
@@ -68,10 +64,7 @@ export default function Amusement({ accessKey }: Props) {
   async function handleDelete(id: number) {
     setDeletingId(id);
     try {
-      await fetch(apiUrl(`/amusements/${id}`), {
-        method: 'DELETE',
-        headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
-      });
+      await apiFetch(`/amusements/${id}`, { method: 'DELETE' });
       refetch();
     } catch {
     } finally {
@@ -92,9 +85,7 @@ export default function Amusement({ accessKey }: Props) {
 
     let description = amusement.description ?? '';
     try {
-      const res = await fetch(apiUrl(`/amusements/${amusement.id}`), {
-        headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
-      });
+      const res = await apiFetch(`/amusements/${amusement.id}`);
       if (res.ok) {
         const data = await res.json();
         description = data.description ?? '';
@@ -135,15 +126,10 @@ export default function Amusement({ accessKey }: Props) {
       };
 
       const isEdit = editingId !== null;
-      const res = await fetch(
-        isEdit ? apiUrl(`/amusements/${editingId}`) : apiUrl('/amusements'),
+      const res = await apiFetch(
+        isEdit ? `/amusements/${editingId}` : '/amusements',
         {
           method: isEdit ? 'PATCH' : 'POST',
-          headers: {
-            'X-Access-Key': accessKey,
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify(body),
         }
       );

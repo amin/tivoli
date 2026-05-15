@@ -6,7 +6,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import VoteSection from "../components/VoteSection";
 import Amusement from "../components/Amusement";
-import { apiUrl } from "../lib/api";
+import { apiUrl, apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 
 type Animal = 'lion' | 'dolphin' | 'toucan' | 'beetlebug' | 'snake';
@@ -126,7 +126,7 @@ function calcVP(stamps: Stamp[]): number {
 
 export default function User() {
   const navigate = useNavigate();
-  const { user, accessKey, refresh, logout } = useAuth();
+  const { user, refresh, logout } = useAuth();
 
   const [stamps, setStamps] = useState<Stamp[]>([]);
   const [stampsLoading, setStampsLoading] = useState(false);
@@ -140,9 +140,7 @@ export default function User() {
   const fetchStamps = useCallback(async () => {
     setStampsLoading(true);
     try {
-      const stampsRes = await fetch(apiUrl('/stamps'), {
-        headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
-      });
+      const stampsRes = await apiFetch('/stamps');
       const stampsData = await stampsRes.json();
       setStamps(stampsData.data ?? []);
     } catch {
@@ -150,7 +148,7 @@ export default function User() {
     } finally {
       setStampsLoading(false);
     }
-  }, [accessKey, navigate]);
+  }, [navigate]);
 
   useEffect(() => {
     if (user) fetchStamps();
@@ -160,13 +158,8 @@ export default function User() {
     setExchangeLoading(true);
     setExchangeResult(null);
     try {
-      const res = await fetch(apiUrl('/exchanges'), {
+      const res = await apiFetch('/exchanges', {
         method: 'POST',
-        headers: {
-          'X-Access-Key': accessKey,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ stamp_ids: stampIds }),
       });
 
@@ -201,8 +194,8 @@ export default function User() {
     doExchange(stamps.map(s => s.id), 'All Stamps');
   }
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     navigate('/login');
   }
 
@@ -257,7 +250,7 @@ export default function User() {
         </button>
       </nav>
 
-      {view === 'amusements' && <Amusement accessKey={accessKey} />}
+      {view === 'amusements' && <Amusement />}
 
       {view === 'stamps' && (exchangeOptions.length > 0 || exchangeResult) && (
         <section className="section exchange-section">
@@ -360,7 +353,7 @@ export default function User() {
             )}
           </main>
 
-          <VoteSection accessKey={accessKey} userId={user.id} />
+          <VoteSection userId={user.id} />
         </>
       )}
 

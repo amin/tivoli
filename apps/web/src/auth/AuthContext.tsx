@@ -7,9 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { apiUrl } from "../lib/api";
-
-const LS_KEY = "tivoliAccessKey";
+import { apiFetch, getCsrfCookie } from "../lib/api";
 
 export type GroupSummary = {
   id: number;
@@ -27,69 +25,72 @@ export type AuthUser = {
 
 type AuthValue = {
   user: AuthUser | null;
-  accessKey: string;
   loading: boolean;
-  login: (key: string) => void;
-  logout: () => void;
+  login: (name: string, accessKey: string) => Promise<void>;
+  logout: () => Promise<void>;
   refresh: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [accessKey, setAccessKey] = useState<string>(
-    () => localStorage.getItem(LS_KEY) ?? "",
-  );
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState<boolean>(!!accessKey);
+class LoginError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
 
-  const fetchUser = useCallback(async (key: string) => {
-    if (!key) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const fetchUser = useCallback(async () => {
     try {
-      const res = await fetch(apiUrl("/user"), {
-        headers: { "X-Access-Key": key, Accept: "application/json" },
-      });
+      const res = await apiFetch("/user");
       if (!res.ok) {
-        localStorage.removeItem(LS_KEY);
-        setAccessKey("");
         setUser(null);
         return;
       }
-      const data = await res.json();
-      setUser(data);
+      setUser(await res.json());
     } catch {
       setUser(null);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchUser(accessKey);
-  }, [accessKey, fetchUser]);
+    let cancelled = false;
+    (async () => {
+      await fetchUser();
+      if (!cancelled) setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchUser]);
 
-  const login = useCallback((key: string) => {
-    localStorage.setItem(LS_KEY, key);
-    setAccessKey(key);
-    // accessKey effect triggers fetchUser
+  const login = useCallback(async (name: string, accessKey: string) => {
+    await getCsrfCookie();
+    const res = await apiFetch("/login", {
+      method: "POST",
+      body: JSON.stringify({ name, access_key: accessKey }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new LoginError(res.status, body.message ?? `Login failed (${res.status})`);
+    }
+    setUser(body);
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(LS_KEY);
-    setAccessKey("");
-    setUser(null);
+  const logout = useCallback(async () => {
+    try {
+      await apiFetch("/logout", { method: "POST" });
+    } finally {
+      setUser(null);
+    }
   }, []);
-
-  const refresh = useCallback(() => fetchUser(accessKey), [accessKey, fetchUser]);
 
   const value = useMemo<AuthValue>(
-    () => ({ user, accessKey, loading, login, logout, refresh }),
-    [user, accessKey, loading, login, logout, refresh],
+    () => ({ user, loading, login, logout, refresh: fetchUser }),
+    [user, loading, login, logout, fetchUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

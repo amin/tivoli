@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { apiUrl } from "../lib/api";
+import { apiFetch } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 
 export type AmusementItem = {
   id: number;
@@ -13,15 +14,14 @@ export type AmusementItem = {
   api_key?: string;
 };
 
-export function useAmusements(accessKey: string, owned = false) {
+export function useAmusements(owned = false) {
+  const { user } = useAuth();
   const [amusements, setAmusements] = useState<AmusementItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   function fetchAmusements() {
     setLoading(true);
-    fetch(apiUrl(owned ? "/amusements?owned=true" : "/amusements"), {
-      headers: { "X-Access-Key": accessKey, Accept: "application/json" },
-    })
+    apiFetch(owned ? "/amusements?owned=true" : "/amusements")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => { if (data) setAmusements(data.data ?? []); })
       .catch(() => {})
@@ -30,7 +30,8 @@ export function useAmusements(accessKey: string, owned = false) {
 
   useEffect(() => {
     fetchAmusements();
-  }, [accessKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, owned]);
 
   return { amusements, loading, refetch: fetchAmusements };
 }
