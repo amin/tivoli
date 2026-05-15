@@ -46,7 +46,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/identity-tokens', [IdentityTokenController::class, 'store']);
 
     // User
-    Route::get('/user', fn(Request $request) => response()->json($request->user()));
+    Route::get('/user', function (Request $request) {
+        $user  = $request->user()->load('group');
+        $group = $user->group;
+        return response()->json([
+            'id'          => $user->id,
+            'name'        => $user->name,
+            'balance'     => $user->balance,
+            'stamp_count' => $user->stamps()->count(),
+            'group'       => $group ? [
+                'id'           => $group->id,
+                'name'         => $group->name,
+                'is_admin'     => (bool) $group->is_admin,
+                'member_count' => $group->users()->count(),
+            ] : null,
+        ]);
+    });
     Route::patch('/user', [UpdateUserInfoController::class, 'update']);
 
     // Groups

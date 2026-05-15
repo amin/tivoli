@@ -11,7 +11,7 @@ class AmusementSeeder extends Seeder
 {
     public function run(): void
     {
-        $group = Group::where('name', 'Emilie, Amin, Nathalie')->first();
+        $group = Group::where('is_admin', true)->first();
 
         Amusement::forceCreate([
             'group_id'      => $group->id,
