@@ -71,5 +71,4 @@ Route::middleware(AccessKeyAuth::class)->group(function () {
 });
 
 // Existing routes not in the spec (kept untouched)
-Route::post('/stamps', [StampController::class, 'store']);
 Route::get('/victory-points', [VictoryPointsController::class, 'show']);

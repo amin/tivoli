@@ -137,10 +137,10 @@ export default function User() {
   const [exchangeResult,  setExchangeResult]  = useState<string | null>(null);
   const [exchangeOk,      setExchangeOk]      = useState(false);
 
-  const fetchStamps = useCallback(async (userId: number) => {
+  const fetchStamps = useCallback(async () => {
     setStampsLoading(true);
     try {
-      const stampsRes = await fetch(apiUrl(`/stamps?user_id=${userId}`), {
+      const stampsRes = await fetch(apiUrl('/stamps'), {
         headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
       });
       const stampsData = await stampsRes.json();
@@ -153,7 +153,7 @@ export default function User() {
   }, [accessKey, navigate]);
 
   useEffect(() => {
-    if (user) fetchStamps(user.id);
+    if (user) fetchStamps();
   }, [user, fetchStamps]);
 
   async function doExchange(stampIds: number[], label: string) {
@@ -180,7 +180,7 @@ export default function User() {
           setExchangeResult(`Earned €${data.amount.toFixed(2)} for your ${label}!`);
         }
         await refresh();
-        if (user) await fetchStamps(user.id);
+        if (user) await fetchStamps();
       } else {
         setExchangeOk(false);
         setExchangeResult(data.message ?? 'Exchange failed.');
