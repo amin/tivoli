@@ -6,7 +6,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import VoteSection from "../components/VoteSection";
 import Amusement from "../components/Amusement";
-import { apiUrl, apiFetch } from "../lib/api";
+import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 
 type Animal = 'lion' | 'dolphin' | 'toucan' | 'beetlebug' | 'snake';
@@ -14,9 +14,11 @@ type Metal  = 'silver' | 'gold' | 'platinum';
 
 type Stamp = {
   id: number;
-  animal: Animal;
-  metal: Metal | null;
-  source_amusement_id: number;
+  stamptype: {
+    animal: Animal;
+    metal: Metal | null;
+  };
+  image_url: string;
   created_at: string;
 };
 
@@ -35,26 +37,22 @@ const METAL_COLOR: Record<Metal, string> = {
   platinum: 'var(--c-blue)',
 };
 
-function stampImagePath(s: Stamp): string {
-  const file = s.metal ? `${s.metal}-${s.animal}.svg` : `${s.animal}.svg`;
-  return apiUrl(`/images/stamps/${file}`);
-}
-
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function stampLabel(s: Stamp): string {
-  return s.metal ? `${capitalize(s.metal)} ${capitalize(s.animal)}` : capitalize(s.animal);
+  const { animal, metal } = s.stamptype;
+  return metal ? `${capitalize(metal)} ${capitalize(animal)}` : capitalize(animal);
 }
 
 function detectExchangeOptions(stamps: Stamp[]): ExchangeOption[] {
   const options: ExchangeOption[] = [];
 
   // Metal set: one silver + one gold + one platinum
-  const silver   = stamps.find(s => s.metal === 'silver');
-  const gold     = stamps.find(s => s.metal === 'gold');
-  const platinum = stamps.find(s => s.metal === 'platinum');
+  const silver   = stamps.find(s => s.stamptype.metal === 'silver');
+  const gold     = stamps.find(s => s.stamptype.metal === 'gold');
+  const platinum = stamps.find(s => s.stamptype.metal === 'platinum');
 
   if (silver && gold && platinum) {
     options.push({
@@ -66,7 +64,7 @@ function detectExchangeOptions(stamps: Stamp[]): ExchangeOption[] {
   }
 
   // Animal set: one of each animal
-  const animalStamps = ALL_ANIMALS.map(a => stamps.find(s => s.animal === a));
+  const animalStamps = ALL_ANIMALS.map(a => stamps.find(s => s.stamptype.animal === a));
   if (animalStamps.every(Boolean)) {
     options.push({
       stampIds: animalStamps.map(s => s!.id),
@@ -77,13 +75,13 @@ function detectExchangeOptions(stamps: Stamp[]): ExchangeOption[] {
   }
 
   // Non-metal set: 3 distinct animals with no metal
-  const nonMetal = stamps.filter(s => s.metal === null);
+  const nonMetal = stamps.filter(s => s.stamptype.metal === null);
   const seen = new Set<string>();
   const picked: Stamp[] = [];
 
   for (const s of nonMetal) {
-    if (!seen.has(s.animal) && picked.length < 3) {
-      seen.add(s.animal);
+    if (!seen.has(s.stamptype.animal) && picked.length < 3) {
+      seen.add(s.stamptype.animal);
       picked.push(s);
     }
   }
@@ -102,7 +100,7 @@ function detectExchangeOptions(stamps: Stamp[]): ExchangeOption[] {
 // VP formula from the leaderboard spec (metal-first greedy partition)
 function calcVP(stamps: Stamp[]): number {
   const metalCount: Record<Metal, number> = { silver: 0, gold: 0, platinum: 0 };
-  for (const s of stamps) if (s.metal) metalCount[s.metal]++;
+  for (const s of stamps) if (s.stamptype.metal) metalCount[s.stamptype.metal]++;
 
   const metalSets = Math.min(metalCount.silver, metalCount.gold, metalCount.platinum);
 
@@ -111,13 +109,13 @@ function calcVP(stamps: Stamp[]): number {
     let need = metalSets;
     for (const s of stamps) {
       if (!need) break;
-      if (s.metal === metal && !usedInMetal.has(s.id)) { usedInMetal.add(s.id); need--; }
+      if (s.stamptype.metal === metal && !usedInMetal.has(s.id)) { usedInMetal.add(s.id); need--; }
     }
   }
 
   const afterMetal = stamps.filter(s => !usedInMetal.has(s.id));
   const remAnimal: Record<Animal, number> = { lion: 0, dolphin: 0, toucan: 0, beetlebug: 0, snake: 0 };
-  for (const s of afterMetal) remAnimal[s.animal]++;
+  for (const s of afterMetal) remAnimal[s.stamptype.animal]++;
 
   const animalSets = Math.min(...ALL_ANIMALS.map(a => remAnimal[a]));
   const loose = afterMetal.length - animalSets * 5;
@@ -331,7 +329,7 @@ export default function User() {
                   <div key={stamp.id} className="card">
                     <div className="card-illustration stamp-illustration">
                       <img
-                        src={stampImagePath(stamp)}
+                        src={stamp.image_url}
                         alt={stampLabel(stamp)}
                         className="stamp-img"
                         onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
@@ -339,9 +337,9 @@ export default function User() {
                     </div>
                     <div className="card-body">
                       <p className="card-title">{stampLabel(stamp)}</p>
-                      {stamp.metal ? (
-                        <p className="card-tag" style={{ color: METAL_COLOR[stamp.metal] }}>
-                          {capitalize(stamp.metal)}
+                      {stamp.stamptype.metal ? (
+                        <p className="card-tag" style={{ color: METAL_COLOR[stamp.stamptype.metal] }}>
+                          {capitalize(stamp.stamptype.metal)}
                         </p>
                       ) : (
                         <p className="card-tag">Common</p>
