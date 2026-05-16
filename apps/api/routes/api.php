@@ -56,6 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
             'name'        => $user->name,
             'balance'     => $user->balance,
             'stamp_count' => $user->stamps()->count(),
+            'has_voted'   => $user->vote()->exists(),
             'group'       => $group ? [
                 'id'           => $group->id,
                 'name'         => $group->name,

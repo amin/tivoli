@@ -12,6 +12,7 @@ import { apiFetch } from "../lib/api";
 export type GroupSummary = {
   id: number;
   name: string;
+  is_admin: boolean;
   member_count: number;
 };
 
@@ -21,6 +22,7 @@ export type AuthUser = {
   balance: number;
   group: GroupSummary | null;
   stamp_count: number;
+  has_voted: boolean;
 };
 
 type AuthValue = {
@@ -70,8 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!res.ok) {
       throw new Error(body.message ?? `Login failed (${res.status})`);
     }
-    setUser(body);
-  }, []);
+    await fetchUser();
+  }, [fetchUser]);
 
   const logout = useCallback(async () => {
     try {

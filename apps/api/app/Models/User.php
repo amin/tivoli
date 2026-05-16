@@ -14,8 +14,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
-    'name',          // set in seedern
-    'access_key',    // set by backend when activated
+    'name',
+    'group_id',
+    'startcode',
+    'access_key',
+    'balance',
+    'is_active',
 ])]
 #[Hidden(['access_key'])]
 class User extends Authenticatable

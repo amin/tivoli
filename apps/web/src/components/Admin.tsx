@@ -1,9 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { apiUrl } from "../lib/api";
-
-type Props = {
-  accessKey: string;
-};
+import { apiFetch } from "../lib/api";
 
 type MoneyLeader = { name: string; group: string | null; balance: number };
 type VpLeader    = { name: string; group: string | null; total_vp: number };
@@ -15,7 +11,7 @@ type Leaderboard = {
   vote_winners:  VoteWinner[];
 };
 
-export default function Admin({ accessKey }: Props) {
+export default function Admin() {
   const [loading, setLoading] = useState(false);
   const [scoreboard, setScoreboard] = useState<Leaderboard | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,10 +36,7 @@ export default function Admin({ accessKey }: Props) {
     setResetting(true);
     setResetDone(false);
     try {
-      const res = await fetch(apiUrl('/reset'), {
-        method: 'POST',
-        headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
-      });
+      const res = await apiFetch('/reset', { method: 'POST' });
       if (res.ok) {
         setResetDone(true);
         setConfirmReset(false);
@@ -64,9 +57,7 @@ export default function Admin({ accessKey }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(apiUrl('/leaderboard'), {
-        headers: { 'X-Access-Key': accessKey, Accept: 'application/json' },
-      });
+      const res = await apiFetch('/leaderboard');
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError((data as { message?: string }).message ?? 'Failed to load scoreboard.');
