@@ -7,6 +7,8 @@ use App\Http\Controllers\ExchangeController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\IdentityTokenController;
 use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\ResetController;
 use App\Http\Controllers\SettleController;
 use App\Http\Controllers\StampController;
 use App\Http\Controllers\StoreAmusementController;
@@ -89,6 +91,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Settlement & leaderboard
     Route::post('/settle', [SettleController::class, 'store']);
     Route::get('/leaderboard', [LeaderboardController::class, 'show']);
+
+    // Game reset (admin only)
+    Route::post('/reset', [ResetController::class, 'store']);
 });
 
 // Existing routes not in the spec (kept untouched)
