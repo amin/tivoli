@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
-    public function store(ActivateUserRequest $request): JsonResponse
+    public function activate(ActivateUserRequest $request): JsonResponse
     {
         $requestedName = trim($request->name);
 
@@ -42,7 +42,7 @@ class UserController extends Controller
         ]);
     }
 
-    public function show(Request $request): JsonResponse
+    public function profile(Request $request): JsonResponse
     {
         $user = $request->user()->load('group');
         $group = $user->group;

@@ -21,7 +21,7 @@ Route::get('/', fn () => response()->json([
 ]));
 
 // ── Auth ───────────────────────────────────────────────────────────────
-Route::post('/activate', [UserController::class, 'store']);
+Route::post('/activate', [UserController::class, 'activate']);
 Route::post('/login', [AuthSessionController::class, 'store']);
 
 // CSRF token endpoint — returns the current session's CSRF token in JSON so
@@ -42,7 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/identity-tokens', [IdentityTokenController::class, 'store']);
 
     // User
-    Route::get('/user', [UserController::class, 'show']);
+    Route::get('/user', [UserController::class, 'profile']);
     Route::patch('/user', [UserController::class, 'update']);
 
     // Groups
