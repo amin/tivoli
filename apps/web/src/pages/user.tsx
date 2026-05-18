@@ -101,37 +101,12 @@ function detectExchangeOptions(stamps: Stamp[]): ExchangeOption[] {
   return options;
 }
 
-// VP formula from the leaderboard spec (metal-first greedy partition)
-function calcVP(stamps: Stamp[]): number {
-  const metalCount: Record<Metal, number> = { silver: 0, gold: 0, platinum: 0 };
-  for (const s of stamps) if (s.metal) metalCount[s.metal]++;
-
-  const metalSets = Math.min(metalCount.silver, metalCount.gold, metalCount.platinum);
-
-  const usedInMetal = new Set<number>();
-  for (const metal of ['silver', 'gold', 'platinum'] as Metal[]) {
-    let need = metalSets;
-    for (const s of stamps) {
-      if (!need) break;
-      if (s.metal === metal && !usedInMetal.has(s.id)) { usedInMetal.add(s.id); need--; }
-    }
-  }
-
-  const afterMetal = stamps.filter(s => !usedInMetal.has(s.id));
-  const remAnimal: Record<Animal, number> = { lion: 0, dolphin: 0, toucan: 0, beetlebug: 0, snake: 0 };
-  for (const s of afterMetal) remAnimal[s.animal]++;
-
-  const animalSets = Math.min(...ALL_ANIMALS.map(a => remAnimal[a]));
-  const loose = afterMetal.length - animalSets * 5;
-  return 40 * metalSets + 25 * animalSets + (loose * (loose + 1)) / 2;
-}
-
-
 export default function User() {
   const navigate = useNavigate();
   const { user, refresh, logout } = useAuth();
 
   const [stamps, setStamps] = useState<Stamp[]>([]);
+  const [vp, setVp] = useState(0);
   const [stampsLoading, setStampsLoading] = useState(false);
 
   const [view, setView] = useState<'stamps' | 'amusements' | 'admin'>('stamps');
@@ -203,7 +178,6 @@ export default function User() {
   }
 
   const exchangeOptions = detectExchangeOptions(stamps);
-  const vp = calcVP(stamps);
 
   // ProtectedRoute guarantees user is non-null here, but keep a guard
   // in case the context becomes stale during navigation.
