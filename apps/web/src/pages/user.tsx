@@ -8,6 +8,7 @@ import VoteSection from "../components/VoteSection";
 import Amusement from "../components/Amusement";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
+import Admin from "../components/Admin";
 
 type Animal = 'lion' | 'dolphin' | 'toucan' | 'beetlebug' | 'snake';
 type Metal  = 'silver' | 'gold' | 'platinum';
@@ -129,7 +130,7 @@ export default function User() {
   const [stamps, setStamps] = useState<Stamp[]>([]);
   const [stampsLoading, setStampsLoading] = useState(false);
 
-  const [view, setView] = useState<'stamps' | 'amusements'>('stamps');
+  const [view, setView] = useState<'stamps' | 'amusements' | 'admin'>('stamps');
 
   const [exchangeLoading, setExchangeLoading] = useState(false);
   const [exchangeResult,  setExchangeResult]  = useState<string | null>(null);
@@ -246,9 +247,18 @@ export default function User() {
         >
           My Amusements
         </button>
+        {user.group?.is_admin && (
+          <button
+            className={`view-tab${view === 'admin' ? ' active' : ''}`}
+            onClick={() => setView('admin')}
+          >
+            Admin
+          </button>
+        )}
       </nav>
 
       {view === 'amusements' && <Amusement />}
+      {view === 'admin' && <Admin />}
 
       {view === 'stamps' && (exchangeOptions.length > 0 || exchangeResult) && (
         <section className="section exchange-section">

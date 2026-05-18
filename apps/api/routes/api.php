@@ -7,6 +7,8 @@ use App\Http\Controllers\ExchangeController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\IdentityTokenController;
 use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\ResetController;
 use App\Http\Controllers\SettleController;
 use App\Http\Controllers\StampController;
 use App\Http\Controllers\StoreAmusementController;
@@ -46,7 +48,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/identity-tokens', [IdentityTokenController::class, 'store']);
 
     // User
-    Route::get('/user', fn(Request $request) => response()->json($request->user()));
+    Route::get('/user', function (Request $request) {
+        $user  = $request->user()->load('group');
+        $group = $user->group;
+        return response()->json([
+            'id'          => $user->id,
+            'name'        => $user->name,
+            'balance'     => $user->balance,
+            'stamp_count' => $user->stamps()->count(),
+            'has_voted'   => $user->vote()->exists(),
+            'group'       => $group ? [
+                'id'           => $group->id,
+                'name'         => $group->name,
+                'is_admin'     => (bool) $group->is_admin,
+                'member_count' => $group->users()->count(),
+            ] : null,
+        ]);
+    });
     Route::patch('/user', [UpdateUserInfoController::class, 'update']);
 
     // Groups
@@ -74,6 +92,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Settlement & leaderboard
     Route::post('/settle', [SettleController::class, 'store']);
     Route::get('/leaderboard', [LeaderboardController::class, 'show']);
+
+    // Game reset (admin only)
+    Route::post('/reset', [ResetController::class, 'store']);
 });
 
 // Existing routes not in the spec (kept untouched)

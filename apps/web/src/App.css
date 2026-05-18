@@ -509,6 +509,139 @@
   transition: color 0.15s;
   align-items: end;
 }
+/* ---------- Admin ---------- */
+.admin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.btn-end-game {
+  background: var(--c-red);
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+.btn-reset {
+  background: var(--c-night);
+  color: var(--c-yellow);
+  border: none;
+  font-weight: 600;
+}
+
+.reset-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--c-red);
+  border-radius: var(--r-md);
+  background: var(--c-red-soft, #fff5f5);
+}
+
+.reset-confirm-text {
+  font-size: var(--text-sm);
+  color: var(--c-red);
+}
+
+.reset-confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.reset-success {
+  font-size: var(--text-sm);
+  color: var(--c-green-dark);
+  font-weight: 500;
+}
+
+/* ---------- Scoreboard modal ---------- */
+.scoreboard-modal {
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.scoreboard-category {
+  margin-bottom: 20px;
+}
+
+.scoreboard-cat-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  color: var(--c-blue);
+  border-bottom: 2px solid var(--c-yellow);
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+}
+
+.scoreboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scoreboard-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  background: var(--bg-tint);
+  border: 1px solid var(--border-faint);
+}
+
+.scoreboard-row--first {
+  background: var(--c-yellow-soft);
+  border-color: var(--c-yellow);
+  font-weight: 600;
+}
+
+.scoreboard-rank {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--c-orange);
+  min-width: 24px;
+  line-height: 1;
+}
+
+.scoreboard-row--first .scoreboard-rank {
+  color: var(--c-night);
+}
+
+.scoreboard-name {
+  flex: 1;
+  font-size: var(--text-base);
+  color: var(--text-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.scoreboard-group {
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.scoreboard-value {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--c-green-dark);
+  white-space: nowrap;
+}
+
+.scoreboard-empty {
+  font-size: var(--text-sm);
+  color: var(--text-faint);
+  padding: 8px 0;
+}
+
 /* ---------- Responsive (mobile-first, min-width) ---------- */
 @media (min-width: 560px) {
   :root { --text-brand: 46px; }
