@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreExchangeRequest;
 use App\Models\Stamp;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ExchangeController extends Controller
@@ -16,14 +16,9 @@ class ExchangeController extends Controller
         'non_metal' => ['amount' => 3,  'count' => 3],
     ];
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreExchangeRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id'],
-            'set_type' => ['required', 'string', 'in:metal,animal,non_metal'],
-            'stamp_ids' => ['required', 'array'],
-            'stamp_ids.*' => ['integer'],
-        ]);
+        $validated = $request->validated();
 
         $user = User::findOrFail($validated['user_id']);
         $setType = $validated['set_type'];

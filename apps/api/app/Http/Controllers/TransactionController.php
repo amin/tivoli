@@ -2,23 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PayoutTransactionRequest;
+use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Amusement;
 use App\Models\IdentityToken;
 use App\Models\Stamp;
 use App\Models\Transaction;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
-    public function store(Request $request): JsonResponse
+    public function store(StoreTransactionRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'identity_token' => ['required', 'string'],
-            'amount' => ['required', 'numeric', 'min:0'],
-            'api_key' => ['required', 'string'],
-        ]);
+        $data = $request->validated();
 
         $amusement = Amusement::where('api_key', $data['api_key'])->first();
 
@@ -60,12 +57,9 @@ class TransactionController extends Controller
         });
     }
 
-    public function payout(Request $request, int $id): JsonResponse
+    public function payout(PayoutTransactionRequest $request, int $id): JsonResponse
     {
-        $data = $request->validate([
-            'amount' => ['required', 'numeric', 'min:0'],
-            'api_key' => ['required', 'string'],
-        ]);
+        $data = $request->validated();
 
         $amusement = Amusement::where('api_key', $data['api_key'])->first();
 
