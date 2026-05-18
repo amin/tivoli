@@ -60,7 +60,12 @@ class TransactionController extends Controller
                 'type'         => 'fee',
             ]);
 
-            $stamp = Stamp::generate($user->id);
+            $stamp = Stamp::generate($user->id, $amusement->id);
+
+            return response()->json([
+                'id' => $transaction->id,
+                'stamp' => $stamp,
+            ], 201);
         });
 
         return response()->json([

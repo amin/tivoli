@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Amusement;
 use App\Models\AnimalType;
 use App\Models\User;
+use App\Services\VpCalculator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,8 +21,8 @@ class LeaderboardController extends Controller
             ->orderByDesc('balance')
             ->get()
             ->map(fn($u) => [
-                'name'    => $u->name,
-                'group'   => $u->group?->name,
+                'name' => $u->name,
+                'group' => $u->group?->name,
                 'balance' => round($u->balance, 2),
             ])
             ->values();
@@ -35,6 +36,9 @@ class LeaderboardController extends Controller
                 'name'     => $u->name,
                 'group'    => $u->group?->name,
                 'total_vp' => $this->computeVP($u->stamps),
+                'name' => $u->name,
+                'group' => $u->group?->name,
+                'total_vp' => VpCalculator::compute($u->stamps)['total'],
             ])
             ->sortByDesc('total_vp')
             ->values();
@@ -103,5 +107,8 @@ class LeaderboardController extends Controller
         $looseVP    = intdiv($looseMetal * ($looseMetal + 1), 2);
 
         return $metalSetVP + $animalSetVP + $looseVP;
+            'vp_leaders' => $vpLeaders,
+            'vote_winners' => $voteWinners,
+        ]);
     }
 }

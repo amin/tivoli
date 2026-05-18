@@ -8,15 +8,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Stamp extends Model
 {
-    protected $fillable = ['user_id', 'stamptype_id', 'exchanged_at'];
+    protected $fillable = ['user_id', 'stamptype_id', 'source_amusement_id', 'exchanged_at'];
 
     protected $casts = [
         'exchanged_at' => 'datetime',
     ];
 
-    protected $appends = ['image_url'];
+    protected $appends = ['animal', 'metal', 'image_url'];
+
+    protected $hidden = ['stamptype', 'stamptype_id', 'user_id', 'exchanged_at', 'updated_at'];
 
     protected $with = ['stamptype'];
+
+    protected function animal(): Attribute
+    {
+        return Attribute::get(fn() => $this->stamptype->animal->value);
+    }
+
+    protected function metal(): Attribute
+    {
+        return Attribute::get(fn() => $this->stamptype->metal?->value);
+    }
 
     protected function imageUrl(): Attribute
     {
@@ -33,7 +45,12 @@ class Stamp extends Model
         return $this->belongsTo(Stamptype::class);
     }
 
-    public static function generate(int $userId): self
+    public function sourceAmusement(): BelongsTo
+    {
+        return $this->belongsTo(Amusement::class, 'source_amusement_id');
+    }
+
+    public static function generate(int $userId, int $amusementId): self
     {
         $animals = AnimalType::cases();
         $metals = MetalType::cases();
@@ -46,8 +63,9 @@ class Stamp extends Model
             ->first();
 
         return self::create([
-            'user_id'      => $userId,
+            'user_id' => $userId,
             'stamptype_id' => $stamptype->id,
+            'source_amusement_id' => $amusementId,
         ]);
     }
 }

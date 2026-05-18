@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExchangeRequest;
 use App\Models\Stamp;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -20,16 +19,8 @@ class ExchangeController extends Controller
     {
         $validated = $request->validated();
 
-        $user = User::findOrFail($validated['user_id']);
-        $setType = $validated['set_type'];
-        $stampIds = array_unique($validated['stamp_ids']);
-        $required = self::RATES[$setType]['count'];
-
-        if (count($stampIds) !== $required) {
-            return response()->json([
-                'message' => "A {$setType} set requires exactly {$required} stamps.",
-            ], 422);
-        }
+        $user      = $request->user();
+        $stampIds  = array_unique($validated['stamp_ids']);
 
         $stamps = Stamp::whereIn('id', $stampIds)
             ->where('user_id', $user->id)
@@ -37,74 +28,92 @@ class ExchangeController extends Controller
             ->with('stamptype')
             ->get();
 
-        if ($stamps->count() !== $required) {
+        if ($stamps->count() !== count($stampIds)) {
             return response()->json(['message' => 'One or more stamp IDs do not belong to you.'], 422);
         }
 
-        $error = $this->validateSet($stamps, $setType);
-        if ($error) {
-            return response()->json(['message' => $error], 422);
+        [$consumedIds, $metalSets, $animalSets, $nonMetalSets] = $this->formSets($stamps);
+
+        $totalAmount   = ($metalSets * 10) + ($animalSets * 7) + ($nonMetalSets * 3);
+        $stampsConsumed = count($consumedIds);
+
+        if ($stampsConsumed > 0) {
+            DB::transaction(function () use ($consumedIds, $user, $totalAmount) {
+                Stamp::whereIn('id', $consumedIds)->update(['exchanged_at' => now()]);
+                $user->increment('balance', $totalAmount);
+            });
         }
 
-        $amount = self::RATES[$setType]['amount'];
-
-        DB::transaction(function () use ($stampIds, $user, $amount) {
-            Stamp::whereIn('id', $stampIds)->update(['exchanged_at' => now()]);
-            $user->increment('balance', $amount);
-        });
-
         return response()->json([
-            'amount' => $amount,
-            'set_type' => $setType,
-            'stamps_consumed' => $required,
+            'amount'         => $totalAmount,
+            'sets_exchanged' => [
+                'metal_sets'     => $metalSets,
+                'animal_sets'    => $animalSets,
+                'non_metal_sets' => $nonMetalSets,
+            ],
+            'stamps_consumed' => $stampsConsumed,
         ]);
     }
 
-    private function validateSet($stamps, string $setType): ?string
+    private function formSets($stamps): array
     {
-        return match ($setType) {
-            'metal' => $this->validateMetalSet($stamps),
-            'animal' => $this->validateAnimalSet($stamps),
-            'non_metal' => $this->validateNonMetalSet($stamps),
-        };
-    }
+        $consumedIds = [];
 
-    private function validateMetalSet($stamps): ?string
-    {
-        $metals = $stamps->map(fn($s) => $s->stamptype->metal?->value)->filter()->sort()->values()->all();
-        $required = ['gold', 'platinum', 'silver'];
-
-        if ($metals !== $required) {
-            return 'A metal set requires one silver, one gold, and one platinum stamp.';
+        // 1. Metal sets: one silver + one gold + one platinum
+        $byMetal = [];
+        foreach (['silver', 'gold', 'platinum'] as $metal) {
+            $byMetal[$metal] = $stamps
+                ->filter(fn($s) => $s->stamptype->metal?->value === $metal)
+                ->pluck('id')
+                ->toArray();
         }
 
-        return null;
-    }
-
-    private function validateAnimalSet($stamps): ?string
-    {
-        $animals = $stamps->map(fn($s) => $s->stamptype->animal->value)->sort()->values()->all();
-        $required = ['beetlebug', 'dolphin', 'lion', 'snake', 'toucan'];
-
-        if ($animals !== $required) {
-            return 'An animal set requires one of each animal: lion, dolphin, toucan, beetlebug, snake.';
+        $metalSets = min(array_map('count', $byMetal));
+        foreach ($byMetal as $ids) {
+            array_push($consumedIds, ...array_slice($ids, 0, $metalSets));
         }
 
-        return null;
-    }
-
-    private function validateNonMetalSet($stamps): ?string
-    {
-        $hasMetals = $stamps->filter(fn($s) => $s->stamptype->metal !== null);
-        if ($hasMetals->isNotEmpty()) {
-            return 'A non-metal set may only contain stamps with no metal.';
+        // 2. Animal sets: one of each of the five animals, from remaining stamps
+        $remaining = $stamps->whereNotIn('id', $consumedIds);
+        $byAnimal  = [];
+        foreach (AnimalType::cases() as $animal) {
+            $byAnimal[$animal->value] = $remaining
+                ->filter(fn($s) => $s->stamptype->animal->value === $animal->value)
+                ->pluck('id')
+                ->toArray();
         }
 
-        $animals = $stamps->map(fn($s) => $s->stamptype->animal->value)->unique();
-        if ($animals->count() !== 3) {
-            return 'A non-metal set requires 3 stamps from 3 different animals.';
+        $animalSets = min(array_map('count', $byAnimal));
+        foreach ($byAnimal as $ids) {
+            array_push($consumedIds, ...array_slice($ids, 0, $animalSets));
         }
 
-        return null;
+        // 3. Non-metal sets: 3 distinct non-metal animals, from remaining stamps
+        $remaining        = $stamps->whereNotIn('id', $consumedIds);
+        $nonMetalByAnimal = [];
+        foreach (AnimalType::cases() as $animal) {
+            $ids = $remaining
+                ->filter(fn($s) => $s->stamptype->metal === null
+                    && $s->stamptype->animal->value === $animal->value)
+                ->pluck('id')
+                ->toArray();
+            if ($ids) {
+                $nonMetalByAnimal[$animal->value] = $ids;
+            }
+        }
+
+        $nonMetalSets = 0;
+        while (count($nonMetalByAnimal) >= 3) {
+            $animals = array_keys($nonMetalByAnimal);
+            for ($i = 0; $i < 3; $i++) {
+                $consumedIds[] = array_shift($nonMetalByAnimal[$animals[$i]]);
+                if (empty($nonMetalByAnimal[$animals[$i]])) {
+                    unset($nonMetalByAnimal[$animals[$i]]);
+                }
+            }
+            $nonMetalSets++;
+        }
+
+        return [$consumedIds, $metalSets, $animalSets, $nonMetalSets];
     }
 }
