@@ -7,14 +7,11 @@ use App\Http\Controllers\ExchangeController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\IdentityTokenController;
 use App\Http\Controllers\LeaderboardController;
-use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ResetController;
-use App\Http\Controllers\SettleController;
 use App\Http\Controllers\StampController;
 use App\Http\Controllers\StoreAmusementController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UpdateUserInfoController;
-use App\Http\Controllers\VictoryPointsController;
 use App\Http\Controllers\VoteController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -89,13 +86,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Votes
     Route::post('/votes', [VoteController::class, 'store']);
 
-    // Settlement & leaderboard
-    Route::post('/settle', [SettleController::class, 'store']);
+    // Leaderboard
     Route::get('/leaderboard', [LeaderboardController::class, 'show']);
 
     // Game reset (admin only)
     Route::post('/reset', [ResetController::class, 'store']);
 });
-
-// Existing routes not in the spec (kept untouched)
-Route::get('/victory-points', [VictoryPointsController::class, 'show']);
