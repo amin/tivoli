@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\ActivateUserController;
 use App\Http\Controllers\AmusementController;
 use App\Http\Controllers\Auth\AuthSessionController;
 use App\Http\Controllers\ExchangeController;
@@ -9,12 +8,10 @@ use App\Http\Controllers\IdentityTokenController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ResetController;
 use App\Http\Controllers\StampController;
-use App\Http\Controllers\StoreAmusementController;
 use App\Http\Controllers\TransactionController;
-use App\Http\Controllers\UpdateUserInfoController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VoteController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
 
 // ── Status ─────────────────────────────────────────────────────────────
 Route::get('/', fn () => response()->json([
@@ -24,7 +21,7 @@ Route::get('/', fn () => response()->json([
 ]));
 
 // ── Auth ───────────────────────────────────────────────────────────────
-Route::post('/activate', [ActivateUserController::class, 'store']);
+Route::post('/activate', [UserController::class, 'store']);
 Route::post('/login', [AuthSessionController::class, 'store']);
 
 // CSRF token endpoint — returns the current session's CSRF token in JSON so
@@ -45,24 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/identity-tokens', [IdentityTokenController::class, 'store']);
 
     // User
-    Route::get('/user', function (Request $request) {
-        $user  = $request->user()->load('group');
-        $group = $user->group;
-        return response()->json([
-            'id'          => $user->id,
-            'name'        => $user->name,
-            'balance'     => $user->balance,
-            'stamp_count' => $user->stamps()->count(),
-            'has_voted'   => $user->vote()->exists(),
-            'group'       => $group ? [
-                'id'           => $group->id,
-                'name'         => $group->name,
-                'is_admin'     => (bool) $group->is_admin,
-                'member_count' => $group->users()->count(),
-            ] : null,
-        ]);
-    });
-    Route::patch('/user', [UpdateUserInfoController::class, 'update']);
+    Route::get('/user', [UserController::class, 'show']);
+    Route::patch('/user', [UserController::class, 'update']);
 
     // Groups
     Route::get('/groups', [GroupController::class, 'index']);
@@ -71,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Amusements
     Route::get('/amusements', [AmusementController::class, 'index']);
-    Route::post('/amusements', [StoreAmusementController::class, 'store']);
+    Route::post('/amusements', [AmusementController::class, 'store']);
     Route::get('/amusements/{id}', [AmusementController::class, 'show']);
     Route::patch('/amusements/{id}', [AmusementController::class, 'update']);
     Route::delete('/amusements/{id}', [AmusementController::class, 'destroy']);
