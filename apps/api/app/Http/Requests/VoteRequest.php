@@ -23,7 +23,7 @@ class VoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amusement_id' => 'required|exists:amusements.id',
+            'amusement_id' => ['required', 'integer', 'exists:amusements,id'],
         ];
     }
 }

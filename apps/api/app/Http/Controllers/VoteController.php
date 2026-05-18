@@ -3,22 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\VoteRequest;
-use Illuminate\Http\Request;
+use App\Models\Vote;
+use Illuminate\Http\JsonResponse;
 
 class VoteController extends Controller
 {
-    public function store(VoteRequest $request)
+    public function store(VoteRequest $request): JsonResponse
     {
         $user = $request->user();
 
-        if ($user->vote) {
-            return response()->json(['message' => 'User has already voted'], 400);
+        if ($user->vote()->exists()) {
+            return response()->json(['message' => 'You have already voted.'], 409);
         }
 
-        $vote = $user->vote()->create([
-            'amusement_id' => $request->amusement_id,
-        ]);
+        $user->vote()->create(['amusement_id' => $request->amusement_id]);
 
-        return response()->json(['message' => 'Vote recorded', 'vote' => $vote], 201);
+        return response()->json(['message' => 'Vote recorded'], 201);
     }
 }
