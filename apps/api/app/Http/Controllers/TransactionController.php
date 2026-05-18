@@ -41,23 +41,24 @@ class TransactionController extends Controller
             'user_id' => ['required', 'integer', 'exists:users,id'],
         ]);
 
-        $user = User::findOrFail($validated['user_id']);
+        $user  = User::findOrFail($validated['user_id']);
+        $price = round((float) $amusement->price, 2);
 
-        if ($user->balance < $amusement->price) {
+        if (round((float) $user->balance, 2) < $price) {
             return response()->json(['error' => 'Insufficient balance'], 422);
         }
 
         $transaction = null;
         $stamp       = null;
 
-        DB::transaction(function () use ($amusement, $user, &$transaction, &$stamp) {
-            $user->decrement('balance', $amusement->price);
-            $amusement->increment('amusement_balance', $amusement->price);
+        DB::transaction(function () use ($amusement, $user, $price, &$transaction, &$stamp) {
+            $user->decrement('balance', $price);
+            $amusement->increment('amusement_balance', $price);
 
             $transaction = Transaction::create([
                 'user_id'      => $user->id,
                 'amusement_id' => $amusement->id,
-                'amount'       => $amusement->price,
+                'amount'       => $price,
                 'type'         => 'fee',
             ]);
 
@@ -99,17 +100,18 @@ class TransactionController extends Controller
         }
 
         $user              = User::findOrFail($fee->user_id);
+        $payout            = round((float) $amusement->player_payout, 2);
         $payoutTransaction = null;
 
-        DB::transaction(function () use ($amusement, $user, $fee, &$payoutTransaction) {
-            $user->increment('balance', $amusement->player_payout);
-            $amusement->decrement('amusement_balance', $amusement->player_payout);
+        DB::transaction(function () use ($amusement, $user, $fee, $payout, &$payoutTransaction) {
+            $user->increment('balance', $payout);
+            $amusement->decrement('amusement_balance', $payout);
             $fee->update(['settled_at' => now()]);
 
             $payoutTransaction = Transaction::create([
                 'user_id'      => $user->id,
                 'amusement_id' => $amusement->id,
-                'amount'       => $amusement->player_payout,
+                'amount'       => $payout,
                 'type'         => 'payout',
             ]);
         });
