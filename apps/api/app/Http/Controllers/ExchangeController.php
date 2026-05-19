@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExchangeRequest;
 use App\Models\Stamp;
+use App\Models\User;
 use App\Models\AnimalType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
