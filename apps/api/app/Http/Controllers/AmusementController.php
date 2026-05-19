@@ -146,45 +146,6 @@ class AmusementController extends Controller
         return response()->json(['data' => $tx]);
     }
 
-    public function settle(Request $request): JsonResponse
-    {
-        $amusements = Amusement::with('group.users')->get();
-        $details    = [];
-
-        DB::transaction(function () use ($amusements, &$details) {
-            foreach ($amusements as $amusement) {
-                $balance = $amusement->amusement_balance;
-                $members = $amusement->group?->users ?? collect();
-                $memberCount = $members->count();
-
-                $splitPerMember = $memberCount > 0
-                    ? round($balance / $memberCount, 2)
-                    : 0.0;
-
-                foreach ($members as $member) {
-                    $member->increment('balance', $splitPerMember);
-                }
-
-                DB::table('amusements')
-                    ->where('id', $amusement->id)
-                    ->update(['amusement_balance' => 0]);
-
-                $details[] = [
-                    'amusement_id'     => $amusement->id,
-                    'amusement_name'   => $amusement->name,
-                    'balance'          => $balance,
-                    'split_per_member' => $splitPerMember,
-                    'member_count'     => $memberCount,
-                ];
-            }
-        });
-
-        return response()->json([
-            'amusements_settled' => count($details),
-            'details'            => $details,
-        ]);
-    }
-
     public function stats(Request $request, int $id): JsonResponse
     {
         $amusement = Amusement::find($id);
