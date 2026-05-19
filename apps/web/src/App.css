@@ -394,7 +394,6 @@
   width: 100%;
   max-width: 400px;
   box-shadow: 0 20px 60px var(--shadow-modal);
-  border-top: 4px solid var(--c-blue);
 }
 
 .modal-title {
@@ -409,7 +408,7 @@
 .modal-sub {
   font-size: var(--text-base);
   color: var(--text-muted);
-  margin-bottom: 24px;
+  margin-bottom: 15px;
 }
 
 .field { margin-bottom: 16px; }
@@ -652,6 +651,87 @@
   font-size: var(--text-sm);
   color: var(--text-faint);
   padding: 8px 0;
+}
+
+/* ---------- How It Works modal ---------- */
+.hiw-modal {
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.hiw-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.hiw-close {
+  background: none;
+  border: none;
+  font-size: var(--text-md);
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.hiw-close:hover { color: var(--text-ink); }
+
+.hiw-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hiw-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  border: 2px solid;
+}
+
+.hiw-step--blue   { background: var(--c-blue-soft);   border-color: var(--c-blue); }
+.hiw-step--orange { background: var(--c-orange-soft);  border-color: var(--c-orange); }
+.hiw-step--yellow { background: var(--c-yellow-soft);  border-color: var(--c-yellow); }
+.hiw-step--red    { background: var(--c-red-soft);     border-color: var(--c-red); }
+.hiw-step--green  { background: var(--c-green-soft);   border-color: var(--c-green); }
+
+.hiw-step-num {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1;
+  min-width: 28px;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.hiw-step--blue   .hiw-step-num { color: var(--c-blue); }
+.hiw-step--orange .hiw-step-num { color: var(--c-orange); }
+.hiw-step--yellow .hiw-step-num { color: var(--c-yellow-dark); }
+.hiw-step--red    .hiw-step-num { color: var(--c-red); }
+.hiw-step--green  .hiw-step-num { color: var(--c-green-dark); }
+
+.hiw-step-body { display: flex; flex-direction: column; gap: 3px; }
+
+.hiw-step-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-ink);
+}
+
+.hiw-step-text {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
 }
 
 /* ---------- Responsive (mobile-first, min-width) ---------- */
