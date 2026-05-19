@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logoImg from "../assets/logo_transparent.svg";
+import logoImg from "../assets/loopland_transparent.svg";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AmusementCard from "../components/AmusementCard";
+import HowItWorksModal from "../components/HowItWorksModal";
 import { useAmusements, type AmusementItem } from "../hooks/useAmusements";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
@@ -14,6 +15,7 @@ export default function Home() {
   const { user } = useAuth();
   const { amusements } = useAmusements();
   const [filter, setFilter] = useState<Filter>("all");
+  const [showHiw, setShowHiw] = useState(false);
   const navigate = useNavigate();
 
   async function openAmusement(e: React.MouseEvent, a: AmusementItem) {
@@ -67,9 +69,9 @@ export default function Home() {
                 Enter the park
               </Link>
             )}
-            <Link to="/how-it-works" className="btn btn-secondary">
+            <button className="btn btn-secondary" onClick={() => setShowHiw(true)}>
               How it works
-            </Link>
+            </button>
           </div>
         </div>
       </section>
@@ -110,6 +112,8 @@ export default function Home() {
       </main>
 
       <Footer />
+
+      {showHiw && <HowItWorksModal onClose={() => setShowHiw(false)} />}
     </>
   );
 }
