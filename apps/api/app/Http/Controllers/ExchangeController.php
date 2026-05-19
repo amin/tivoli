@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExchangeRequest;
 use App\Models\Stamp;
+use App\Models\AnimalType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -89,7 +90,7 @@ class ExchangeController extends Controller
         }
 
         // 3. Non-metal sets: 3 distinct non-metal animals, from remaining stamps
-        $remaining        = $stamps->whereNotIn('id', $consumedIds);
+        $remaining = $stamps->whereNotIn('id', $consumedIds);
         $nonMetalByAnimal = [];
         foreach (AnimalType::cases() as $animal) {
             $ids = $remaining

@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PayoutTransactionRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Amusement;
+use App\Models\IdentityToken;
 use App\Models\Stamp;
 use App\Models\Transaction;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
+
 use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
@@ -17,58 +18,46 @@ class TransactionController extends Controller
     {
         $data = $request->validated();
 
-        if (!$key) {
-            return response()->json(['error' => 'Missing amusement key'], 401);
-        }
-
-        $amusement = Amusement::where('api_key', $key)->first();
+        $amusement = Amusement::where('api_key', $data['api_key'])->first();
 
         if (!$amusement) {
-            return response()->json(['error' => 'Invalid amusement key'], 401);
+            return response()->json(['message' => 'Invalid api_key'], 401);
         }
 
-        return $amusement;
-    }
+        $token = IdentityToken::where('token', $data['identity_token'])->first();
 
-    public function store(Request $request): JsonResponse
-    {
-        $amusement = $this->authenticate($request);
-        if ($amusement instanceof JsonResponse) {
-            return $amusement;
+        if (!$token || !$token->isValid()) {
+            return response()->json(['message' => 'Invalid or expired identity token'], 401);
         }
 
-        $validated = $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id'],
-        ]);
+        $user = $token->user;
 
-        $user  = User::findOrFail($validated['user_id']);
-        $price = round((float) $amusement->price, 2);
-
-        if (round((float) $user->balance, 2) < $price) {
-            return response()->json(['error' => 'Insufficient balance'], 422);
+        if ($user->balance < $data['amount']) {
+            return response()->json(['message' => 'Insufficient balance'], 402);
         }
 
-        $transaction = null;
-        $stamp       = null;
+        return DB::transaction(function () use ($user, $amusement, $data, $token) {
+            $token->update(['consumed_at' => now()]);
 
-        DB::transaction(function () use ($amusement, $user, $price, &$transaction, &$stamp) {
-            $user->decrement('balance', $price);
-            $amusement->increment('amusement_balance', $price);
+            $user->decrement('balance', $data['amount']);
+            $amusement->increment('amusement_balance', $data['amount']);
 
             $transaction = Transaction::create([
-                'user_id'      => $user->id,
+                'user_id' => $user->id,
                 'amusement_id' => $amusement->id,
-                'amount'       => $price,
-                'type'         => 'fee',
+                'amount' => $data['amount'],
+                'type' => 'fee',
             ]);
 
             $stamp = Stamp::generate($user->id, $amusement->id);
+
+            return response()->json([
+                'id' => $transaction->id,
+                'stamp' => $stamp,
+            ], 201);
+
         });
 
-        return response()->json([
-            'transaction' => $transaction,
-            'stamp'       => $stamp,
-        ], 201);
     }
 
     public function payout(PayoutTransactionRequest $request, int $id): JsonResponse
@@ -81,41 +70,50 @@ class TransactionController extends Controller
             return response()->json(['message' => 'Invalid api_key'], 401);
         }
 
-        $fee = Transaction::findOrFail($id);
+        $original = Transaction::find($id);
 
-        if ($fee->amusement_id !== $amusement->id) {
-            return response()->json(['error' => 'Transaction does not belong to this amusement'], 403);
+        if (!$original) {
+            return response()->json(['message' => 'Transaction not found'], 404);
         }
 
-        if ($fee->type !== 'fee') {
-            return response()->json(['error' => 'Transaction is not a fee'], 422);
+        if ($original->amusement_id !== $amusement->id) {
+            return response()->json(['message' => 'Transaction does not belong to this amusement'], 403);
         }
 
-        if ($fee->settled_at !== null) {
-            return response()->json(['error' => "Transaction #{$fee->id} has already been paid out"], 409);
+        if ($original->type !== 'fee') {
+            return response()->json(['message' => 'Only fee transactions can be paid out'], 400);
         }
 
-        if (!$amusement->player_payout) {
-            return response()->json(['error' => 'This amusement has no player payout configured'], 422);
+        if ($amusement->type === 'attraction') {
+            return response()->json(['message' => 'Attractions cannot pay out'], 409);
         }
 
-        $user              = User::findOrFail($fee->user_id);
-        $payout            = round((float) $amusement->player_payout, 2);
-        $payoutTransaction = null;
+        if ($original->settled_at !== null) {
+            return response()->json(
+                ['message' => "Transaction #{$original->id} has already been paid out"],
+                409,
+            );
+        }
 
-        DB::transaction(function () use ($amusement, $user, $fee, $payout, &$payoutTransaction) {
-            $user->increment('balance', $payout);
-            $amusement->decrement('amusement_balance', $payout);
-            $fee->update(['settled_at' => now()]);
+         // Amusement balance is allowed to go negative; it's reconciled at
+        // settle (group members absorb the debt).
 
-            $payoutTransaction = Transaction::create([
-                'user_id'      => $user->id,
+        return DB::transaction(function () use ($original, $amusement, $data) {
+            $amusement->decrement('amusement_balance', $data['amount']);
+            $original->user->increment('balance', $data['amount']);
+            $original->update(['settled_at' => now()]);
+
+            $payout = Transaction::create([
+                'user_id' => $original->user_id,
                 'amusement_id' => $amusement->id,
-                'amount'       => $payout,
-                'type'         => 'payout',
+                'amount' => $data['amount'],
+                'type' => 'payout',
             ]);
-        });
 
-        return response()->json(['transaction' => $payoutTransaction], 201);
+            return response()->json([
+                'id' => $payout->id,
+                'original_transaction_id' => $original->id,
+            ], 201);
+        });
     }
 }
