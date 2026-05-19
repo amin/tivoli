@@ -38,7 +38,7 @@ class UserSeeder extends Seeder
         ];
 
         $groups = [
-            ["name" => "Centralbank", "members" => ["Emilie", "Amin", "Nathalie"], "is_admin" => true],
+            ["members" => ["Emilie", "Amin", "Nathalie"], "is_admin" => true],
             ["members" => ["Wilma", "Benita"]],
             ["members" => ["Elsa", "Laura", "John"]],
             ["members" => ["Anton", "Emma"]],

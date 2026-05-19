@@ -7,7 +7,7 @@ export default function Footer() {
         ))}
       </div>
       <div className="footer-content">
-        <span className="footer-left">© {new Date().getFullYear()} Tivoli</span>
+        <span className="footer-left">© {new Date().getFullYear()} Loopland</span>
         <nav className="footer-links">
           <a href="#">About</a>
           <a href="#">Contact</a>

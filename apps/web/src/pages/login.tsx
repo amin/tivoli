@@ -202,7 +202,7 @@ export default function Login() {
               <span className="label-row">
                 <label className="label">Startcode</label>
                 <InfoTip id="tip-startcode">
-                  A one-time code given to you when you registered for Tivoli.
+                  A one-time code given to you when you registered for Loopland.
                 </InfoTip>
               </span>
               <input
