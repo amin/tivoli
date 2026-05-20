@@ -1,4 +1,5 @@
 import type { AmusementItem } from "../hooks/useAmusements";
+import noImageSrc from "../assets/no-image.jpg";
 
 type Props = {
   amusement: AmusementItem;
@@ -12,8 +13,8 @@ type Props = {
 export default function AmusementCard({ amusement, apiKey, showImage = false, showBalance = false, onCardClick, actions }: Props) {
   const content = (
     <div className="card-body">
-      {showImage && amusement.image_url && (
-        <img className="card-image" src={amusement.image_url} alt={amusement.name} />
+      {showImage && (
+        <img className="card-image" src={amusement.image_url ?? noImageSrc} alt={amusement.name} />
       )}
       <div className="card-meta">
         <p className="card-title">{amusement.name}</p>
