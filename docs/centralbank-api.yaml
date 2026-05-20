@@ -25,8 +25,8 @@ info:
     `api_key` at registration. To act on behalf of a user, also pass
     their short-lived `identity_token` (issued by `POST /identity-tokens`
     and forwarded via URL query parameter) in the body of
-    `POST /transactions`. Identity tokens are single-use and expire in
-    5 minutes.
+    `POST /transactions`. Identity tokens are multi-use during their TTL
+    (default 30 minutes); each token can mint at most one stamp.
 
     `GET /identity-tokens/{token}` is unauthenticated — possession of a
     valid (unexpired, unconsumed) token is sufficient to resolve it to
@@ -55,25 +55,32 @@ info:
 
     ### User flow (amusements)
     1. User clicks an amusement link in the Tivoli frontend. The frontend
-       calls `POST /identity-tokens` to mint a short-lived (5 min, single-use)
-       token bound to the logged-in user.
+       calls `POST /identity-tokens` to mint an identity token bound to the
+       logged-in user (default TTL 30 min; multi-use during TTL).
     2. The frontend redirects to the amusement with `?identity_token=<token>`
        in the query string.
     3. The amusement reads the token from the URL, then immediately rewrites
-       the URL (e.g. `history.replaceState`) to scrub the token. It stores
-       the token in memory until ready to charge.
-    4. When the user starts paying, the amusement calls `POST /transactions`
-       with `{ identity_token, amount, api_key }`. The `api_key` in the
-       body identifies and authenticates the calling amusement.
-    5. Central bank validates the token (consuming it), deducts the amount
-       from the user, credits the amusement, generates a random stamp, and
-       returns `{ id, stamp }`.
+       the URL (e.g. `history.replaceState`) to scrub the token. It keeps
+       the token in memory for the duration of the visit.
+    4. Every time the user pays (entry, in-game purchase, etc.) the
+       amusement calls `POST /transactions` with
+       `{ identity_token, amount, api_key }`. Central bank deducts from the
+       user, credits the amusement's tracker, and distributes the amount
+       equally across the amusement's group members' personal balances.
+    5. The very first call with a fresh identity_token mints a stamp
+       (subject to a 3-minute anti-farming rate limit per (user, amusement)
+       pair — if the player already received a stamp from this amusement
+       within the window, no stamp is issued and the token's
+       stamp-issuing chance is spent). Subsequent calls with the same
+       token return `stamp: null`.
     6. Amusement runs its own game logic.
-    7. If the user wins, amusement calls `POST /transactions/{id}/payout`
-       with `{ amount, api_key }`. Central bank deducts from the amusement
-       and credits the user.
+    7. If the user wins, the amusement calls `POST /transactions/{id}/payout`
+       with `{ amount, api_key }`, where `id` is one of the player's earlier
+       `fee` transactions for this amusement. Central bank deducts from the
+       amusement's tracker and credits the user. Owners are NOT debited at
+       payout time.
 
-    For attractions (rides), only steps 4–5 are needed — no payout.
+    For attractions (rides), only step 4 is needed — no payout.
 
 servers:
   - url: https://api-develop-b059.up.railway.app
@@ -196,12 +203,15 @@ paths:
       operationId: issueIdentityToken
       summary: Issue a short-lived identity token for amusement redirects
       description: >
-        Generates a single-use, 5-minute identity token bound to the
-        authenticated user. The token is intended to be passed as a
-        `?identity_token=<token>` query parameter when redirecting the
-        user to an amusement. The amusement then uses the token in a
-        `POST /transactions` body to identify the user without exposing
-        their long-lived access key.
+        Generates a 30-minute identity token bound to the authenticated
+        user. The token is multi-use during its TTL — each call to
+        `POST /transactions` accepts the same token — but it can mint
+        at most one stamp.
+
+        The token is intended to be passed as a `?identity_token=<token>`
+        query parameter when redirecting the user to an amusement. The
+        amusement then uses the token in a `POST /transactions` body to
+        identify the user without exposing their long-lived access key.
 
         The amusement should immediately strip the parameter from the URL
         (e.g. via `history.replaceState`) so it doesn't leak via referer
@@ -764,14 +774,16 @@ paths:
                   type: string
                   format: uuid
                   description: >
-                    Short-lived identity token from the URL query parameter.
-                    Single-use; consumed by this call.
+                    Identity token from the URL query parameter. Multi-use
+                    during its TTL (default 30 min). Each token can mint at
+                    most one stamp; subsequent calls with the same token
+                    still process payments but return `stamp: null`.
                 amount:
                   type: number
                   multipleOf: 0.01
                   minimum: 0.01
                   description: Amount to deduct in euros (2-decimal precision).
-                  example: 19.95
+                  example: 1.95
                 api_key:
                   type: string
                   format: uuid
@@ -860,6 +872,14 @@ paths:
                 $ref: "#/components/schemas/Error"
                 example:
                   message: "This transaction belongs to a different amusement"
+        "400":
+          description: The referenced transaction is not a `fee` (e.g. a `payout` row).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example:
+                  message: "Only fee transactions can be paid out"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
@@ -879,24 +899,36 @@ paths:
     get:
       tags: [Stamps]
       operationId: listStamps
-      summary: Get current user's unexchanged stamps
+      summary: Get current user's unexchanged stamps with total VP
+      description: >
+        Returns the user's unexchanged stamps along with their total Victory
+        Points (VP). VP is computed server-side using the same partition
+        algorithm described under `GET /leaderboard`, so the value matches
+        what will appear on the final leaderboard.
+
+        **VP penalty:** if any amusement in the user's group has
+        `amusement_balance < 0`, `total_vp` is returned as 0 regardless of
+        stamp holdings. This is the same rule applied by `GET /leaderboard`.
       security: [{ accessKeyAuth: [] }]
       responses:
         "200":
-          description: User's stamp collection
+          description: User's stamp collection and total VP
           content:
             application/json:
               schema:
                 type: object
+                required: [data, total_vp]
                 properties:
                   data:
                     type: array
                     items:
                       $ref: "#/components/schemas/Stamp"
-                  vp:
+                  total_vp:
                     type: integer
-                    description: Current Victory Points for the authenticated user's unexchanged stamps.
-                    example: 47
+                    description: >
+                      Sum of Victory Points the user would receive on the
+                      leaderboard given their current unexchanged stamps.
+                    example: 65
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -1005,32 +1037,34 @@ paths:
     post:
       tags: [Results]
       operationId: settle
-      summary: End of showdown settlement
+      summary: End-of-showdown settlement (admin only)
       description: >
-        Called **once** at the end of the showdown. For each amusement:
-
-        1. Take the amusement's current balance (positive = profit,
-           negative = debt).
-        2. Split it equally among the members of the amusement's group and
-           apply the split to each member's personal balance — profit is
-           credited, debt is debited.
-        3. Zero the amusement's balance.
-
-        After settlement, all amusement balances are zero and the surplus
-        or debt has been absorbed by the group members.
-
-        Calling this endpoint is intended to happen exactly once. Calling
-        it again would settle zero-balance amusements, which is a no-op.
+        Called **once** at the end of the showdown by an admin-group member.
+        For each amusement whose `amusement_balance` is negative, the
+        absolute amount is split equally across the amusement's group
+        members and deducted from their personal balances (members may go
+        negative). `amusement_balance` itself is NOT zeroed — it remains
+        negative as a historical record and continues to trigger the VP
+        penalty. `amusements.settled_at` is set, making subsequent calls
+        a no-op for that amusement.
       security: [{ accessKeyAuth: [] }]
       responses:
         "200":
-          description: Settlement results
+          description: Settlement summary
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SettlementResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Caller's group is not an admin group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example:
+                  message: "Forbidden"
 
   # ── Leaderboard ────────────────────────────────────────────────────────
 
@@ -1047,20 +1081,32 @@ paths:
         - **Most VP**: users ordered by Victory Points (descending).
         - **Nicest amusements**: amusements ordered by vote count (descending).
 
-        **VP calculation (partition, metal first):**
+        **VP calculation:**
         1. `metal_sets = min(silver_count, gold_count, platinum_count)` →
-           `40 × metal_sets` VP. Reserves 3 × metal_sets stamps (one of each
-           metal per set).
-        2. From the remaining stamps,
-           `animal_sets = min(count of each of the five animals)` →
-           `25 × animal_sets` VP. Reserves 5 × animal_sets stamps.
-        3. `loose = remaining stamps after both partitions`. VP awarded as
-           the `loose`-th triangular number
+           `40 × metal_sets` VP.
+        2. `animal_sets = min(count per animal across all five animals)` →
+           `25 × animal_sets` VP. Computed from the full collection — a
+           metal stamp counts toward both its metal slot and its animal slot.
+        3. `loose` = stamps that end up in neither a metal set nor an animal
+           set, after maximizing the overlap between the two (i.e. when a
+           metal stamp can serve both a metal slot and an animal slot, it
+           does). VP awarded as the `loose`-th triangular number
            (1 → 1, 2 → 3, 3 → 6, 4 → 10, …).
         4. Total VP is the sum of the three.
 
+        Example: collection `[lion, dolphin, snake, gold-dolphin,
+        gold-dolphin, platinum-beetlebug, silver-toucan]` (7 stamps).
+        1 metal set (silver-toucan + 1 gold-dolphin + platinum-beetlebug —
+        with toucan and beetlebug also filling animal-set slots) + 1 animal
+        set + 2 loose dolphins → 40 + 25 + 3 = **68 VP**.
+
         Only unexchanged stamps are counted. Stamps are never deleted by
         this endpoint — the partition is purely arithmetic.
+
+        **VP penalty:** if any amusement in the user's group has
+        `amusement_balance < 0` at the time `/leaderboard` is read, that
+        user's `total_vp` is forced to 0 regardless of stamp holdings.
+        This persists after `/settle` (the tracker is not zeroed).
 
         **Tie-breaking** in all three rankings: lower `id` (or earliest
         creation) wins.
@@ -1372,9 +1418,6 @@ components:
           enum: [silver, gold, platinum]
           nullable: true
           example: "gold"
-        source_amusement_id:
-          type: integer
-          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -1389,7 +1432,14 @@ components:
           type: integer
           description: Transaction ID. Save this — it is required for payout.
         stamp:
-          $ref: "#/components/schemas/Stamp"
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/Stamp"
+          description: >
+            Newly minted stamp, or null if this identity_token has already
+            had its single stamp-issuing attempt, or if a stamped transaction
+            for this (user, amusement) pair exists within the last 3 minutes
+            (anti-farming guard).
 
     # ── Exchange ───────────────────────────────────────────────────
 
@@ -1430,7 +1480,7 @@ components:
       properties:
         amusements_settled:
           type: integer
-          description: Number of amusements settled in this call.
+          description: Number of amusements processed in this call.
           example: 12
         details:
           type: array
@@ -1441,14 +1491,14 @@ components:
                 type: integer
               amusement_name:
                 type: string
-              balance:
+              amusement_balance:
                 type: number
                 multipleOf: 0.01
-                description: Balance before split (positive = profit, negative = debt).
-              split_per_member:
+                description: Balance at settlement time (negative = deficit). Not zeroed.
+              deducted_per_member:
                 type: number
                 multipleOf: 0.01
-                description: Amount each group member received (or paid).
+                description: Per-member deduction applied (0 if non-negative or no members).
               member_count:
                 type: integer
 

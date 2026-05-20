@@ -58,4 +58,11 @@ class User extends Authenticatable
         return $this->hasOne(Vote::class);
     }
 
+    public function hasNegativeGroupAmusement(): bool
+    {
+        return $this->group
+            ?->amusements()
+            ->where('amusement_balance', '<', 0)
+            ->exists() ?? false;
+    }
 }

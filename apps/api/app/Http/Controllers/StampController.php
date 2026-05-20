@@ -11,13 +11,19 @@ class StampController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $stamps = Stamp::where('user_id', $request->user()->id)
+        $user = $request->user();
+
+        $stamps = Stamp::where('user_id', $user->id)
             ->whereNull('exchanged_at')
             ->get();
 
+        $totalVp = $user->hasNegativeGroupAmusement()
+            ? 0
+            : VpCalculator::compute($stamps)['total'];
+
         return response()->json([
             'data' => $stamps,
-            'vp' => VpCalculator::compute($stamps)['total'],
+            'total_vp' => $totalVp,
         ]);
     }
 }

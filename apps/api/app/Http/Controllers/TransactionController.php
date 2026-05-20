@@ -9,55 +9,77 @@ use App\Models\IdentityToken;
 use App\Models\Stamp;
 use App\Models\Transaction;
 use Illuminate\Http\JsonResponse;
-
 use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
+    private const RATE_LIMIT_MINUTES = 3;
+
     public function store(StoreTransactionRequest $request): JsonResponse
     {
         $data = $request->validated();
+        $amount = (float) $data['amount'];
 
         $amusement = Amusement::where('api_key', $data['api_key'])->first();
-
         if (!$amusement) {
             return response()->json(['message' => 'Invalid api_key'], 401);
         }
 
-        $token = IdentityToken::where('token', $data['identity_token'])->first();
-
-        if (!$token || !$token->isValid()) {
+        $identityToken = IdentityToken::where('token', $data['identity_token'])->first();
+        if (!$identityToken || !$identityToken->isValid()) {
             return response()->json(['message' => 'Invalid or expired identity token'], 401);
         }
 
-        $user = $token->user;
+        $user = $identityToken->user;
 
-        if ($user->balance < $data['amount']) {
+        if ($user->balance < $amount) {
             return response()->json(['message' => 'Insufficient balance'], 402);
         }
 
-        return DB::transaction(function () use ($user, $amusement, $data, $token) {
-            $token->update(['consumed_at' => now()]);
+        return DB::transaction(function () use ($user, $amusement, $amount, $identityToken) {
+            $user->decrement('balance', $amount);
+            $amusement->increment('amusement_balance', $amount);
 
-            $user->decrement('balance', $data['amount']);
-            $amusement->increment('amusement_balance', $data['amount']);
+            // Income is also distributed to the amusement's group members in
+            // real time. `amusement_balance` is a net tracker, not a pool —
+            // the double-credit is intentional (spec D6).
+            $this->distributeToOwners($amusement, $amount);
+
+            // Stamp eligibility (option B — token gets one attempt):
+            //  - this identity_token has not been used before (consumed_at is null), AND
+            //  - no stamp has been issued for this (user, amusement) within the last 3 min.
+            // Either way, mark the token as consumed on first use to spend its chance.
+            $isFirstUse = $identityToken->consumed_at === null;
+
+            $recentStamped = Transaction::where('user_id', $user->id)
+                ->where('amusement_id', $amusement->id)
+                ->whereNotNull('stamp_id')
+                ->where('created_at', '>', now()->subMinutes(self::RATE_LIMIT_MINUTES))
+                ->exists();
+
+            $stamp = ($isFirstUse && !$recentStamped) ? Stamp::generate($user->id) : null;
 
             $transaction = Transaction::create([
                 'user_id' => $user->id,
                 'amusement_id' => $amusement->id,
-                'amount' => $data['amount'],
+                'stamp_id' => $stamp?->id,
+                'amount' => $amount,
                 'type' => 'fee',
             ]);
 
-            $stamp = Stamp::generate($user->id, $amusement->id);
+            if ($stamp) {
+                $stamp->update(['transaction_id' => $transaction->id]);
+            }
+
+            if ($isFirstUse) {
+                $identityToken->update(['consumed_at' => now()]);
+            }
 
             return response()->json([
                 'id' => $transaction->id,
                 'stamp' => $stamp,
             ], 201);
-
         });
-
     }
 
     public function payout(PayoutTransactionRequest $request, int $id): JsonResponse
@@ -65,13 +87,11 @@ class TransactionController extends Controller
         $data = $request->validated();
 
         $amusement = Amusement::where('api_key', $data['api_key'])->first();
-
         if (!$amusement) {
             return response()->json(['message' => 'Invalid api_key'], 401);
         }
 
         $original = Transaction::find($id);
-
         if (!$original) {
             return response()->json(['message' => 'Transaction not found'], 404);
         }
@@ -95,9 +115,8 @@ class TransactionController extends Controller
             );
         }
 
-         // Amusement balance is allowed to go negative; it's reconciled at
+        // Amusement balance is allowed to go negative; it's reconciled at
         // settle (group members absorb the debt).
-
         return DB::transaction(function () use ($original, $amusement, $data) {
             $amusement->decrement('amusement_balance', $data['amount']);
             $original->user->increment('balance', $data['amount']);
@@ -115,5 +134,23 @@ class TransactionController extends Controller
                 'original_transaction_id' => $original->id,
             ], 201);
         });
+    }
+
+    private function distributeToOwners(Amusement $amusement, float $amount): void
+    {
+        $members = $amusement->group?->users()->get() ?? collect();
+        $n = $members->count();
+        if ($n === 0) {
+            return;
+        }
+
+        $share = round($amount / $n, 2);
+        if ($share <= 0) {
+            return;
+        }
+
+        foreach ($members as $member) {
+            $member->increment('balance', $share);
+        }
     }
 }

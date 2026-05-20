@@ -1,0 +1,25 @@
+meta {
+  name: Store Transaction
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/transactions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "identity_token": "{{identityToken}}",
+    "amount": 5.00,
+    "api_key": "{{apiKey}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setEnvVar("transactionId", res.body.id);
+  }
+}

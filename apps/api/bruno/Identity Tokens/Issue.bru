@@ -1,0 +1,21 @@
+meta {
+  name: Issue Identity Token
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/identity-tokens
+  body: none
+  auth: none
+}
+
+headers {
+  X-Access-Key: {{accessKey}}
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setEnvVar("identityToken", res.body.identity_token);
+  }
+}

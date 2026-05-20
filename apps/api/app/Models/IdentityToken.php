@@ -8,6 +8,8 @@ use Illuminate\Support\Str;
 
 class IdentityToken extends Model
 {
+    public const DEFAULT_TTL_MINUTES = 30;
+
     protected $fillable = ['token', 'user_id', 'expires_at', 'consumed_at'];
 
     protected $casts = [
@@ -20,12 +22,15 @@ class IdentityToken extends Model
         return $this->belongsTo(User::class);
     }
 
+    // Multi-use during TTL. `consumed_at` tracks the first time the token was
+    // used (its stamp-issuing chance is spent at that moment), but the token
+    // remains valid for additional transactions until it expires.
     public function isValid(): bool
     {
-        return $this->consumed_at === null && $this->expires_at->isFuture();
+        return $this->expires_at->isFuture();
     }
 
-    public static function issueFor(User $user, int $ttlMinutes = 5): self
+    public static function issueFor(User $user, int $ttlMinutes = self::DEFAULT_TTL_MINUTES): self
     {
         return self::create([
             'token' => (string) Str::uuid(),

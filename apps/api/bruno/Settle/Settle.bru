@@ -1,0 +1,21 @@
+meta {
+  name: Settle
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/settle
+  body: none
+  auth: none
+}
+
+headers {
+  X-Access-Key: {{accessKey}}
+}
+
+docs {
+  Admin-only. Requires the authenticated user's group to have `is_admin = true`.
+  Returns 403 otherwise. After a successful settle, all subsequent
+  /transactions and /payout calls return 409 (event closed).
+}

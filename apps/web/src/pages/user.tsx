@@ -17,7 +17,6 @@ type Stamp = {
   id: number;
   animal: Animal;
   metal: Metal | null;
-  source_amusement_id: number;
   created_at: string;
 };
 

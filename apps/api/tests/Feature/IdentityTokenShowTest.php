@@ -57,14 +57,18 @@ class IdentityTokenShowTest extends TestCase
         $response->assertStatus(401);
     }
 
-    public function test_show_returns_401_for_consumed_token(): void
+    public function test_show_still_resolves_a_consumed_token(): void
     {
-        $user = $this->makeUser();
+        // Identity tokens are multi-use during their TTL; `consumed_at` only
+        // marks that the token has had its single stamp-issuing attempt, not
+        // that it is invalid.
+        $user = $this->makeUser('Bob');
         $token = IdentityToken::issueFor($user);
         $token->update(['consumed_at' => now()]);
 
         $response = $this->getJson("/identity-tokens/{$token->token}");
 
-        $response->assertStatus(401);
+        $response->assertStatus(200);
+        $response->assertJsonPath('user.name', 'Bob');
     }
 }

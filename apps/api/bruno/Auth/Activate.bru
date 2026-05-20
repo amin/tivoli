@@ -1,0 +1,24 @@
+meta {
+  name: Activate
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/activate
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "first_name": "{{userName}}",
+    "startcode": "{{startcode}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    bru.setEnvVar("accessKey", res.body.access_key);
+  }
+}
