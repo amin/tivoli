@@ -30,6 +30,9 @@ Route::post('/login', [AuthSessionController::class, 'store']);
 // XSRF-TOKEN cookie when the API is on a different PSL subdomain).
 Route::get('/csrf-token', fn () => response()->json(['csrf_token' => csrf_token()]));
 
+// ── Public amusement listing ────────────────────────────────────────────
+Route::get('/amusements', [AmusementController::class, 'index']);
+
 // ── Transactions (amusement api_key in request body) ───────────────────
 Route::get('/identity-tokens/{token}', [IdentityTokenController::class, 'show']);
 Route::post('/transactions', [TransactionController::class, 'store']);
@@ -51,8 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/groups/{id}', [GroupController::class, 'show']);
     Route::patch('/groups/{id}', [GroupController::class, 'update']);
 
-    // Amusements
-    Route::get('/amusements', [AmusementController::class, 'index']);
+    // Amusements (write + admin actions)
     Route::post('/amusements', [AmusementController::class, 'store']);
     Route::get('/amusements/{id}', [AmusementController::class, 'show']);
     Route::patch('/amusements/{id}', [AmusementController::class, 'update']);
