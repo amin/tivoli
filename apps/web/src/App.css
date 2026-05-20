@@ -734,6 +734,33 @@
   margin: 0;
 }
 
+/* ---------- Back-to-home button ---------- */
+.back-home-btn {
+  position: fixed;
+  right: 20px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: var(--c-blue);
+  color: white;
+  border-radius: var(--r-pill);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-family: var(--font-body);
+  text-decoration: none;
+  box-shadow: 0 4px 16px var(--shadow-btn);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+@media (hover: hover) {
+  .back-home-btn:hover {
+    background: var(--c-blue-dark);
+    box-shadow: 0 6px 20px var(--shadow-btn);
+  }
+}
+
 /* ---------- Responsive (mobile-first, min-width) ---------- */
 @media (min-width: 560px) {
   :root { --text-brand: 46px; }
