@@ -9,6 +9,7 @@ use App\Models\IdentityToken;
 use App\Models\Stamp;
 use App\Models\Transaction;
 use Illuminate\Http\JsonResponse;
+
 use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
@@ -48,13 +49,15 @@ class TransactionController extends Controller
                 'type' => 'fee',
             ]);
 
-            $stamp = Stamp::generate($user->id);
+            $stamp = Stamp::generate($user->id, $amusement->id);
 
             return response()->json([
                 'id' => $transaction->id,
                 'stamp' => $stamp,
             ], 201);
+
         });
+
     }
 
     public function payout(PayoutTransactionRequest $request, int $id): JsonResponse
@@ -92,7 +95,7 @@ class TransactionController extends Controller
             );
         }
 
-        // Amusement balance is allowed to go negative; it's reconciled at
+         // Amusement balance is allowed to go negative; it's reconciled at
         // settle (group members absorb the debt).
 
         return DB::transaction(function () use ($original, $amusement, $data) {

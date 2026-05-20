@@ -7,7 +7,7 @@
   background: var(--c-night);
   border-bottom: 3px solid var(--c-red);
   flex-wrap: wrap;
-  position: relative;
+  gap: 0.3rem;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -48,8 +48,8 @@
 .auth-pill {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 6px 14px;
+  gap: 5px;
+  padding: 5px 10px;
   border: 1px solid var(--c-blue-muted);
   border-radius: var(--r-pill);
   background: var(--c-blue-soft);
@@ -310,6 +310,11 @@
 .card-pill--winnings {
   background: var(--c-green-soft);
   color: var(--c-green-dark);
+}
+
+.card-pill--balance {
+  background: var(--c-blue-soft);
+  color: var(--c-blue-dark);
 }
 
 .card-api-key {

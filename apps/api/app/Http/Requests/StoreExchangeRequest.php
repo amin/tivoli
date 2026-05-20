@@ -18,8 +18,6 @@ class StoreExchangeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
-            'set_type' => ['required', 'string', 'in:metal,animal,non_metal'],
             'stamp_ids' => ['required', 'array'],
             'stamp_ids.*' => ['integer'],
         ];

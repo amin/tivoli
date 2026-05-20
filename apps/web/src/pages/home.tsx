@@ -54,7 +54,7 @@ export default function Home() {
             <span className="pixel">playground</span>
           </h1>
           <p>
-            Attractions and games - all in one place. Grab a ticket and
+            Attractions and games, all in one place. Grab a ticket and
             explore.
           </p>
           <div className="hero-ctas">

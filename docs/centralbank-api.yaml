@@ -893,6 +893,10 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Stamp"
+                  vp:
+                    type: integer
+                    description: Current Victory Points for the authenticated user's unexchanged stamps.
+                    example: 47
         "401":
           $ref: "#/components/responses/Unauthorized"
 
