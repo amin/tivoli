@@ -97,12 +97,12 @@ class OwnerDistributionTest extends TestCase
 
         $this->postJson('/transactions', [
             'identity_token' => $token->token,
-            'amount' => 0.50,
+            'amount' => 2.00,
             'api_key' => $amusement->api_key,
         ])->assertStatus(201);
 
         $o1->refresh();
-        $this->assertEquals(1.50, $o1->balance);
+        $this->assertEquals(3.00, $o1->balance);
     }
 
     public function test_rounding_drops_fractional_cent(): void

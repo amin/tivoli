@@ -93,7 +93,7 @@ class IdentityTokenReuseTest extends TestCase
         $first->assertStatus(201);
         $this->assertNotNull($first->json('stamp'));
 
-        $second = $this->postTx($token->token, $amusement, 0.50);
+        $second = $this->postTx($token->token, $amusement, 1.00);
         $second->assertStatus(201);
         $this->assertNull($second->json('stamp'));
     }

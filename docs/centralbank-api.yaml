@@ -781,8 +781,8 @@ paths:
                 amount:
                   type: number
                   multipleOf: 0.01
-                  minimum: 0.01
-                  description: Amount to deduct in euros (2-decimal precision).
+                  minimum: 1
+                  description: Amount to deduct in euros (2-decimal precision; minimum 1).
                   example: 1.95
                 api_key:
                   type: string

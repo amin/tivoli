@@ -18,8 +18,8 @@ class PayoutTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['required', 'numeric', 'min:0'],
-            'api_key' => ['required', 'string'],
+            'amount' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:9999.99'],
+            'api_key' => ['required', 'string', 'uuid'],
         ];
     }
 }
