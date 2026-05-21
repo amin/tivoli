@@ -63,6 +63,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchUser]);
 
+  // Balance changes happen out-of-band (games, payouts, exchanges, settle),
+  // so the header would otherwise show a stale value. We poll instead of
+  // using WebSockets because Reverb/Echo would require a second long-lived
+  // service and broadcasting from every balance-changing code path — too
+  // much infra for what amounts to a once-per-3s refresh.
+  useEffect(() => {
+    if (!user) return;
+    const id = setInterval(async () => {
+      try {
+        const res = await apiFetch("/user");
+        if (!res.ok) return;
+        const fresh = await res.json();
+        setUser((prev) => (prev && prev.balance !== fresh.balance ? { ...prev, balance: fresh.balance } : prev));
+      } catch {
+        // ignore transient errors
+      }
+    }, 3000);
+    return () => clearInterval(id);
+  }, [user?.id]);
+
   const login = useCallback(async (name: string, accessKey: string) => {
     const res = await apiFetch("/login", {
       method: "POST",

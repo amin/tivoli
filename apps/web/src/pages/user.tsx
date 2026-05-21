@@ -126,7 +126,7 @@ export default function User() {
 
   useEffect(() => {
     if (user) fetchStamps();
-  }, [user, fetchStamps]);
+  }, [user?.id, fetchStamps]);
 
   async function doExchange(stampIds: number[], label: string) {
     setExchangeLoading(true);

@@ -50,7 +50,7 @@ export default function Login() {
     if (!authLoading && user) {
       navigate("/user", { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user?.id, authLoading, navigate]);
 
   // Activation form state
   const [activationName, setActivationName] = useState("");
