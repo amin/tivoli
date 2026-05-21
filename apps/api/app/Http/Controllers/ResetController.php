@@ -28,7 +28,7 @@ class ResetController extends Controller
         Transaction::query()->delete();
         IdentityToken::query()->delete();
         User::query()->update(['balance' => self::STARTING_BALANCE]);
-        Amusement::query()->update(['amusement_balance' => 0]);
+        Amusement::query()->update(['amusement_balance' => 0, 'settled_at' => null]);
 
         return response()->json(['message' => 'Game reset successfully']);
     }
