@@ -76,8 +76,13 @@ class TransactionController extends Controller
             }
 
             return response()->json([
-                'id' => $transaction->id,
-                'stamp' => $stamp,
+                'transaction_id' => $transaction->id,
+                'amount' => $amount,
+                'stamp' => $stamp ? [
+                    'animal' => $stamp->animal,
+                    'metal' => $stamp->metal,
+                    'image_url' => $stamp->image_url,
+                ] : null,
             ], 201);
         });
     }
@@ -130,8 +135,8 @@ class TransactionController extends Controller
             ]);
 
             return response()->json([
-                'id' => $payout->id,
-                'original_transaction_id' => $original->id,
+                'transaction_id' => $payout->id,
+                'amount' => (float) $data['amount'],
             ], 201);
         });
     }
