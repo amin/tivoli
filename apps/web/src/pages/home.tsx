@@ -134,6 +134,9 @@ export default function Home() {
             launchAmusement(guestPending);
             setGuestPending(null);
           }}
+        />
+      )}
+      
       {iframe && (
         <IframeModal
           url={iframe.url}
