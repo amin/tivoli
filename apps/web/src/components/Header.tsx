@@ -2,12 +2,14 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 const BRAND_LETTERS = [
-  ["T", "red"],
-  ["i", "blue"],
-  ["v", "red"],
-  ["o", "yellow"],
+  ["L", "red"],
+  ["o", "blue"],
+  ["o", "red"],
+  ["p", "yellow"],
   ["l", "red"],
-  ["i", "blue"],
+  ["a", "blue"],
+  ["n", "red"],
+  ["d", "yellow"],
 ] as const;
 
 export default function Header() {
@@ -34,7 +36,6 @@ export default function Header() {
           <Link to="/login" className="auth-pill">
             <span className="avatar">G</span>
             <span className="auth-text">Guest</span>
-            <span className="auth-divider">·</span>
             <span className="auth-link">Log in / Activate</span>
           </Link>
         )}

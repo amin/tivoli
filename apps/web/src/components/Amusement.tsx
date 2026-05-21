@@ -177,6 +177,7 @@ export default function Amusement() {
                 key={amusement.id}
                 amusement={amusement}
                 apiKey={amusement.api_key}
+                showBalance
                 actions={
                   <>
                     <button

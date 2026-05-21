@@ -11,21 +11,6 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Group name and user names
-        $users = [
-            "Emilie, Amin, Nathalie" => ["Emilie", "Amin", "Nathalie"],
-            "Wilma, Benita" => ["Wilma", "Benita"],
-            "Elsa, Laura, John" => ["Elsa", "Laura", "John"],
-            "Anton, Emma" => ["Anton", "Emma"],
-            "Olivia, Olof" => ["Olivia", "Olof"],
-            "Tim, Robin" => ["Tim", "Robin"],
-            "Allan, Alex" => ["Allan", "Alex"],
-            "Marie, Patricia, Malin" => ["Marie", "Patricia", "Malin"],
-            "Hanna, Maria" => ["Hanna", "Maria"],
-            "Eddie, Daniella" => ["Eddie", "Daniella"],
-        ];
-
-        // Startcodes for deterministic seeding
         $startcodes = [
             "Emilie" => "c81e18e2-5525-4c9a-aa15-cf9ffcc8d72c",
             "Amin" => "afc2b0f0-7c1e-484a-834f-c1adc25a819d",
@@ -52,17 +37,32 @@ class UserSeeder extends Seeder
             "Daniella" => "6cb4cc5a-db71-43bc-9e86-0851d10f8782",
         ];
 
-        foreach ($users as $groupName => $names) {
-            // Fetch group from database
-            $group = Group::where("name", $groupName)->first();
+        $groups = [
+            ["members" => ["Emilie", "Amin", "Nathalie"], "is_admin" => true],
+            ["members" => ["Wilma", "Benita"]],
+            ["members" => ["Elsa", "Laura", "John"]],
+            ["members" => ["Anton", "Emma"]],
+            ["members" => ["Olivia", "Olof"]],
+            ["members" => ["Tim", "Robin"]],
+            ["members" => ["Allan", "Alex"]],
+            ["members" => ["Marie", "Patricia", "Malin"]],
+            ["members" => ["Hanna", "Maria"]],
+            ["members" => ["Eddie", "Daniella"]],
+        ];
 
-            // Create each user and assign group ID
-            foreach ($names as $studentName) {
+        foreach ($groups as $groupData) {
+            $members = $groupData['members'];
+
+            $group = Group::create([
+                "name" => $groupData['name'] ?? implode(', ', $members),
+                "is_admin" => $groupData['is_admin'] ?? false,
+            ]);
+
+            foreach ($members as $name) {
                 User::create([
-                    "name" => $studentName,
+                    "name" => $name,
                     "group_id" => $group->id,
-                    "startcode" =>
-                        $startcodes[$studentName] ?? Str::uuid()->toString(),
+                    "startcode" => $startcodes[$name] ?? Str::uuid()->toString(),
                     "access_key" => null,
                     "balance" => 25,
                 ]);

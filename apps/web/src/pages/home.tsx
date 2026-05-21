@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logoImg from "../assets/logo_transparent.svg";
+import logoImg from "../assets/loopland_transparent.svg";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AmusementCard from "../components/AmusementCard";
+import HowItWorksModal from "../components/HowItWorksModal";
+import GuestWarningModal from "../components/GuestWarningModal";
 import { useAmusements, type AmusementItem } from "../hooks/useAmusements";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
@@ -14,12 +16,20 @@ export default function Home() {
   const { user } = useAuth();
   const { amusements } = useAmusements();
   const [filter, setFilter] = useState<Filter>("all");
+  const [showHiw, setShowHiw] = useState(false);
+  const [guestPending, setGuestPending] = useState<AmusementItem | null>(null);
   const navigate = useNavigate();
+
+  function launchAmusement(a: AmusementItem, token?: string) {
+    const url = new URL(a.url);
+    if (token) url.searchParams.set("identity_token", token);
+    window.open(url.toString(), "_blank", "noreferrer");
+  }
 
   async function openAmusement(e: React.MouseEvent, a: AmusementItem) {
     e.preventDefault();
     if (!user) {
-      navigate("/login");
+      setGuestPending(a);
       return;
     }
     try {
@@ -29,9 +39,7 @@ export default function Home() {
         return;
       }
       const body = await res.json();
-      const url = new URL(a.url);
-      url.searchParams.set("identity_token", body.identity_token);
-      window.open(url.toString(), "_blank", "noreferrer");
+      launchAmusement(a, body.identity_token);
     } catch {
       // Network error — silently no-op; user can retry
     }
@@ -54,7 +62,7 @@ export default function Home() {
             <span className="pixel">playground</span>
           </h1>
           <p>
-            Attractions and games - all in one place. Grab a ticket and
+            Attractions and games, all in one place. Grab a ticket and
             explore.
           </p>
           <div className="hero-ctas">
@@ -67,9 +75,9 @@ export default function Home() {
                 Enter the park
               </Link>
             )}
-            <Link to="/how-it-works" className="btn btn-secondary">
+            <button className="btn btn-secondary" onClick={() => setShowHiw(true)}>
               How it works
-            </Link>
+            </button>
           </div>
         </div>
       </section>
@@ -110,6 +118,19 @@ export default function Home() {
       </main>
 
       <Footer />
+
+      {showHiw && <HowItWorksModal onClose={() => setShowHiw(false)} />}
+
+      {guestPending && (
+        <GuestWarningModal
+          amusement={guestPending}
+          onClose={() => setGuestPending(null)}
+          onContinueAsGuest={() => {
+            launchAmusement(guestPending);
+            setGuestPending(null);
+          }}
+        />
+      )}
     </>
   );
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,13 +13,9 @@ use Illuminate\Support\Str;
 
 class AuthSessionController extends Controller
 {
-    public function store(Request $request): JsonResponse
+    public function store(LoginRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:50'],
-            'access_key' => ['required', 'string', 'uuid'],
-        ]);
-
+        $validated = $request->validated();
         $name = trim($validated['name']);
         $accessKey = $validated['access_key'];
 

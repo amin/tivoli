@@ -8,15 +8,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Stamp extends Model
 {
-    protected $fillable = ['user_id', 'stamptype_id', 'exchanged_at'];
+    protected $fillable = ['user_id', 'stamptype_id', 'transaction_id', 'exchanged_at'];
 
     protected $casts = [
         'exchanged_at' => 'datetime',
     ];
 
-    protected $appends = ['image_url'];
+    protected $appends = ['animal', 'metal', 'image_url'];
+
+    protected $hidden = ['stamptype', 'stamptype_id', 'user_id', 'exchanged_at', 'updated_at', 'source_amusement_id'];
 
     protected $with = ['stamptype'];
+
+    protected function animal(): Attribute
+    {
+        return Attribute::get(fn() => $this->stamptype->animal->value);
+    }
+
+    protected function metal(): Attribute
+    {
+        return Attribute::get(fn() => $this->stamptype->metal?->value);
+    }
 
     protected function imageUrl(): Attribute
     {
@@ -33,6 +45,11 @@ class Stamp extends Model
         return $this->belongsTo(Stamptype::class);
     }
 
+    public function transaction(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class);
+    }
+
     public static function generate(int $userId): self
     {
         $animals = AnimalType::cases();
@@ -46,7 +63,7 @@ class Stamp extends Model
             ->first();
 
         return self::create([
-            'user_id'      => $userId,
+            'user_id' => $userId,
             'stamptype_id' => $stamptype->id,
         ]);
     }

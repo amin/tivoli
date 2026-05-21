@@ -318,8 +318,9 @@
 .user-logout-wrap {
   display: flex;
   justify-content: center;
-  padding: 28px 24px 28px;
+  padding: 28px 24px;
   background: var(--bg-tint);
+  margin-top: auto;
 }
 
 .logout-btn {

@@ -10,6 +10,7 @@ export type AmusementItem = {
   url: string;
   price: number | null;
   player_payout: number | null;
+  amusement_balance?: number;
   image_url: string | null;
   api_key?: string;
 };

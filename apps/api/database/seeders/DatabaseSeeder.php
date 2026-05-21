@@ -17,7 +17,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             StamptypeSeeder::class,
-            GroupSeeder::class,
             UserSeeder::class,
             GuestSeeder::class,
             AmusementSeeder::class,

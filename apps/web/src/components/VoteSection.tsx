@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 import CustomSelect from "./CustomSelect";
 
 type Amusement = {
@@ -14,14 +15,19 @@ type Props = {
 };
 
 export default function VoteSection({ userId }: Props) {
+  const { user } = useAuth();
   const [amusements,  setAmusements]  = useState<Amusement[]>([]);
   const [voteChoice,  setVoteChoice]  = useState('');
   const [voteLoading, setVoteLoading] = useState(false);
   const [voteResult,  setVoteResult]  = useState<string | null>(null);
   const [voteOk,      setVoteOk]      = useState(false);
   const [hasVoted,    setHasVoted]    = useState(
-    () => !!localStorage.getItem(`tivoliVoted_${userId}`)
+    () => !!(user?.has_voted || localStorage.getItem(`tivoliVoted_${userId}`))
   );
+
+  useEffect(() => {
+    if (user?.has_voted) setHasVoted(true);
+  }, [user?.has_voted]);
 
   useEffect(() => {
     apiFetch('/amusements')

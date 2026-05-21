@@ -1,0 +1,18 @@
+meta {
+  name: Payout
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/transactions/{{transactionId}}/payout
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "amount": 10.00,
+    "api_key": "{{apiKey}}"
+  }
+}
