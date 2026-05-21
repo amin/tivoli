@@ -14,16 +14,19 @@ class AmusementController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $userGroupId = $request->user()->group_id;
+        $userGroupId = $request->user()?->group_id;
 
         $query = Amusement::orderBy('type')->orderBy('name');
 
         if ($request->boolean('owned')) {
+            if (!$userGroupId) {
+                return response()->json(['data' => []]);
+            }
             $query->where('group_id', $userGroupId);
         }
 
         $amusements = $query->get()->each(function ($amusement) use ($userGroupId) {
-            if ($amusement->group_id === $userGroupId) {
+            if ($userGroupId && $amusement->group_id === $userGroupId) {
                 $amusement->makeVisible('api_key');
             }
         });
