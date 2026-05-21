@@ -6,7 +6,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import VoteSection from "../components/VoteSection";
 import Amusement from "../components/Amusement";
-import { apiUrl, apiFetch } from "../lib/api";
+import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import Admin from "../components/Admin";
 
