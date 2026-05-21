@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Amusement;
 use App\Models\Group;
+use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -40,6 +41,16 @@ class SettleTest extends TestCase
             'api_key' => (string) Str::uuid(),
             'type' => 'game',
             'amusement_balance' => $balance,
+        ]);
+    }
+
+    private function seedPayout(int $amusementId, int $userId, float $amount): void
+    {
+        Transaction::create([
+            'user_id' => $userId,
+            'amusement_id' => $amusementId,
+            'amount' => $amount,
+            'type' => 'payout',
         ]);
     }
 
@@ -88,6 +99,7 @@ class SettleTest extends TestCase
         $o1 = $this->makeUser($owners->id, 50.00);
         $o2 = $this->makeUser($owners->id, 50.00);
         $a = $this->makeAmusement($owners->id, -20.00);
+        $this->seedPayout($a->id, $caller->id, 20.00);
 
         $res = $this->actingAs($caller)->postJson('/settle');
 
@@ -148,6 +160,7 @@ class SettleTest extends TestCase
         $caller = $this->makeUser($admin->id, 0);
         $o1 = $this->makeUser($owners->id, 5.00);
         $a = $this->makeAmusement($owners->id, -20.00);
+        $this->seedPayout($a->id, $caller->id, 20.00);
 
         $this->actingAs($caller)->postJson('/settle')->assertStatus(200);
 
@@ -163,6 +176,7 @@ class SettleTest extends TestCase
         $this->makeUser($owners->id, 0);
         $this->makeUser($owners->id, 0);
         $negative = $this->makeAmusement($owners->id, -10.00);
+        $this->seedPayout($negative->id, $caller->id, 10.00);
         $positive = $this->makeAmusement($owners->id, 5.00);
 
         $res = $this->actingAs($caller)->postJson('/settle');

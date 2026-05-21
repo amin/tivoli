@@ -77,13 +77,13 @@ class StampRateLimitTest extends TestCase
 
         $first = $this->entry($player, $amusement);
         $this->assertNotNull($first['stamp']);
-        $firstStampedTxId = $first['id'];
+        $firstStampedTxId = $first['transaction_id'];
 
         $second = $this->entry($player, $amusement);
         $this->assertNull($second['stamp']);
 
         $this->assertDatabaseHas('transactions', [
-            'id' => $second['id'],
+            'id' => $second['transaction_id'],
             'type' => 'fee',
             'stamp_id' => null,
         ]);
@@ -104,13 +104,13 @@ class StampRateLimitTest extends TestCase
         $first = $this->entry($player, $amusement);
         $this->assertNotNull($first['stamp']);
 
-        Transaction::where('id', $first['id'])->update([
+        Transaction::where('id', $first['transaction_id'])->update([
             'created_at' => now()->subMinutes(4),
         ]);
 
         $second = $this->entry($player, $amusement);
         $this->assertNotNull($second['stamp']);
-        $this->assertNotSame($first['stamp']['id'], $second['stamp']['id']);
+        $this->assertSame(2, \App\Models\Stamp::where('user_id', $player->id)->count());
     }
 
     public function test_rate_limit_is_per_user_amusement_pair(): void

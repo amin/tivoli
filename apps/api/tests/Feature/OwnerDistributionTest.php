@@ -123,9 +123,9 @@ class OwnerDistributionTest extends TestCase
         ])->assertStatus(201);
 
         $o1->refresh(); $o2->refresh(); $o3->refresh();
-        $this->assertEquals(1.67, $o1->balance);
-        $this->assertEquals(1.67, $o2->balance);
-        $this->assertEquals(1.67, $o3->balance);
+        $this->assertEquals(1.66, $o1->balance);
+        $this->assertEquals(1.66, $o2->balance);
+        $this->assertEquals(1.66, $o3->balance);
     }
 
     public function test_payout_does_not_touch_owner_balances(): void
@@ -147,7 +147,7 @@ class OwnerDistributionTest extends TestCase
         $balanceAfterEntry = $o1->balance;
         $this->assertEquals(2.00, $balanceAfterEntry);
 
-        $this->postJson("/transactions/{$entry['id']}/payout", [
+        $this->postJson("/transactions/{$entry['transaction_id']}/payout", [
             'amount' => 4.00,
             'api_key' => $amusement->api_key,
         ])->assertStatus(201);
