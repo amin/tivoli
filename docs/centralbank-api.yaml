@@ -83,6 +83,8 @@ info:
     For attractions (rides), only step 4 is needed — no payout.
 
 servers:
+  - url: https://api.loopland.se
+    description: Production
   - url: https://api-develop-b059.up.railway.app
     description: Staging (Railway)
   - url: http://localhost:8000
@@ -768,7 +770,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [identity_token, amount, api_key]
+              required: [identity_token, api_key]
               properties:
                 identity_token:
                   type: string
@@ -782,7 +784,11 @@ paths:
                   type: number
                   multipleOf: 0.01
                   minimum: 0.1
-                  description: Amount to deduct in euros (2-decimal precision; minimum 0.10).
+                  description: >
+                    Amount to deduct in euros (2-decimal precision; minimum
+                    0.10). Optional — when omitted, the amusement's stored
+                    `price` is used. If `amount` is omitted and the amusement
+                    has no `price`, the request is rejected with 422.
                   example: 1.95
                 api_key:
                   type: string
@@ -845,13 +851,18 @@ paths:
           application/json:
             schema:
               type: object
-              required: [amount, api_key]
+              required: [api_key]
               properties:
                 amount:
                   type: number
                   multipleOf: 0.01
                   minimum: 0.01
-                  description: Winnings to pay out in euros (2-decimal precision).
+                  description: >
+                    Winnings to pay out in euros (2-decimal precision).
+                    Optional — when omitted, the amusement's stored
+                    `player_payout` is used. If `amount` is omitted and the
+                    amusement has no `player_payout`, the request is rejected
+                    with 422.
                   example: 10.00
                 api_key:
                   type: string
