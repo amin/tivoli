@@ -36,7 +36,8 @@ Route::get('/amusements', [AmusementController::class, 'index']);
 // ── Transactions (amusement api_key in request body) ───────────────────
 Route::get('/identity-tokens/{token}', [IdentityTokenController::class, 'show']);
 Route::post('/transactions', [TransactionController::class, 'store']);
-Route::post('/transactions/{id}/payout', [TransactionController::class, 'payout']);
+Route::post('/transactions/{id}/payout', [TransactionController::class, 'payout'])
+    ->whereNumber('id');
 
 // ── Authenticated user routes ──────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
