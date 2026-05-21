@@ -1,8 +1,21 @@
+import { useEffect } from "react";
+
 type Props = {
   url: string;
+  onClose: () => void;
 };
 
-export default function IframeModal({ url }: Props) {
+export default function IframeModal({ url, onClose }: Props) {
+  useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      if (event.data?.type === "AMUSEMENT_CLOSE") {
+        onClose();
+      }
+    }
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [onClose]);
+
   return (
     <div className="modal-overlay">
       <div className="modal modal--iframe">

@@ -13,9 +13,10 @@
   z-index: 10;
 }
 
-:is(.brand-name, .section-head h2, .card-title, .empty-title, .modal-title,
-    .user-hero-name, .user-vp-chip, .exchange-card-title, .exchange-value,
-    .hero h1, .scoreboard-cat-title, .scoreboard-rank, .hiw-step-num) {
+:is(.brand-name,.section-head h2,.card-title,.empty-title,
+.modal-title,.user-hero-name,.user-vp-chip,.exchange-card-title,
+.exchange-value,.hero h1,.scoreboard-cat-title,.scoreboard-rank,
+.hiw-step-num, .view-tab, h2) {
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -93,8 +94,8 @@
   font-size: var(--text-hero);
   font-weight: 600;
   line-height: 1.05;
-
-  text-shadow: 2px 2px var(--c-yellow);
+  /* text-shadow: 2px 2px var(--c-yellow); */
+  text-shadow: 3px 2px var(--c-yellow);
   color: var(--c-blue);
   margin-bottom: 18px;
 }
@@ -858,6 +859,7 @@
   .hero { padding: 48px 28px 56px; }
   .grid { grid-template-columns: repeat(2, 1fr); }
   .footer-content { padding: 28px 40px; flex-direction: row; align-items: center; }
+  .admin-actions { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
 }
 
 @media (min-width: 880px) {

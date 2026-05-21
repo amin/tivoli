@@ -41,7 +41,6 @@ export default function Home() {
         return;
       }
       const body = await res.json();
-      launchAmusement(a, body.identity_token);
       const url = new URL(a.url);
       url.searchParams.set("identity_token", body.identity_token);
       setIframe({ url: url.toString() });
@@ -140,6 +139,7 @@ export default function Home() {
       {iframe && (
         <IframeModal
           url={iframe.url}
+          onClose={() => setIframe(null)}
         />
       )}
     </>
