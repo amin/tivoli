@@ -70,7 +70,8 @@
   border-bottom: 2px solid var(--c-blue-soft);
   background: var(--bg-hero);
   position: sticky;
-  top: 68px;
+  top: 67px;
+  z-index: 10;
 }
 
 .view-tab {
