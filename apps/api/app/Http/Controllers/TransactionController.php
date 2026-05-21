@@ -18,7 +18,6 @@ class TransactionController extends Controller
     public function store(StoreTransactionRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $amount = (float) $data['amount'];
 
         $amusement = Amusement::where('api_key', $data['api_key'])->first();
         if (!$amusement) {
@@ -28,6 +27,14 @@ class TransactionController extends Controller
         if ($amusement->settled_at !== null) {
             return response()->json(['message' => 'Amusement has been settled'], 409);
         }
+
+        $resolvedAmount = $data['amount'] ?? $amusement->price;
+        if ($resolvedAmount === null) {
+            return response()->json([
+                'message' => 'amount is required (amusement has no default price)',
+            ], 422);
+        }
+        $amount = (float) $resolvedAmount;
 
         $identityToken = IdentityToken::where('token', $data['identity_token'])->first();
         if (!$identityToken || !$identityToken->isValid()) {
@@ -124,23 +131,31 @@ class TransactionController extends Controller
             );
         }
 
+        $resolvedAmount = $data['amount'] ?? $amusement->player_payout;
+        if ($resolvedAmount === null) {
+            return response()->json([
+                'message' => 'amount is required (amusement has no default player_payout)',
+            ], 422);
+        }
+        $amount = (float) $resolvedAmount;
+
         // Amusement balance is allowed to go negative; it's reconciled at
         // settle (group members absorb the debt).
-        return DB::transaction(function () use ($original, $amusement, $data) {
-            $amusement->decrement('amusement_balance', $data['amount']);
-            $original->user->increment('balance', $data['amount']);
+        return DB::transaction(function () use ($original, $amusement, $amount) {
+            $amusement->decrement('amusement_balance', $amount);
+            $original->user->increment('balance', $amount);
             $original->update(['settled_at' => now()]);
 
             $payout = Transaction::create([
                 'user_id' => $original->user_id,
                 'amusement_id' => $amusement->id,
-                'amount' => $data['amount'],
+                'amount' => $amount,
                 'type' => 'payout',
             ]);
 
             return response()->json([
                 'transaction_id' => $payout->id,
-                'amount' => (float) $data['amount'],
+                'amount' => $amount,
             ], 201);
         });
     }

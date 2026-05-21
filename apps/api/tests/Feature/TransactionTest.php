@@ -50,13 +50,19 @@ class TransactionTest extends TestCase
         ]);
     }
 
-    private function makeAmusement(int $groupId, string $name = 'Fortune Wheel', string $type = 'game'): Amusement
-    {
+    private function makeAmusement(
+        int $groupId,
+        string $name = 'Fortune Wheel',
+        string $type = 'game',
+        ?float $price = 5.00,
+        ?float $playerPayout = null,
+    ): Amusement {
         return Amusement::forceCreate([
             'group_id' => $groupId,
             'name' => $name,
             'description' => 'Test amusement',
-            'price' => 5.00,
+            'price' => $price,
+            'player_payout' => $playerPayout,
             'url' => 'https://example.com',
             'api_key' => (string) Str::uuid(),
             'type' => $type,
@@ -83,7 +89,7 @@ class TransactionTest extends TestCase
         ]);
 
         $response->assertStatus(201);
-        $response->assertJsonStructure(['id', 'stamp']);
+        $response->assertJsonStructure(['transaction_id', 'stamp']);
 
         $token->refresh();
         $this->assertNotNull($token->consumed_at);
@@ -180,7 +186,7 @@ class TransactionTest extends TestCase
             'api_key' => $amusement->api_key,
         ]);
         $feeRes->assertStatus(201);
-        $feeId = $feeRes->json('id');
+        $feeId = $feeRes->json('transaction_id');
 
         $response = $this->postJson("/transactions/{$feeId}/payout", [
             'amount' => 20.00,
@@ -209,7 +215,7 @@ class TransactionTest extends TestCase
             'amount' => 5.00,
             'api_key' => $amusement->api_key,
         ]);
-        $feeId = $feeRes->json('id');
+        $feeId = $feeRes->json('transaction_id');
 
         // Different amusement tries to claim the payout.
         $response = $this->postJson("/transactions/{$feeId}/payout", [
@@ -233,7 +239,7 @@ class TransactionTest extends TestCase
             'api_key' => $attraction->api_key,
         ]);
         $feeRes->assertStatus(201);
-        $feeId = $feeRes->json('id');
+        $feeId = $feeRes->json('transaction_id');
 
         $response = $this->postJson("/transactions/{$feeId}/payout", [
             'amount' => 5.00,
@@ -256,7 +262,7 @@ class TransactionTest extends TestCase
             'amount' => 5.00,
             'api_key' => $amusement->api_key,
         ]);
-        $feeId = $feeRes->json('id');
+        $feeId = $feeRes->json('transaction_id');
 
         $this->postJson("/transactions/{$feeId}/payout", [
             'amount' => 7.00,
@@ -331,13 +337,13 @@ class TransactionTest extends TestCase
             'amount' => 5.00,
             'api_key' => $amusement->api_key,
         ]);
-        $feeId = $feeRes->json('id');
+        $feeId = $feeRes->json('transaction_id');
 
         $payoutRes = $this->postJson("/transactions/{$feeId}/payout", [
             'amount' => 5.00,
             'api_key' => $amusement->api_key,
         ]);
-        $payoutTxId = $payoutRes->json('id');
+        $payoutTxId = $payoutRes->json('transaction_id');
 
         // Trying to payout the payout row should fail with 400.
         $second = $this->postJson("/transactions/{$payoutTxId}/payout", [
@@ -399,6 +405,101 @@ class TransactionTest extends TestCase
             ->getJson("/amusements/{$amusement->id}/transactions");
 
         $response->assertStatus(403);
+    }
+
+    public function test_store_falls_back_to_amusement_price_when_amount_omitted(): void
+    {
+        $ownerGroup = $this->makeGroup('Owners');
+        $playerGroup = $this->makeGroup('Players');
+        $player = $this->makeUser($playerGroup->id);
+        $amusement = $this->makeAmusement($ownerGroup->id, price: 7.50);
+        $token = $this->issueToken($player);
+
+        $response = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'api_key' => $amusement->api_key,
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertEquals(7.50, $response->json('amount'));
+
+        $player->refresh();
+        $this->assertEquals(92.50, $player->balance);
+
+        $amusement->refresh();
+        $this->assertEquals(7.50, $amusement->amusement_balance);
+    }
+
+    public function test_store_returns_422_when_amount_omitted_and_amusement_has_no_price(): void
+    {
+        $group = $this->makeGroup();
+        $player = $this->makeUser($group->id);
+        $amusement = $this->makeAmusement($group->id, price: null);
+        $token = $this->issueToken($player);
+
+        $response = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'api_key' => $amusement->api_key,
+        ]);
+
+        $response->assertStatus(422);
+
+        $player->refresh();
+        $this->assertEquals(100.00, $player->balance);
+    }
+
+    public function test_payout_falls_back_to_amusement_player_payout_when_amount_omitted(): void
+    {
+        $ownerGroup = $this->makeGroup('Owners');
+        $playerGroup = $this->makeGroup('Players');
+        $player = $this->makeUser($playerGroup->id);
+        $amusement = $this->makeAmusement($ownerGroup->id, playerPayout: 12.00);
+
+        $token = $this->issueToken($player);
+        $feeRes = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 5.00,
+            'api_key' => $amusement->api_key,
+        ])->assertStatus(201);
+        $feeId = $feeRes->json('transaction_id');
+
+        $response = $this->postJson("/transactions/{$feeId}/payout", [
+            'api_key' => $amusement->api_key,
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertEquals(12.00, $response->json('amount'));
+
+        $player->refresh();
+        $this->assertEquals(107.00, $player->balance);
+
+        $amusement->refresh();
+        $this->assertEquals(-7.00, $amusement->amusement_balance);
+    }
+
+    public function test_payout_returns_422_when_amount_omitted_and_amusement_has_no_player_payout(): void
+    {
+        $ownerGroup = $this->makeGroup('Owners');
+        $playerGroup = $this->makeGroup('Players');
+        $player = $this->makeUser($playerGroup->id);
+        $amusement = $this->makeAmusement($ownerGroup->id, playerPayout: null);
+
+        $token = $this->issueToken($player);
+        $feeRes = $this->postJson('/transactions', [
+            'identity_token' => $token->token,
+            'amount' => 5.00,
+            'api_key' => $amusement->api_key,
+        ])->assertStatus(201);
+        $feeId = $feeRes->json('transaction_id');
+
+        $response = $this->postJson("/transactions/{$feeId}/payout", [
+            'api_key' => $amusement->api_key,
+        ]);
+
+        $response->assertStatus(422);
+
+        $player->refresh();
+        $this->assertEquals(95.00, $player->balance);
     }
 
     public function test_stats_returns_correct_totals(): void

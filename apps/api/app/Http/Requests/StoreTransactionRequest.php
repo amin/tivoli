@@ -20,7 +20,7 @@ class StoreTransactionRequest extends FormRequest
         return [
             "identity_token" => ["required", "string", "uuid"],
             "amount" => [
-                "required",
+                "sometimes",
                 "numeric",
                 "decimal:0,2",
                 "min:0.1",
