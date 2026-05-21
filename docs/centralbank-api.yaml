@@ -1537,11 +1537,16 @@ components:
               amusement_balance:
                 type: number
                 multipleOf: 0.01
-                description: Balance at settlement time (negative = deficit). Not zeroed.
+                description: Balance at settlement time (positive = profit, negative = deficit). Not zeroed.
               deducted_per_member:
                 type: number
                 multipleOf: 0.01
-                description: Per-member deduction applied (0 if non-negative or no members).
+                description: >
+                  Per-member deduction applied at settle. Equals
+                  `floor(sum_payouts / member_count)` — i.e., each member
+                  pays their share of the money the system created via
+                  payouts. 0 if no payouts occurred or the amusement has
+                  no members.
               member_count:
                 type: integer
 
