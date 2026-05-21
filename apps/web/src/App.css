@@ -535,6 +535,13 @@
   font-weight: 600;
 }
 
+.btn-settle {
+  background: var(--c-orange);
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
 .reset-confirm {
   display: flex;
   flex-direction: column;

@@ -1,0 +1,11 @@
+meta {
+  name: Show Identity Token
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/identity-tokens/{{identityToken}}
+  body: none
+  auth: none
+}

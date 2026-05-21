@@ -7,6 +7,7 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\IdentityTokenController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ResetController;
+use App\Http\Controllers\SettleController;
 use App\Http\Controllers\StampController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
@@ -72,4 +73,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Game reset (admin only)
     Route::post('/reset', [ResetController::class, 'store']);
+    Route::post('/settle', [SettleController::class, 'store']);
 });

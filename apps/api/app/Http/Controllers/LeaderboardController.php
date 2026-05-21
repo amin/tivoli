@@ -24,13 +24,15 @@ class LeaderboardController extends Controller
 
         $vpLeaders = User::with([
                 'stamps' => fn($q) => $q->whereNull('exchanged_at'),
-                'group',
+                'group.amusements',
             ])
             ->get()
             ->map(fn($u) => [
-                'name' => $u->name,
-                'group' => $u->group?->name,
-                'total_vp' => VpCalculator::compute($u->stamps)['total'],
+                'name'     => $u->name,
+                'group'    => $u->group?->name,
+                'total_vp' => $u->hasNegativeGroupAmusement()
+                    ? 0
+                    : VpCalculator::compute($u->stamps)['total'],
             ])
             ->sortByDesc('total_vp')
             ->values();

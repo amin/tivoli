@@ -11,6 +11,19 @@ type Leaderboard = {
   vote_winners:  VoteWinner[];
 };
 
+type SettleDetail = {
+  amusement_id: number;
+  amusement_name: string;
+  amusement_balance: number;
+  deducted_per_member: number;
+  member_count: number;
+};
+
+type SettleResponse = {
+  amusements_settled: number;
+  details: SettleDetail[];
+};
+
 export default function Admin() {
   const [loading, setLoading] = useState(false);
   const [scoreboard, setScoreboard] = useState<Leaderboard | null>(null);
@@ -18,6 +31,9 @@ export default function Admin() {
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+  const [confirmSettle, setConfirmSettle] = useState(false);
+  const [settling, setSettling] = useState(false);
+  const [settleSummary, setSettleSummary] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,6 +66,36 @@ export default function Admin() {
       setConfirmReset(false);
     } finally {
       setResetting(false);
+    }
+  }
+
+  async function handleSettle() {
+    setSettling(true);
+    setError(null);
+    try {
+      const res = await apiFetch('/settle', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError((data as { message?: string }).message ?? 'Settle failed.');
+        setConfirmSettle(false);
+        return;
+      }
+      const settle = data as SettleResponse;
+      const totalDebt = (settle.details ?? []).reduce(
+        (sum, d) => sum + d.deducted_per_member * d.member_count,
+        0,
+      );
+      setSettleSummary(
+        totalDebt > 0
+          ? `Settled ${settle.amusements_settled} amusements. €${totalDebt.toFixed(2)} deducted from groups in deficit.`
+          : `Settled ${settle.amusements_settled} amusements. No deficits — no deductions made.`,
+      );
+      setConfirmSettle(false);
+    } catch {
+      setError('Network error.');
+      setConfirmSettle(false);
+    } finally {
+      setSettling(false);
     }
   }
 
@@ -87,6 +133,34 @@ export default function Admin() {
           >
             {loading ? 'Counting results…' : 'End game'}
           </button>
+
+          {!confirmSettle ? (
+            <button
+              className="btn btn-settle"
+              onClick={() => { setConfirmSettle(true); setSettleSummary(null); setError(null); }}
+              disabled={settling}
+            >
+              Settle event
+            </button>
+          ) : (
+            <div className="reset-confirm">
+              <p className="reset-confirm-text">
+                This locks the event. After settling, no more transactions are
+                accepted and any amusement with negative balance has its debt
+                deducted from its group members. This cannot be undone.
+              </p>
+              <div className="reset-confirm-actions">
+                <button className="btn btn-secondary" onClick={() => setConfirmSettle(false)} disabled={settling}>
+                  Cancel
+                </button>
+                <button className="btn btn-settle" onClick={handleSettle} disabled={settling}>
+                  {settling ? 'Settling…' : 'Yes, settle'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {settleSummary && <p className="reset-success">{settleSummary}</p>}
 
           {!confirmReset ? (
             <button

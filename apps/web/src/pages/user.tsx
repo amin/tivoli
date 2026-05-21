@@ -6,7 +6,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import VoteSection from "../components/VoteSection";
 import Amusement from "../components/Amusement";
-import { apiUrl, apiFetch } from "../lib/api";
+import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import Admin from "../components/Admin";
 
@@ -17,7 +17,7 @@ type Stamp = {
   id: number;
   animal: Animal;
   metal: Metal | null;
-  source_amusement_id: number;
+  image_url: string;
   created_at: string;
 };
 
@@ -35,11 +35,6 @@ const METAL_COLOR: Record<Metal, string> = {
   gold:     'var(--c-yellow-dark)',
   platinum: 'var(--c-blue)',
 };
-
-function stampImagePath(s: Stamp): string {
-  const file = s.metal ? `${s.metal}-${s.animal}.svg` : `${s.animal}.svg`;
-  return `/images/stamps/${file}`;
-}
 
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -121,6 +116,7 @@ export default function User() {
       const stampsRes = await apiFetch('/stamps');
       const stampsData = await stampsRes.json();
       setStamps(stampsData.data ?? []);
+      setVp(stampsData.total_vp ?? 0);
     } catch {
       navigate('/error?message=Network+error+—+could+not+reach+the+server.');
     } finally {
@@ -314,7 +310,7 @@ export default function User() {
                   <div key={stamp.id} className="card">
                     <div className="card-illustration stamp-illustration">
                       <img
-                        src={stampImagePath(stamp)}
+                        src={stamp.image_url}
                         alt={stampLabel(stamp)}
                         className="stamp-img"
                         onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}

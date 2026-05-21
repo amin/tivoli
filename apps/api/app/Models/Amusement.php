@@ -27,6 +27,7 @@ class Amusement extends Model
         'amusement_balance' => 'float',
         'buffer_required' => 'float',
         'buffer_locked' => 'float',
+        'settled_at' => 'datetime',
     ];
 
     // An amusement belongs to one group
