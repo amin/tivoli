@@ -16,9 +16,9 @@ use Illuminate\Support\Facades\Route;
 
 // ── Status ─────────────────────────────────────────────────────────────
 Route::get('/', fn () => response()->json([
-    'name' => 'Tivoli CentralBank API',
+    'name' => 'Loopland API',
     'status' => 'ok',
-    'docs' => null,
+    'docs' => 'https://github.com/yrgo/WU25/blob/main/Tivoli/centralbank-api.yaml',
 ]));
 
 // ── Auth ───────────────────────────────────────────────────────────────
