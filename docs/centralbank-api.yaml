@@ -64,9 +64,11 @@ info:
        the token in memory for the duration of the visit.
     4. Every time the user pays (entry, in-game purchase, etc.) the
        amusement calls `POST /transactions` with
-       `{ identity_token, amount, api_key }`. Central bank deducts from the
+       `{ identity_token, api_key, amount? }`. Central bank deducts from the
        user, credits the amusement's tracker, and distributes the amount
        equally across the amusement's group members' personal balances.
+       `amount` may be omitted for fixed-price amusements; the amusement's
+       stored `price` is used instead.
     5. The very first call with a fresh identity_token mints a stamp
        (subject to a 3-minute anti-farming rate limit per (user, amusement)
        pair — if the player already received a stamp from this amusement
@@ -75,10 +77,11 @@ info:
        token return `stamp: null`.
     6. Amusement runs its own game logic.
     7. If the user wins, the amusement calls `POST /transactions/{id}/payout`
-       with `{ amount, api_key }`, where `id` is one of the player's earlier
+       with `{ api_key, amount? }`, where `id` is one of the player's earlier
        `fee` transactions for this amusement. Central bank deducts from the
        amusement's tracker and credits the user. Owners are NOT debited at
-       payout time.
+       payout time. `amount` may be omitted for fixed-payout amusements;
+       the amusement's stored `player_payout` is used instead.
 
     For attractions (rides), only step 4 is needed — no payout.
 
