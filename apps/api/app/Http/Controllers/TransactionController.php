@@ -25,6 +25,10 @@ class TransactionController extends Controller
             return response()->json(['message' => 'Invalid api_key'], 401);
         }
 
+        if ($amusement->settled_at !== null) {
+            return response()->json(['message' => 'Amusement has been settled'], 409);
+        }
+
         $identityToken = IdentityToken::where('token', $data['identity_token'])->first();
         if (!$identityToken || !$identityToken->isValid()) {
             return response()->json(['message' => 'Invalid or expired identity token'], 401);
