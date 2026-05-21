@@ -63,7 +63,7 @@
   --text-3xl: 28px;                   /* user hero name, balance amount */
   --text-4xl: 32px;                   /* section headings */
   --text-brand: 35px;                 /* header brand logo */
-  --text-hero: clamp(40px, 5vw, 56px); /* hero h1 */
+  --text-hero: clamp(40px, 13vw, 60px); /* hero h1 */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

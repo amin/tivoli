@@ -19,11 +19,11 @@
 
 .user-hero-name {
   font-family: var(--font-display);
-  font-size: var(--text-3xl);
-  font-weight: 500;
-  color: var(--c-night);
+  font-size: var(--text-brand);
+  color: var(--c-blue);
   letter-spacing: 0.05em;
-  text-shadow: 1px 1px var(--c-orange);
+  text-shadow: 2px 2px var(--c-yellow);
+  text-shadow: 2px 2px white;
 }
 
 .user-hero-sub {
@@ -56,12 +56,6 @@
 
 .vp-text {
   text-align: center;
-  margin-bottom: 12px;
-}
-
-.vp-text {
-  text-align: center;
-  margin-bottom: 12px;
 }
 
 /* ---------- View tabs ---------- */
@@ -70,7 +64,8 @@
   border-bottom: 2px solid var(--c-blue-soft);
   background: var(--bg-hero);
   position: sticky;
-  top: 68px;
+  top: 67px;
+  z-index: 10;
 }
 
 .view-tab {
