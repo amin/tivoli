@@ -28,7 +28,10 @@ class SettleController extends Controller
                 $deducted = 0.0;
                 if ($amusement->amusement_balance < 0 && $memberCount > 0) {
                     $debt = abs((float) $amusement->amusement_balance);
-                    $deducted = round($debt / $memberCount, 2);
+                    // Ceil so members collectively cover at least the full
+                    // debt; symmetric with distributeToOwners() flooring on
+                    // the income side.
+                    $deducted = ceil($debt / $memberCount * 100) / 100;
                     foreach ($members as $member) {
                         $member->decrement('balance', $deducted);
                     }

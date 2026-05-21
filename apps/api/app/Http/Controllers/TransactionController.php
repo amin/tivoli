@@ -153,7 +153,10 @@ class TransactionController extends Controller
             return;
         }
 
-        $share = round($amount / $n, 2);
+        // Floor so the distributed total never exceeds $amount; any
+        // sub-cent remainder stays un-attributed (the user already paid it,
+        // and amusement_balance still tracks it gross).
+        $share = floor($amount / $n * 100) / 100;
         if ($share <= 0) {
             return;
         }
