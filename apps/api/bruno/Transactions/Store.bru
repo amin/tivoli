@@ -20,6 +20,6 @@ body:json {
 
 script:post-response {
   if (res.status === 201) {
-    bru.setEnvVar("transactionId", res.body.id);
+    bru.setEnvVar("transactionId", res.body.transaction_id);
   }
 }
