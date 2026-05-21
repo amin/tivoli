@@ -13,10 +13,11 @@
   z-index: 10;
 }
 
-/* Luckiest Guy has ~30% built-in descent space that reads as phantom margin-bottom */
 :is(.brand-name, .section-head h2, .card-title, .empty-title, .modal-title,
-    .user-hero-name, .user-vp-chip, .exchange-card-title, .exchange-value) {
-  line-height: 0.85;
+    .user-hero-name, .user-vp-chip, .exchange-card-title, .exchange-value,
+    .hero h1, .scoreboard-cat-title, .scoreboard-rank, .hiw-step-num) {
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .brand-name {
@@ -92,7 +93,7 @@
   font-size: var(--text-hero);
   font-weight: 600;
   line-height: 1.05;
-  letter-spacing: 0.2rem;
+
   text-shadow: 2px 2px var(--c-yellow);
   color: var(--c-blue);
   margin-bottom: 18px;
