@@ -1,6 +1,6 @@
 openapi: "3.0.3"
 info:
-  title: Tivoli Centralbank API
+  title: Loopland Centralbank API
   version: "1.0.0"
   license:
     name: MIT
@@ -759,8 +759,8 @@ paths:
         Used when a user plays a game or visits an attraction. The amusement's
         balance is credited. A random stamp is generated and returned.
 
-        The returned `id` is required for `POST /transactions/{id}/payout` if
-        the user wins.
+        The returned `transaction_id` is required for
+        `POST /transactions/{id}/payout` if the user wins.
       security: []
       requestBody:
         required: true
@@ -781,8 +781,8 @@ paths:
                 amount:
                   type: number
                   multipleOf: 0.01
-                  minimum: 1
-                  description: Amount to deduct in euros (2-decimal precision; minimum 1).
+                  minimum: 0.1
+                  description: Amount to deduct in euros (2-decimal precision; minimum 0.10).
                   example: 1.95
                 api_key:
                   type: string
@@ -809,6 +809,14 @@ paths:
                   message: "Insufficient funds. Balance: €3.00, required: €5.00"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          description: The amusement has already been settled and no longer accepts transactions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example:
+                  message: "Amusement has been settled"
 
   /transactions/{id}/payout:
     post:
@@ -852,16 +860,22 @@ paths:
                     The calling amusement's `api_key`. Must match the
                     amusement that owns the original transaction.
       responses:
-        "200":
+        "201":
           description: Payout completed
           content:
             application/json:
               schema:
                 type: object
+                required: [transaction_id, amount]
                 properties:
-                  message:
-                    type: string
-                    example: "Payout successful"
+                  transaction_id:
+                    type: integer
+                    description: ID of the newly-created payout transaction.
+                  amount:
+                    type: number
+                    multipleOf: 0.01
+                    description: Amount credited to the user, echoed back.
+                    example: 10.00
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1409,6 +1423,11 @@ components:
         id:
           type: integer
           readOnly: true
+        transaction_id:
+          type: integer
+          nullable: true
+          readOnly: true
+          description: ID of the transaction that minted this stamp.
         animal:
           type: string
           enum: [lion, dolphin, toucan, beetlebug, snake]
@@ -1418,6 +1437,12 @@ components:
           enum: [silver, gold, platinum]
           nullable: true
           example: "gold"
+        image_url:
+          type: string
+          format: uri
+          readOnly: true
+          description: Absolute URL to the stamp's SVG image.
+          example: "https://api.example.com/images/stamps/gold-dolphin.svg"
         created_at:
           type: string
           format: date-time
@@ -1428,18 +1453,36 @@ components:
     TransactionResponse:
       type: object
       properties:
-        id:
+        transaction_id:
           type: integer
           description: Transaction ID. Save this — it is required for payout.
+        amount:
+          type: number
+          multipleOf: 0.01
+          description: Amount deducted from the user's balance, echoed back.
+          example: 1.95
         stamp:
           nullable: true
-          allOf:
-            - $ref: "#/components/schemas/Stamp"
+          type: object
           description: >
             Newly minted stamp, or null if this identity_token has already
             had its single stamp-issuing attempt, or if a stamped transaction
             for this (user, amusement) pair exists within the last 3 minutes
             (anti-farming guard).
+          properties:
+            animal:
+              type: string
+              enum: [lion, dolphin, toucan, beetlebug, snake]
+              example: "dolphin"
+            metal:
+              type: string
+              enum: [silver, gold, platinum]
+              nullable: true
+              example: "gold"
+            image_url:
+              type: string
+              format: uri
+              example: "https://api.example.com/images/stamps/gold-dolphin.svg"
 
     # ── Exchange ───────────────────────────────────────────────────
 
