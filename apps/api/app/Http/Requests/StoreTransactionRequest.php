@@ -18,9 +18,15 @@ class StoreTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'identity_token' => ['required', 'string', 'uuid'],
-            'amount' => ['required', 'numeric', 'decimal:0,2', 'min:1', 'max:9999.99'],
-            'api_key' => ['required', 'string', 'uuid'],
+            "identity_token" => ["required", "string", "uuid"],
+            "amount" => [
+                "required",
+                "numeric",
+                "decimal:0,2",
+                "min:0.1",
+                "max:9999.99",
+            ],
+            "api_key" => ["required", "string", "uuid"],
         ];
     }
 }
