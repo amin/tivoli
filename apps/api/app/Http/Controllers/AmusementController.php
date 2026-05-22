@@ -100,11 +100,12 @@ class AmusementController extends Controller
             return response()->json(['message' => 'You do not own this amusement'], 403);
         }
 
-        if ((float) $amusement->amusement_balance != 0.0) {
-            return response()->json([
-                'message' => "Cannot delete amusement with balance €" . number_format($amusement->amusement_balance, 2) . ". Settle first.",
-            ], 409);
-        }
+        // TEMP: delete guard disabled — re-enable after current incident.
+        // if ($amusement->settled_at === null && $amusement->transactions()->exists()) {
+        //     return response()->json([
+        //         'message' => 'Cannot delete amusement with transactions before it has been settled.',
+        //     ], 409);
+        // }
 
         $amusement->delete();
 
