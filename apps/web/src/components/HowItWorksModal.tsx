@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import type { MouseEvent } from "react";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 type Props = { onClose: () => void };
 
@@ -36,13 +38,16 @@ const steps = [
 ];
 
 export default function HowItWorksModal({ onClose }: Props) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, onClose);
+
   function handleOverlayClick(e: MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose();
   }
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className="modal hiw-modal" role="dialog" aria-modal="true" aria-labelledby="hiw-title">
+      <div ref={modalRef} className="modal hiw-modal" role="dialog" aria-modal="true" aria-labelledby="hiw-title">
         <div className="hiw-header">
           <h2 className="modal-title" id="hiw-title">How it works</h2>
           <button className="hiw-close" onClick={onClose} aria-label="Close">✕</button>

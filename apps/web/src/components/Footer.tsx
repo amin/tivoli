@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
     <footer className="footer">
-      <div className="lights">
+      <div className="lights" aria-hidden="true">
         {Array.from({ length: 9 }).map((_, i) => (
           <span key={i} className="light" />
         ))}

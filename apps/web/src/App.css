@@ -16,7 +16,7 @@
 :is(.brand-name,.section-head h2,.card-title,.empty-title,
 .modal-title,.user-hero-name,.user-vp-chip,.exchange-card-title,
 .exchange-value,.hero h1,.scoreboard-cat-title,.scoreboard-rank,
-.hiw-step-num, .view-tab, h2) {
+.hiw-step-num, .view-tab, h2, h1) {
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -319,6 +319,12 @@
   color: var(--c-blue-dark);
 }
 
+.card-pill--warning {
+  background: var(--c-red-soft);
+  color: var(--c-red);
+  border: 1px solid var(--c-red);
+}
+
 .card-api-key {
   margin-top: 10px;
   display: flex;
@@ -461,7 +467,7 @@
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-ink);
-  margin-bottom: 6px;
+  margin: 0 0 6px 6px;
 }
 
 .input {

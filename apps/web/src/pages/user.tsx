@@ -199,20 +199,24 @@ export default function User() {
             <h1 className="user-hero-name">{user.name}</h1>
           </div>
           <div className="user-hero-vp-column">
-            <h3 className="vp-text">Victory points</h3>
+            <h2 className="vp-text">Victory points</h2>
             <span className="user-vp-chip">{vp} VP</span>
           </div>
         </div>
       </section>
 
-      <nav className="view-tabs">
+      <nav className="view-tabs" role="tablist">
         <button
+          role="tab"
+          aria-selected={view === 'stamps'}
           className={`view-tab${view === 'stamps' ? ' active' : ''}`}
           onClick={() => setView('stamps')}
         >
           My Stamps
         </button>
         <button
+          role="tab"
+          aria-selected={view === 'amusements'}
           className={`view-tab${view === 'amusements' ? ' active' : ''}`}
           onClick={() => setView('amusements')}
         >
@@ -220,6 +224,8 @@ export default function User() {
         </button>
         {user.group?.is_admin && (
           <button
+            role="tab"
+            aria-selected={view === 'admin'}
             className={`view-tab${view === 'admin' ? ' active' : ''}`}
             onClick={() => setView('admin')}
           >
@@ -295,12 +301,12 @@ export default function User() {
 
             {stampsLoading ? (
               <div className="empty-state">
-                <span className="empty-icon">⏳</span>
+                <span className="empty-icon" aria-hidden="true">⏳</span>
                 <p className="empty-title">Loading…</p>
               </div>
             ) : stamps.length === 0 ? (
               <div className="empty-state">
-                <span className="empty-icon">🎟️</span>
+                <span className="empty-icon" aria-hidden="true">🎟️</span>
                 <p className="empty-title">No stamps yet</p>
                 <p className="empty-sub">Visit attractions and play games to earn stamps!</p>
               </div>

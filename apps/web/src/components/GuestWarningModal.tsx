@@ -1,6 +1,8 @@
+import { useRef } from "react";
 import type { MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { type AmusementItem } from "../hooks/useAmusements";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 type Props = {
   amusement: AmusementItem;
@@ -15,6 +17,8 @@ const warnings = [
 
 export default function GuestWarningModal({ amusement, onClose, onContinueAsGuest }: Props) {
   const navigate = useNavigate();
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, onClose);
 
   function handleOverlayClick(e: MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose();
@@ -27,7 +31,7 @@ export default function GuestWarningModal({ amusement, onClose, onContinueAsGues
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className="modal guest-modal" role="dialog" aria-modal="true" aria-labelledby="guest-modal-title">
+      <div ref={modalRef} className="modal guest-modal" role="dialog" aria-modal="true" aria-labelledby="guest-modal-title">
         <div className="guest-modal-icon" aria-hidden="true">👤</div>
         <h2 className="modal-title" id="guest-modal-title">You're browsing as a guest</h2>
         <p className="modal-sub">
@@ -37,7 +41,7 @@ export default function GuestWarningModal({ amusement, onClose, onContinueAsGues
         <ul className="guest-warnings">
           {warnings.map((w) => (
             <li key={w.text} className="guest-warning-item">
-              <span className="guest-warning-icon">{w.icon}</span>
+              <span className="guest-warning-icon" aria-hidden="true">{w.icon}</span>
               <span>{w.text}</span>
             </li>
           ))}

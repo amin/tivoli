@@ -93,14 +93,14 @@ export default function Home() {
         <p className="section-sub">All the fun in one place.</p>
 
         <div className="filters">
-          <button className={`chip${filter === "all" ? " active" : ""}`} onClick={() => setFilter("all")}>All</button>
-          <button className={`chip${filter === "game" ? " active" : ""}`} onClick={() => setFilter("game")}>Games</button>
-          <button className={`chip${filter === "attraction" ? " active" : ""}`} onClick={() => setFilter("attraction")}>Attractions</button>
+          <button className={`chip${filter === "all" ? " active" : ""}`} aria-pressed={filter === "all"} onClick={() => setFilter("all")}>All</button>
+          <button className={`chip${filter === "game" ? " active" : ""}`} aria-pressed={filter === "game"} onClick={() => setFilter("game")}>Games</button>
+          <button className={`chip${filter === "attraction" ? " active" : ""}`} aria-pressed={filter === "attraction"} onClick={() => setFilter("attraction")}>Attractions</button>
         </div>
 
         {visible.length === 0 ? (
           <div className="empty-state">
-            <span className="empty-icon">🎪</span>
+            <span className="empty-icon" aria-hidden="true">🎪</span>
             <p className="empty-title">Coming soon</p>
             <p className="empty-sub">
               Attractions are being built. <br />

@@ -116,29 +116,29 @@ export default function Login() {
       <Header />
       <section className="activatePage">
         <h1>
-          Log in or Activate 
-          <br />
-          your account
+          Log in or Activate your account
         </h1>
 
         {/* Primary: Login form */}
         <section className="loginSection">
           <h2 className="desc-text">Log in with name & access key</h2>
           <form className="loginGrid" onSubmit={(e) => { e.preventDefault(); loginWithKey(); }}>
-            <label className="label">Name</label>
+            <label className="label" htmlFor="login-name">Name</label>
             <input
+              id="login-name"
               className="input"
               placeholder="Enter your name"
               value={loginName}
               onChange={(e) => setLoginName((e.target as HTMLInputElement).value)}
             />
             <span className="label-row">
-              <label className="label">Access Key</label>
+              <label className="label" htmlFor="login-access-key">Access Key</label>
               <InfoTip id="tip-access-key">
                 Generated when you activated your account. Copy it from the activation confirmation — it's your only way to log in.
               </InfoTip>
             </span>
             <input
+              id="login-access-key"
               className="input"
               placeholder="Enter your access key"
               value={accessKeyInput}
@@ -186,8 +186,9 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="activateForm">
             <h2 className="desc-text">Activate your account</h2>
             <div className="field">
-              <label className="label">Name</label>
+              <label className="label" htmlFor="activate-name">Name</label>
               <input
+                id="activate-name"
                 className="input"
                 placeholder="Enter your name"
                 value={activationName}
@@ -200,12 +201,13 @@ export default function Login() {
 
             <div className="field">
               <span className="label-row">
-                <label className="label">Startcode</label>
+                <label className="label" htmlFor="activate-startcode">Startcode</label>
                 <InfoTip id="tip-startcode">
                   A one-time code given to you when you registered for Loopland.
                 </InfoTip>
               </span>
               <input
+                id="activate-startcode"
                 className="input"
                 placeholder="Enter your startcode"
                 value={startcode}
