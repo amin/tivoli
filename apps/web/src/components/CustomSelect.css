@@ -52,7 +52,7 @@
   z-index: 200;
   min-width: var(--radix-select-trigger-width);
   max-height: 240px;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .cs-viewport {

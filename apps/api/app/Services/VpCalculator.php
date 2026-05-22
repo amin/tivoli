@@ -48,18 +48,20 @@ class VpCalculator
 
         $totalMetal = $silverCount + $goldCount + $platinumCount;
         $metalConsumedByAnimalSets = 0;
+        $looseNonMetal = 0;
         foreach (AnimalType::cases() as $animal) {
             $metalConsumedByAnimalSets += max(0, $animalSets - $nonMetalByAnimal[$animal->value]);
+            $looseNonMetal += max(0, $nonMetalByAnimal[$animal->value] - $animalSets);
         }
 
-        $looseMetal = $totalMetal - $metalConsumedByAnimalSets;
-        $looseVP    = intdiv($looseMetal * ($looseMetal + 1), 2);
+        $looseStamps = ($totalMetal - $metalConsumedByAnimalSets) + $looseNonMetal;
+        $looseVP     = intdiv($looseStamps * ($looseStamps + 1), 2);
 
         return [
-            'total'       => $metalSetVP + $animalSetVP + $looseVP,
-            'metal_sets'  => ['count' => $metalSets,  'vp' => $metalSetVP],
-            'animal_sets' => ['count' => $animalSets, 'vp' => $animalSetVP],
-            'loose_metal' => ['count' => $looseMetal, 'vp' => $looseVP],
+            'total'        => $metalSetVP + $animalSetVP + $looseVP,
+            'metal_sets'   => ['count' => $metalSets,   'vp' => $metalSetVP],
+            'animal_sets'  => ['count' => $animalSets,  'vp' => $animalSetVP],
+            'loose_stamps' => ['count' => $looseStamps, 'vp' => $looseVP],
         ];
     }
 }

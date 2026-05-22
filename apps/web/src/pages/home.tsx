@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 import AmusementCard from "../components/AmusementCard";
 import HowItWorksModal from "../components/HowItWorksModal";
 import GuestWarningModal from "../components/GuestWarningModal";
+import IframeModal from "../components/IframeModal";
 import { useAmusements, type AmusementItem } from "../hooks/useAmusements";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
@@ -18,6 +19,7 @@ export default function Home() {
   const [filter, setFilter] = useState<Filter>("all");
   const [showHiw, setShowHiw] = useState(false);
   const [guestPending, setGuestPending] = useState<AmusementItem | null>(null);
+  const [iframe, setIframe] = useState<{ url: string; } | null>(null);
   const navigate = useNavigate();
 
   function launchAmusement(a: AmusementItem, token?: string) {
@@ -39,7 +41,9 @@ export default function Home() {
         return;
       }
       const body = await res.json();
-      launchAmusement(a, body.identity_token);
+      const url = new URL(a.url);
+      url.searchParams.set("identity_token", body.identity_token);
+      setIframe({ url: url.toString() });
     } catch {
       // Network error — silently no-op; user can retry
     }
@@ -129,6 +133,13 @@ export default function Home() {
             launchAmusement(guestPending);
             setGuestPending(null);
           }}
+        />
+      )}
+      
+      {iframe && (
+        <IframeModal
+          url={iframe.url}
+          onClose={() => setIframe(null)}
         />
       )}
     </>
