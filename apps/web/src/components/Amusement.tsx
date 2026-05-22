@@ -32,6 +32,7 @@ export default function Amusement() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,10 +64,17 @@ export default function Amusement() {
 
   async function handleDelete(id: number) {
     setDeletingId(id);
+    setDeleteError(null);
     try {
-      await apiFetch(`/amusements/${id}`, { method: 'DELETE' });
-      refetch();
+      const res = await apiFetch(`/amusements/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        refetch();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setDeleteError(data.message ?? 'Could not delete amusement.');
+      }
     } catch {
+      setDeleteError('Network error.');
     } finally {
       setDeletingId(null);
     }
@@ -158,6 +166,8 @@ export default function Amusement() {
           <button className="btn btn-primary" onClick={openCreateModal}>+ New</button>
         </div>
         <p className="section-sub">Attractions and games you manage.</p>
+
+        {deleteError && <p className="form-error">{deleteError}</p>}
 
         {loading ? (
           <div className="empty-state">
