@@ -284,8 +284,8 @@
 
 .vote-form {
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  flex-wrap: wrap;
   margin-top: 16px;
 }
 
@@ -336,10 +336,9 @@
   .exchange-grid { grid-template-columns: repeat(2, 1fr); }
   .user-hero-name { font-size: 40px; }
   .user-vp-chip { font-size: 40px; padding: 4px 14px; }
-  .vote-form { flex-direction: column; }
   .vote-form .cs, .vote-btn { width: 100%; }
   .view-tabs { top: 104px; }
-  .vp-text { font-size: var(--text-lg); }
+  .vp-text { font-size: var(--text-md); }
 }
 
 @media (min-width: 880px) {
@@ -348,6 +347,9 @@
   .exchange-grid { grid-template-columns: repeat(3, 1fr); }
   .user-hero-name { font-size: 45px; }
   .user-vp-chip { font-size: 45px; padding: 5px 16px; }
+  .vote-form { flex-direction: row; align-items: center; }
+  .vote-form .cs, .vote-btn { width: auto; }
+  .vote-btn { flex-shrink: 0; }
 }
 
 @media (hover: hover) {

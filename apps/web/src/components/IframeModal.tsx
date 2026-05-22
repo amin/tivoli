@@ -11,6 +11,19 @@ export default function IframeModal({ url, onClose }: Props) {
   useFocusTrap(modalRef, onClose);
 
   useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  useEffect(() => {
     function handleMessage(event: MessageEvent) {
       if (event.data?.type === "AMUSEMENT_CLOSE") onClose();
     }
