@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
@@ -14,9 +15,20 @@ const BRAND_LETTERS = [
 
 export default function Header() {
   const { user } = useAuth();
+  const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      document.documentElement.style.setProperty("--header-h", `${el.getBoundingClientRect().height}px`);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   return (
-    <header className="header">
+    <header ref={headerRef} className="header">
       <Link to="/" className="brand-name">
         {BRAND_LETTERS.map(([letter, color], i) => (
           <span key={i} className={`col-diff-${color}`}>
