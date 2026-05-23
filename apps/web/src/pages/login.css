@@ -11,13 +11,13 @@
   text-align: center;
   line-height: normal;
   margin-bottom: 2rem;
-  width: 100%;
+  padding: 0 2rem 1rem 2rem;
 }
 
 .desc-text {
   font-size: 16px;
   color: var(--c-orange);
-  margin-bottom: 1rem;
+  margin: 0 0 1rem 6px;
 }
 
 .activatePage {
@@ -37,31 +37,6 @@
 
 .field {
   margin-bottom: 12px;
-}
-
-.label {
-  display: block;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--text-ink);
-  margin-bottom: 6px;
-}
-
-.input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--border-soft);
-  border-radius: var(--r-md);
-  font-family: inherit;
-  font-size: var(--text-input);
-  color: var(--text-ink);
-  background: white;
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-.input:focus {
-  border-color: var(--c-blue);
 }
 
 .loginGrid .input {
@@ -168,7 +143,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 6px;
+  margin: 6px 0;
 }
 
 .label-row .label {

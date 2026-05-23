@@ -1,5 +1,5 @@
 import type { AmusementItem } from "../hooks/useAmusements";
-import noImageSrc from "../assets/no-image.jpg";
+import noImageSrc from "../assets/no-image.svg";
 
 type Props = {
   amusement: AmusementItem;
@@ -20,7 +20,7 @@ export default function AmusementCard({ amusement, apiKey, showImage = false, sh
         <p className="card-title">{amusement.name}</p>
         <p className="card-tag">{amusement.type}</p>
       </div>
-      {(amusement.price != null || amusement.player_payout != null || (showBalance && amusement.amusement_balance != null)) && (
+      {(amusement.price != null || amusement.player_payout != null || (showBalance && amusement.amusement_balance != null && amusement.amusement_balance < 0)) && (
         <div className="card-pills">
           {amusement.price != null && (
             <span className="card-pill card-pill--fee">Entrance €{amusement.price}</span>
@@ -28,8 +28,8 @@ export default function AmusementCard({ amusement, apiKey, showImage = false, sh
           {amusement.player_payout != null && (
             <span className="card-pill card-pill--winnings">Winnings €{amusement.player_payout.toFixed(2)}</span>
           )}
-          {showBalance && amusement.amusement_balance != null && (
-            <span className="card-pill card-pill--balance">Balance €{amusement.amusement_balance.toFixed(2)}</span>
+          {showBalance && amusement.amusement_balance != null && amusement.amusement_balance < 0 && (
+            <span className="card-pill card-pill--warning">Balance below zero</span>
           )}
         </div>
       )}
@@ -57,6 +57,7 @@ export default function AmusementCard({ amusement, apiKey, showImage = false, sh
         href={amusement.url}
         target="_blank"
         rel="noreferrer"
+        aria-label={`${amusement.name}, opens in new tab`}
         onClick={(e) => onCardClick(e, amusement)}
       >
         {content}

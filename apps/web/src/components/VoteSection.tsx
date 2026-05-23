@@ -69,13 +69,13 @@ export default function VoteSection({ userId }: Props) {
       <p className="section-sub vote-warning">You can only vote once. Choose carefully!</p>
 
       {hasVoted || voteOk ? (
-        <div className="exchange-result exchange-result--ok">
+        <div className="exchange-result exchange-result--ok" role="status">
           {voteResult ?? 'You have already cast your vote. Thank you!'}
         </div>
       ) : (
         <>
           {voteResult && (
-            <div className="exchange-result exchange-result--err">{voteResult}</div>
+            <div className="exchange-result exchange-result--err" role="alert">{voteResult}</div>
           )}
           <div className="vote-form">
             <CustomSelect
