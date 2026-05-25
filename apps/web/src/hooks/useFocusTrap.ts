@@ -11,6 +11,9 @@ export function useFocusTrap(
     const el = ref.current;
     if (!el) return;
 
+    // non-null value
+    const container = el;
+
     const previously = document.activeElement as HTMLElement | null;
 
     const focusable = () =>
@@ -40,10 +43,13 @@ export function useFocusTrap(
     function handleFocusIn(e: FocusEvent) {
       const target = e.target as Node | null;
       if (!target) return;
-      if (el.contains(target)) return; // focus still inside modal
+
+      if (container.contains(target)) return;
+      // focus still inside modal
+
       // push focus back into the modal
       const items = focusable();
-      (items[0] ?? el).focus();
+      (items[0] ?? container).focus();
     }
 
     // Listen on document in capture phase so we catch focus/keys even if they occur before reaching modal
