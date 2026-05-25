@@ -13,7 +13,7 @@ class LeaderboardController extends Controller
     public function show(Request $request): JsonResponse
     {
         $moneyLeaders = User::with('group')
-            ->where('name', '!=', 'Guest')
+            ->whereNotIn('name', ['Guest', 'LG'])
             ->orderByDesc('balance')
             ->get()
             ->map(fn($u) => [
@@ -27,7 +27,7 @@ class LeaderboardController extends Controller
                 'stamps' => fn($q) => $q->whereNull('exchanged_at'),
                 'group.amusements',
             ])
-            ->where('name', '!=', 'Guest')
+            ->whereNotIn('name', ['Guest', 'LG'])
             ->get()
             ->map(fn($u) => [
                 'name'     => $u->name,
