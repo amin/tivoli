@@ -39,7 +39,7 @@
   --c-night: #0D2848;
   --c-sky: #A8D4F0;
 
-  --shadow-overlay: rgba(13, 40, 72, 0.5);
+  --shadow-overlay: rgba(13, 40, 72, 0.75);
   --shadow-modal: rgba(13, 40, 72, 0.2);
   --shadow-card: rgba(13, 40, 72, 0.08);
   --shadow-btn: rgba(30, 114, 184, 0.35);

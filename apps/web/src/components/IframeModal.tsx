@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 type Props = {
   url: string;
@@ -6,11 +7,25 @@ type Props = {
 };
 
 export default function IframeModal({ url, onClose }: Props) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, onClose);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
-      if (event.data?.type === "AMUSEMENT_CLOSE") {
-        onClose();
-      }
+      if (event.data?.type === "AMUSEMENT_CLOSE") onClose();
     }
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
@@ -18,7 +33,7 @@ export default function IframeModal({ url, onClose }: Props) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal modal--iframe">
+      <div ref={modalRef} className="modal modal--iframe">
         <iframe
           className="iframe-modal-frame"
           src={url}
