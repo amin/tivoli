@@ -282,14 +282,6 @@ export default function User() {
         </section>
       )}
 
-      {view === 'stamps' && exchangeResult && exchangeOptions.length === 0 && (
-        <section className="section" style={{ paddingBottom: 8 }}>
-          <div className={`exchange-result ${exchangeOk ? 'exchange-result--ok' : 'exchange-result--err'}`}>
-            {exchangeResult}
-          </div>
-        </section>
-      )}
-
       {view === 'stamps' && (
         <>
           <main className="section">
