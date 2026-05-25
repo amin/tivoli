@@ -48,6 +48,10 @@ class TransactionController extends Controller
         }
 
         return DB::transaction(function () use ($user, $amusement, $amount, $identityToken) {
+            $amusement = Amusement::whereKey($amusement->id)->lockForUpdate()->first();
+            if ($amusement->settled_at !== null) {
+                return response()->json(['message' => 'Amusement has been settled'], 409);
+            }
             $user->decrement('balance', $amount);
             $amusement->increment('amusement_balance', $amount);
 
@@ -142,6 +146,17 @@ class TransactionController extends Controller
         // Amusement balance is allowed to go negative; it's reconciled at
         // settle (group members absorb the debt).
         return DB::transaction(function () use ($original, $amusement, $amount) {
+            $amusement = Amusement::whereKey($amusement->id)->lockForUpdate()->first();
+            if ($amusement->settled_at !== null) {
+                return response()->json(['message' => 'Amusement has been settled'], 409);
+            }
+            $original = Transaction::whereKey($original->id)->lockForUpdate()->first();
+            if ($original->settled_at !== null) {
+                return response()->json(
+                    ['message' => "Transaction #{$original->id} has already been paid out"],
+                    409,
+                );
+            }
             $amusement->decrement('amusement_balance', $amount);
             $original->user->increment('balance', $amount);
             $original->update(['settled_at' => now()]);

@@ -21,7 +21,7 @@ class SettleController extends Controller
         $details = [];
 
         DB::transaction(function () use (&$details) {
-            $amusements = Amusement::whereNull('settled_at')->with('group.users')->get();
+            $amusements = Amusement::whereNull('settled_at')->with('group.users')->lockForUpdate()->get();
             foreach ($amusements as $amusement) {
                 $members = $amusement->group?->users ?? collect();
                 $memberCount = $members->count();
