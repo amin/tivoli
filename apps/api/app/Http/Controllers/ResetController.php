@@ -28,8 +28,8 @@ class ResetController extends Controller
         Vote::query()->delete();
         Transaction::query()->delete();
         IdentityToken::query()->delete();
-        User::whereRaw('LOWER(name) != ?', ['guest'])->update(['balance' => self::STARTING_BALANCE]);
-        User::whereRaw('LOWER(name) = ?', ['guest'])->update(['balance' => self::GUEST_STARTING_BALANCE]);
+        User::where('name', '!=', 'Guest')->update(['balance' => self::STARTING_BALANCE]);
+        User::where('name', 'Guest')->update(['balance' => self::GUEST_STARTING_BALANCE]);
         Amusement::query()->update(['amusement_balance' => 0, 'settled_at' => null]);
 
         return response()->json(['message' => 'Game reset successfully']);
