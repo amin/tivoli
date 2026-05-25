@@ -220,7 +220,7 @@
 
 .card {
   display: block;
-  border: 1px solid var(--border-faint);
+  border: 3px solid white;
   border-radius: var(--r-lg);
   overflow: hidden;
   background: white;
