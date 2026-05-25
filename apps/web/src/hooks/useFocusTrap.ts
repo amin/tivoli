@@ -40,7 +40,7 @@ export function useFocusTrap(
     function handleFocusIn(e: FocusEvent) {
       const target = e.target as Node | null;
       if (!target) return;
-      if (el.contains(target)) return; // focus still inside modal
+      if (el!.contains(target)) return; // focus still inside modal
       // push focus back into the modal
       const items = focusable();
       (items[0] ?? el).focus();
