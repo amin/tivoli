@@ -27,7 +27,7 @@ class Stamptype extends Model
                 ? "{$this->metal->value}-{$this->animal->value}.svg"
                 : "{$this->animal->value}.svg";
 
-            return asset("images/stamps/transparent/{$filename}");
+            return asset("images/stamps/{$filename}");
         });
     }
 
