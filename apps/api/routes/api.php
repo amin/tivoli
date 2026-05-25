@@ -24,6 +24,7 @@ Route::get('/', fn () => response()->json([
 // ── Auth ───────────────────────────────────────────────────────────────
 Route::post('/activate', [UserController::class, 'activate']);
 Route::post('/login', [AuthSessionController::class, 'store']);
+Route::post('/login/guest', [AuthSessionController::class, 'storeGuest']);
 
 // CSRF token endpoint — returns the current session's CSRF token in JSON so
 // the SPA can read it across origins (document.cookie can't see the

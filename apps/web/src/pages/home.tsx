@@ -14,19 +14,13 @@ import { useAuth } from "../auth/AuthContext";
 type Filter = "all" | "game" | "attraction";
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const { amusements } = useAmusements();
   const [filter, setFilter] = useState<Filter>("all");
   const [showHiw, setShowHiw] = useState(false);
   const [guestPending, setGuestPending] = useState<AmusementItem | null>(null);
   const [iframe, setIframe] = useState<{ url: string; } | null>(null);
   const navigate = useNavigate();
-
-  function launchAmusement(a: AmusementItem, token?: string) {
-    const url = new URL(a.url);
-    if (token) url.searchParams.set("identity_token", token);
-    window.open(url.toString(), "_blank", "noreferrer");
-  }
 
   async function openAmusement(e: React.MouseEvent, a: AmusementItem) {
     e.preventDefault();
@@ -129,9 +123,22 @@ export default function Home() {
         <GuestWarningModal
           amusement={guestPending}
           onClose={() => setGuestPending(null)}
-          onContinueAsGuest={() => {
-            launchAmusement(guestPending);
+          onContinueAsGuest={async () => {
+            const amusement = guestPending;
             setGuestPending(null);
+            try {
+              const loginRes = await apiFetch("/login/guest", { method: "POST" });
+              if (!loginRes.ok) return;
+              await refresh();
+              const tokenRes = await apiFetch("/identity-tokens", { method: "POST" });
+              if (!tokenRes.ok) return;
+              const { identity_token } = await tokenRes.json();
+              const url = new URL(amusement.url);
+              url.searchParams.set("identity_token", identity_token);
+              setIframe({ url: url.toString() });
+            } catch {
+              // silently no-op; user can retry
+            }
           }}
         />
       )}
