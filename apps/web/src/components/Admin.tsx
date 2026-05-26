@@ -127,7 +127,7 @@ export default function Admin() {
 
         <div className="admin-actions">
           <button
-            className="btn btn-end-game"
+            className="btn btn-scoreboard"
             onClick={handleEndGame}
             disabled={loading}
           >

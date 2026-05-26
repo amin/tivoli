@@ -567,8 +567,8 @@
   gap: 20px;
 }
 
-.btn-end-game {
-  background: var(--c-red);
+.btn-scoreboard {
+  background: var(--c-orange);
   color: white;
   border: none;
   font-weight: 600;
@@ -582,7 +582,7 @@
 }
 
 .btn-settle {
-  background: var(--c-orange);
+  background: var(--c-red);
   color: white;
   border: none;
   font-weight: 600;
