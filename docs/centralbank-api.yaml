@@ -16,8 +16,14 @@ info:
     The endpoint returns a permanent access_key (UUID). The access_key is
     stored hashed (bcrypt) server-side and shown only once in the activation
     response. Subsequent requests authenticate via the `X-Access-Key` header.
-    The frontend can call `POST /auth/login` with the access_key to fetch the
+    The frontend can call `POST /login` with the access_key to fetch the
     user profile on sign-in.
+
+    **Guest access** is available via `POST /login/guest` (no credentials
+    required). A temporary guest session is created and the caller can
+    subsequently call `GET /user` to retrieve the guest profile. Guest
+    accounts have limited capabilities (e.g. they cannot exchange stamps or
+    vote) and are not persisted across sessions.
 
     **Amusements** authenticate by including their `api_key` in the
     **request body** of transaction endpoints (`POST /transactions`,
@@ -201,6 +207,38 @@ paths:
                 $ref: "#/components/schemas/User"
         "401":
           $ref: "#/components/responses/Unauthorized"
+
+  /login/guest:
+    post:
+      tags: [Auth]
+      operationId: guestLogin
+      summary: Start an anonymous guest session
+      description: >
+        Creates a temporary guest session with no credentials required.
+        The session is established server-side (e.g. via a session cookie).
+        After a successful call, use `GET /user` to retrieve the guest profile.
+
+        Guest accounts have limited capabilities: they can browse amusements
+        and receive identity tokens, but cannot exchange stamps, cast votes,
+        or perform any action that requires a real user account.
+      security: []
+      responses:
+        "200":
+          description: Guest session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Guest session created"
+        "409":
+          description: A session is already active
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /identity-tokens:
     post:
