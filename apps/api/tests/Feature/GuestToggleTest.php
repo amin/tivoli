@@ -43,6 +43,11 @@ class GuestToggleTest extends TestCase
         return $this->makeUser($group->id);
     }
 
+    private function freshGuest(): ?User
+    {
+        return User::whereRaw('LOWER(name) = ?', ['guest'])->first();
+    }
+
     public function test_status_is_true_when_guest_active(): void
     {
         $this->makeGuest(true);
@@ -78,7 +83,7 @@ class GuestToggleTest extends TestCase
             ->assertStatus(200)
             ->assertJson(['active' => false]);
 
-        $this->assertFalse((bool) User::whereRaw('LOWER(name) = ?', ['guest'])->first()->is_active);
+        $this->assertFalse((bool) $this->freshGuest()->is_active);
     }
 
     public function test_admin_can_enable_guest(): void
@@ -91,7 +96,7 @@ class GuestToggleTest extends TestCase
             ->assertStatus(200)
             ->assertJson(['active' => true]);
 
-        $this->assertTrue((bool) User::whereRaw('LOWER(name) = ?', ['guest'])->first()->is_active);
+        $this->assertTrue((bool) $this->freshGuest()->is_active);
     }
 
     public function test_non_admin_cannot_toggle_guest(): void
@@ -103,7 +108,7 @@ class GuestToggleTest extends TestCase
             ->patchJson('/guest', ['is_active' => false])
             ->assertStatus(403);
 
-        $this->assertTrue((bool) User::whereRaw('LOWER(name) = ?', ['guest'])->first()->is_active);
+        $this->assertTrue((bool) $this->freshGuest()->is_active);
     }
 
     public function test_unauthenticated_cannot_toggle_guest(): void
@@ -112,6 +117,8 @@ class GuestToggleTest extends TestCase
 
         $this->patchJson('/guest', ['is_active' => false])
             ->assertStatus(401);
+
+        $this->assertTrue((bool) $this->freshGuest()->is_active);
     }
 
     public function test_toggle_returns_404_when_no_guest_exists(): void
