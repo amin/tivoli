@@ -145,10 +145,10 @@ export default function Admin() {
           ) : (
             <div className="reset-confirm">
               <p className="reset-confirm-text">
-                This settles every amusement. No further transactions are
-                accepted on them, and each amusement reclaims the money it
-                paid out by deducting an equal share from its group members.
-                This cannot be undone.
+                Warning: once settled, players can no longer play any
+                amusement. Each amusement will also reclaim the money it paid
+                out by deducting an equal share from its group members. This
+                cannot be undone.
               </p>
               <div className="reset-confirm-actions">
                 <button className="btn btn-secondary" onClick={() => setConfirmSettle(false)} disabled={settling}>

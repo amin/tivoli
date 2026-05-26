@@ -188,6 +188,18 @@
   margin-bottom: 22px;
 }
 
+.game-ended-banner {
+  background: var(--c-yellow);
+  color: var(--c-night);
+  text-align: center;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  position: sticky;
+  top: var(--header-h, 84px);
+  z-index: 10;
+}
+
 .filters {
   display: flex;
   gap: 8px;
@@ -427,16 +439,16 @@
 .iframe-modal-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
+  justify-content: flex-end;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border-faint);
   flex-shrink: 0;
 }
 
 .iframe-modal-close {
-  font-size: var(--text-base);
+  font-size: var(--text-2xl);
   color: var(--text-faint);
-  padding: 4px 8px;
+  padding: 9px 13px;
   border-radius: var(--r-md);
   transition: background 0.15s, color 0.15s;
 }
