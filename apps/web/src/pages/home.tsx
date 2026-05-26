@@ -10,6 +10,7 @@ import IframeModal from "../components/IframeModal";
 import { useAmusements, type AmusementItem } from "../hooks/useAmusements";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
+import { useGuestAvailable } from "../hooks/useGuestAvailable";
 
 type Filter = "all" | "game" | "attraction";
 
@@ -21,11 +22,16 @@ export default function Home() {
   const [guestPending, setGuestPending] = useState<AmusementItem | null>(null);
   const [iframe, setIframe] = useState<{ url: string; } | null>(null);
   const navigate = useNavigate();
+  const { available: guestAvailable } = useGuestAvailable();
 
   async function openAmusement(e: React.MouseEvent, a: AmusementItem) {
     e.preventDefault();
     if (!user) {
-      setGuestPending(a);
+      if (guestAvailable === false) {
+        navigate("/login");
+      } else {
+        setGuestPending(a);
+      }
       return;
     }
     try {
