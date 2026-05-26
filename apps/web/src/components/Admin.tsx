@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../lib/api";
+import { useGuestAvailable } from "../hooks/useGuestAvailable";
 
 type MoneyLeader = { name: string; group: string | null; balance: number };
 type VpLeader    = { name: string; group: string | null; total_vp: number };
@@ -35,6 +36,30 @@ export default function Admin() {
   const [settling, setSettling] = useState(false);
   const [settleSummary, setSettleSummary] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const { available: guestAvailable, refresh: refreshGuest } = useGuestAvailable();
+  const [togglingGuest, setTogglingGuest] = useState(false);
+
+  async function handleToggleGuest() {
+    setTogglingGuest(true);
+    setError(null);
+    try {
+      const res = await apiFetch('/guest', {
+        method: 'PATCH',
+        body: JSON.stringify({ is_active: !guestAvailable }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError((data as { message?: string }).message ?? 'Failed to update guest account.');
+        return;
+      }
+      await refreshGuest();
+    } catch {
+      setError('Network error.');
+    } finally {
+      setTogglingGuest(false);
+    }
+  }
 
   useEffect(() => {
     if (!scoreboard) return;
@@ -133,6 +158,23 @@ export default function Admin() {
           >
             {loading ? 'Counting results…' : 'Scoreboard'}
           </button>
+
+          <div className="guest-toggle-row">
+            <span className="guest-toggle-label">
+              Guest login: {guestAvailable === null ? '…' : guestAvailable ? 'On' : 'Off'}
+            </span>
+            <button
+              className="btn btn-secondary"
+              onClick={handleToggleGuest}
+              disabled={togglingGuest || guestAvailable === null}
+            >
+              {togglingGuest
+                ? 'Updating…'
+                : guestAvailable
+                  ? 'Disable guest'
+                  : 'Enable guest'}
+            </button>
+          </div>
 
           {!confirmSettle ? (
             <button
