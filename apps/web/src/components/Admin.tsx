@@ -41,6 +41,7 @@ export default function Admin() {
   const [togglingGuest, setTogglingGuest] = useState(false);
 
   async function handleToggleGuest() {
+    if (guestAvailable === null) return;
     setTogglingGuest(true);
     setError(null);
     try {

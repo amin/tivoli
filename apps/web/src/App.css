@@ -614,6 +614,17 @@
   font-weight: 500;
 }
 
+.guest-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.guest-toggle-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
 /* ---------- Scoreboard modal ---------- */
 .scoreboard-modal {
   max-width: 520px;
