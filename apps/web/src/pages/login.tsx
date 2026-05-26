@@ -6,6 +6,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
+import { useGuestAvailable } from "../hooks/useGuestAvailable";
 
 function InfoTip({ id, children }: { id: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -45,6 +46,7 @@ function InfoTip({ id, children }: { id: string; children: React.ReactNode }) {
 export default function Login() {
   const navigate = useNavigate();
   const { user, loading: authLoading, login, refresh } = useAuth();
+  const { available: guestAvailable } = useGuestAvailable();
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -183,17 +185,19 @@ export default function Login() {
               </button>
             </div>
 
-            <div className="guestLoginRow">
-              <span className="guestDivider">or</span>
-              <button
-                type="button"
-                className="btn btn-link"
-                disabled={loginLoading}
-                onClick={loginAsGuest}
-              >
-                {loginLoading ? "Logging in…" : "Login as Guest"}
-              </button>
-            </div>
+            {guestAvailable === true && (
+              <div className="guestLoginRow">
+                <span className="guestDivider">or</span>
+                <button
+                  type="button"
+                  className="btn btn-link"
+                  disabled={loginLoading}
+                  onClick={loginAsGuest}
+                >
+                  {loginLoading ? "Logging in…" : "Login as Guest"}
+                </button>
+              </div>
+            )}
 
             <div className="activateToggle">
               <button

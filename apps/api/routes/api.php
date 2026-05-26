@@ -4,6 +4,7 @@ use App\Http\Controllers\AmusementController;
 use App\Http\Controllers\Auth\AuthSessionController;
 use App\Http\Controllers\ExchangeController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\GuestController;
 use App\Http\Controllers\IdentityTokenController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ResetController;
@@ -33,6 +34,9 @@ Route::get('/csrf-token', fn () => response()->json(['csrf_token' => csrf_token(
 
 // ── Public amusement listing ────────────────────────────────────────────
 Route::get('/amusements', [AmusementController::class, 'index']);
+
+// ── Guest account status (public — login page reads this) ──────────────
+Route::get('/guest', [GuestController::class, 'show']);
 
 // ── Transactions (amusement api_key in request body) ───────────────────
 Route::get('/identity-tokens/{token}', [IdentityTokenController::class, 'show']);
@@ -78,4 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Game reset (admin only)
     Route::post('/reset', [ResetController::class, 'store']);
     Route::post('/settle', [SettleController::class, 'store']);
+
+    // Guest account toggle (admin only)
+    Route::patch('/guest', [GuestController::class, 'update']);
 });

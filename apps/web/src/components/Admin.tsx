@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../lib/api";
+import { useGuestAvailable } from "../hooks/useGuestAvailable";
 
 type MoneyLeader = { name: string; group: string | null; balance: number };
 type VpLeader    = { name: string; group: string | null; total_vp: number };
@@ -35,6 +36,35 @@ export default function Admin() {
   const [settling, setSettling] = useState(false);
   const [settleSummary, setSettleSummary] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const { available: guestAvailable, refresh: refreshGuest } = useGuestAvailable();
+  const [confirmGuest, setConfirmGuest] = useState(false);
+  const [togglingGuest, setTogglingGuest] = useState(false);
+
+  async function handleToggleGuest() {
+    if (guestAvailable === null) return;
+    setTogglingGuest(true);
+    setError(null);
+    try {
+      const res = await apiFetch('/guest', {
+        method: 'PATCH',
+        body: JSON.stringify({ is_active: !guestAvailable }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError((data as { message?: string }).message ?? 'Failed to update guest account.');
+        setConfirmGuest(false);
+        return;
+      }
+      await refreshGuest();
+      setConfirmGuest(false);
+    } catch {
+      setError('Network error.');
+      setConfirmGuest(false);
+    } finally {
+      setTogglingGuest(false);
+    }
+  }
 
   useEffect(() => {
     if (!scoreboard) return;
@@ -133,6 +163,40 @@ export default function Admin() {
           >
             {loading ? 'Counting results…' : 'Scoreboard'}
           </button>
+
+          {!confirmGuest ? (
+            <button
+              className={`btn ${guestAvailable ? 'btn-secondary' : 'btn-guest-enable'}`}
+              onClick={() => { setConfirmGuest(true); setError(null); }}
+              disabled={togglingGuest || guestAvailable === null}
+            >
+              {guestAvailable === null
+                ? 'Guest login…'
+                : guestAvailable
+                  ? 'Disable guest login'
+                  : 'Enable guest login'}
+            </button>
+          ) : (
+            <div className={guestAvailable ? 'reset-confirm' : 'guest-confirm-enable'}>
+              <p className={guestAvailable ? 'reset-confirm-text' : 'guest-confirm-enable-text'}>
+                {guestAvailable
+                  ? 'Warning: disabling guest login removes the "Login as Guest" option. Visitors without an activated account will no longer be able to browse or play amusements.'
+                  : 'This re-enables the "Login as Guest" option, letting visitors browse and play amusements without activating an account.'}
+              </p>
+              <div className="reset-confirm-actions">
+                <button className="btn btn-secondary" onClick={() => setConfirmGuest(false)} disabled={togglingGuest}>
+                  Cancel
+                </button>
+                <button
+                  className={`btn ${guestAvailable ? 'btn-guest' : 'btn-guest-enable-confirm'}`}
+                  onClick={handleToggleGuest}
+                  disabled={togglingGuest}
+                >
+                  {togglingGuest ? 'Updating…' : guestAvailable ? 'Yes, disable' : 'Yes, enable'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {!confirmSettle ? (
             <button
