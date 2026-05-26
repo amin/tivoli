@@ -436,26 +436,14 @@
   overflow: hidden;
 }
 
-.iframe-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-faint);
-  flex-shrink: 0;
-}
-
 .iframe-modal-close {
-  font-size: var(--text-2xl);
-  color: var(--text-faint);
-  padding: 9px 13px;
-  border-radius: var(--r-md);
-  transition: background 0.15s, color 0.15s;
-}
-
-.iframe-modal-close:hover {
-  background: var(--bg-soft);
-  color: var(--text-ink);
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: none;
 }
 
 .iframe-modal-frame {
