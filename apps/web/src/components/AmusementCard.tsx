@@ -25,7 +25,7 @@ export default function AmusementCard({ amusement, apiKey, showImage = false, sh
           {amusement.price != null && (
             <span className="card-pill card-pill--fee">Entrance €{amusement.price}</span>
           )}
-          {amusement.player_payout != null && (
+          {amusement.player_payout != null && amusement.player_payout > 0 && (
             <span className="card-pill card-pill--winnings">Winnings €{amusement.player_payout.toFixed(2)}</span>
           )}
           {showBalance && amusement.amusement_balance != null && amusement.amusement_balance < 0 && (

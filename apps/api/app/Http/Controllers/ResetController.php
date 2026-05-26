@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 class ResetController extends Controller
 {
     private const STARTING_BALANCE = 25.00;
+    private const GUEST_STARTING_BALANCE = 90000.00;
 
     public function store(Request $request): JsonResponse
     {
@@ -27,7 +28,8 @@ class ResetController extends Controller
         Vote::query()->delete();
         Transaction::query()->delete();
         IdentityToken::query()->delete();
-        User::query()->update(['balance' => self::STARTING_BALANCE]);
+        User::where('name', '!=', 'Guest')->update(['balance' => self::STARTING_BALANCE]);
+        User::where('name', 'Guest')->update(['balance' => self::GUEST_STARTING_BALANCE]);
         Amusement::query()->update(['amusement_balance' => 0, 'settled_at' => null]);
 
         return response()->json(['message' => 'Game reset successfully']);

@@ -3,19 +3,29 @@ import { useEffect, type RefObject } from "react";
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
 
-export function useFocusTrap(ref: RefObject<HTMLElement | null>, onClose: () => void) {
+export function useFocusTrap(
+  ref: RefObject<HTMLElement | null>,
+  onClose: () => void,
+) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
+    // non-null value
+    const container = el;
+
     const previously = document.activeElement as HTMLElement | null;
 
-    const focusable = () => Array.from(el.querySelectorAll<HTMLElement>(FOCUSABLE));
+    const focusable = () =>
+      Array.from(el.querySelectorAll<HTMLElement>(FOCUSABLE));
     const items = focusable();
     (items[0] ?? el).focus();
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
       if (e.key !== "Tab") return;
       const items = focusable();
       if (!items.length) return;
@@ -30,9 +40,25 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, onClose: () => 
       }
     }
 
-    el.addEventListener("keydown", handleKeyDown);
+    function handleFocusIn(e: FocusEvent) {
+      const target = e.target as Node | null;
+      if (!target) return;
+
+      if (container.contains(target)) return;
+      // focus still inside modal
+
+      // push focus back into the modal
+      const items = focusable();
+      (items[0] ?? container).focus();
+    }
+
+    // Listen on document in capture phase so we catch focus/keys even if they occur before reaching modal
+    document.addEventListener("keydown", handleKeyDown, true);
+    document.addEventListener("focusin", handleFocusIn, true);
+
     return () => {
-      el.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown, true);
+      document.removeEventListener("focusin", handleFocusIn, true);
       previously?.focus();
     };
   }, [ref, onClose]);

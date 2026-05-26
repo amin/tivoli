@@ -43,6 +43,20 @@ class AuthSessionController extends Controller
         return response()->json($user);
     }
 
+    public function storeGuest(Request $request): JsonResponse
+    {
+        $user = User::whereRaw('LOWER(name) = ?', ['guest'])->where('is_active', true)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Guest account not available'], 404);
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return response()->json($user);
+    }
+
     public function destroy(Request $request): JsonResponse
     {
         Auth::guard('web')->logout();

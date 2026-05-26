@@ -188,6 +188,18 @@
   margin-bottom: 22px;
 }
 
+.game-ended-banner {
+  background: var(--c-yellow);
+  color: var(--c-night);
+  text-align: center;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  position: sticky;
+  top: var(--header-h, 84px);
+  z-index: 10;
+}
+
 .filters {
   display: flex;
   gap: 8px;
@@ -220,7 +232,7 @@
 
 .card {
   display: block;
-  border: 1px solid var(--border-faint);
+  border: 3px solid white;
   border-radius: var(--r-lg);
   overflow: hidden;
   background: white;
@@ -424,26 +436,14 @@
   overflow: hidden;
 }
 
-.iframe-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border-faint);
-  flex-shrink: 0;
-}
-
 .iframe-modal-close {
-  font-size: var(--text-base);
-  color: var(--text-faint);
-  padding: 4px 8px;
-  border-radius: var(--r-md);
-  transition: background 0.15s, color 0.15s;
-}
-
-.iframe-modal-close:hover {
-  background: var(--bg-soft);
-  color: var(--text-ink);
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: none;
 }
 
 .iframe-modal-frame {
@@ -567,8 +567,8 @@
   gap: 20px;
 }
 
-.btn-end-game {
-  background: var(--c-red);
+.btn-scoreboard {
+  background: var(--c-orange);
   color: white;
   border: none;
   font-weight: 600;
@@ -582,7 +582,7 @@
 }
 
 .btn-settle {
-  background: var(--c-orange);
+  background: var(--c-red);
   color: white;
   border: none;
   font-weight: 600;
@@ -705,6 +705,7 @@
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
+  position: relative;
 }
 
 .hiw-header {
@@ -715,12 +716,13 @@
 }
 
 .hiw-close {
-  background: none;
-  border: none;
-  font-size: var(--text-md);
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: var(--text-2xl);
   color: var(--text-faint);
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 9px 13px;
   line-height: 1;
   transition: color 0.15s;
 }

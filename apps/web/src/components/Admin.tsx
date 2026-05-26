@@ -87,8 +87,8 @@ export default function Admin() {
       );
       setSettleSummary(
         totalDebt > 0
-          ? `Settled ${settle.amusements_settled} amusements. €${totalDebt.toFixed(2)} deducted from groups in deficit.`
-          : `Settled ${settle.amusements_settled} amusements. No deficits — no deductions made.`,
+          ? `Settled ${settle.amusements_settled} amusements. €${totalDebt.toFixed(2)} reclaimed from group members.`
+          : `Settled ${settle.amusements_settled} amusements. No payouts to reclaim.`,
       );
       setConfirmSettle(false);
     } catch {
@@ -127,11 +127,11 @@ export default function Admin() {
 
         <div className="admin-actions">
           <button
-            className="btn btn-end-game"
+            className="btn btn-scoreboard"
             onClick={handleEndGame}
             disabled={loading}
           >
-            {loading ? 'Counting results…' : 'End game'}
+            {loading ? 'Counting results…' : 'Scoreboard'}
           </button>
 
           {!confirmSettle ? (
@@ -145,9 +145,10 @@ export default function Admin() {
           ) : (
             <div className="reset-confirm">
               <p className="reset-confirm-text">
-                This locks the event. After settling, no more transactions are
-                accepted and any amusement with negative balance has its debt
-                deducted from its group members. This cannot be undone.
+                Warning: once settled, players can no longer play any
+                amusement. Each amusement will also reclaim the money it paid
+                out by deducting an equal share from its group members. This
+                cannot be undone.
               </p>
               <div className="reset-confirm-actions">
                 <button className="btn btn-secondary" onClick={() => setConfirmSettle(false)} disabled={settling}>

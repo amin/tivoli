@@ -44,7 +44,7 @@ function InfoTip({ id, children }: { id: string; children: React.ReactNode }) {
 
 export default function Login() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, login } = useAuth();
+  const { user, loading: authLoading, login, refresh } = useAuth();
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -111,6 +111,22 @@ export default function Login() {
     }
   }
 
+  async function loginAsGuest() {
+    setLoginError(null);
+    setLoginLoading(true);
+    try {
+      const res = await apiFetch("/login/guest", { method: "POST" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.message ?? `Login failed (${res.status})`);
+      await refresh();
+      navigate("/user");
+    } catch (err) {
+      setLoginError(err instanceof Error ? err.message : "Network error");
+    } finally {
+      setLoginLoading(false);
+    }
+  }
+
   return (
     <>
       <Header />
@@ -167,10 +183,22 @@ export default function Login() {
               </button>
             </div>
 
-            <div className="activateToggle">
+            <div className="guestLoginRow">
+              <span className="guestDivider">or</span>
               <button
                 type="button"
                 className="btn btn-link"
+                disabled={loginLoading}
+                onClick={loginAsGuest}
+              >
+                {loginLoading ? "Logging in…" : "Login as Guest"}
+              </button>
+            </div>
+
+            <div className="activateToggle">
+              <button
+                type="button"
+                className="btn btn-link btn-link--orange"
                 onClick={() => setShowActivate((s) => !s)}
               >
                 Activate Account
