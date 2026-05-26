@@ -34,6 +34,9 @@ export default function IframeModal({ url, onClose }: Props) {
   return (
     <div className="modal-overlay">
       <div ref={modalRef} className="modal modal--iframe">
+        <div className="iframe-modal-header">
+          <button className="iframe-modal-close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
         <iframe
           className="iframe-modal-frame"
           src={url}

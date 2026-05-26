@@ -13,6 +13,7 @@ export type AmusementItem = {
   amusement_balance?: number;
   image_url: string | null;
   api_key?: string;
+  settled_at: string | null;
 };
 
 export function useAmusements(owned = false) {

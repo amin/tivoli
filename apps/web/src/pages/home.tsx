@@ -43,11 +43,18 @@ export default function Home() {
     }
   }
 
+  const gameSettled = amusements.length > 0 && amusements.every((a) => a.settled_at !== null);
   const visible = filter === "all" ? amusements : amusements.filter((a) => a.type === filter);
 
   return (
     <>
       <Header />
+
+      {gameSettled && (
+        <div className="game-ended-banner" role="alert">
+          Loopland is closed, you can no longer play.
+        </div>
+      )}
 
       <section className="hero">
         <div className="hero-img-wrap">
