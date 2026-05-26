@@ -38,6 +38,7 @@ export default function Admin() {
   const modalRef = useRef<HTMLDivElement>(null);
 
   const { available: guestAvailable, refresh: refreshGuest } = useGuestAvailable();
+  const [confirmGuest, setConfirmGuest] = useState(false);
   const [togglingGuest, setTogglingGuest] = useState(false);
 
   async function handleToggleGuest() {
@@ -52,11 +53,14 @@ export default function Admin() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError((data as { message?: string }).message ?? 'Failed to update guest account.');
+        setConfirmGuest(false);
         return;
       }
       await refreshGuest();
+      setConfirmGuest(false);
     } catch {
       setError('Network error.');
+      setConfirmGuest(false);
     } finally {
       setTogglingGuest(false);
     }
@@ -160,22 +164,39 @@ export default function Admin() {
             {loading ? 'Counting results…' : 'Scoreboard'}
           </button>
 
-          <div className="guest-toggle-row">
-            <span className="guest-toggle-label">
-              Guest login: {guestAvailable === null ? '…' : guestAvailable ? 'On' : 'Off'}
-            </span>
+          {!confirmGuest ? (
             <button
-              className="btn btn-secondary"
-              onClick={handleToggleGuest}
+              className={`btn ${guestAvailable ? 'btn-secondary' : 'btn-guest-enable'}`}
+              onClick={() => { setConfirmGuest(true); setError(null); }}
               disabled={togglingGuest || guestAvailable === null}
             >
-              {togglingGuest
-                ? 'Updating…'
+              {guestAvailable === null
+                ? 'Guest login…'
                 : guestAvailable
-                  ? 'Disable guest'
-                  : 'Enable guest'}
+                  ? 'Disable guest login'
+                  : 'Enable guest login'}
             </button>
-          </div>
+          ) : (
+            <div className={guestAvailable ? 'reset-confirm' : 'guest-confirm-enable'}>
+              <p className={guestAvailable ? 'reset-confirm-text' : 'guest-confirm-enable-text'}>
+                {guestAvailable
+                  ? 'Warning: disabling guest login removes the "Login as Guest" option. Visitors without an activated account will no longer be able to browse or play amusements.'
+                  : 'This re-enables the "Login as Guest" option, letting visitors browse and play amusements without activating an account.'}
+              </p>
+              <div className="reset-confirm-actions">
+                <button className="btn btn-secondary" onClick={() => setConfirmGuest(false)} disabled={togglingGuest}>
+                  Cancel
+                </button>
+                <button
+                  className={`btn ${guestAvailable ? 'btn-guest' : 'btn-guest-enable-confirm'}`}
+                  onClick={handleToggleGuest}
+                  disabled={togglingGuest}
+                >
+                  {togglingGuest ? 'Updating…' : guestAvailable ? 'Yes, disable' : 'Yes, enable'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {!confirmSettle ? (
             <button
