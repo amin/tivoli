@@ -196,13 +196,15 @@ export default function Amusement() {
                     >
                       Edit
                     </button>
-                    <button
-                      className="btn btn-secondary"
-                      disabled={deletingId === amusement.id}
-                      onClick={() => handleDelete(amusement.id)}
-                    >
-                      {deletingId === amusement.id ? 'Deleting…' : 'Delete'}
-                    </button>
+                    {false && (
+                      <button
+                        className="btn btn-secondary"
+                        disabled={deletingId === amusement.id}
+                        onClick={() => handleDelete(amusement.id)}
+                      >
+                        {deletingId === amusement.id ? 'Deleting…' : 'Delete'}
+                      </button>
+                    )}
                   </>
                 }
               />
