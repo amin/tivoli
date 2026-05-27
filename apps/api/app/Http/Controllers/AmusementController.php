@@ -100,12 +100,11 @@ class AmusementController extends Controller
             return response()->json(['message' => 'You do not own this amusement'], 403);
         }
 
-        // TEMP: delete guard disabled — re-enable after current incident.
-        // if ($amusement->settled_at === null && $amusement->transactions()->exists()) {
-        //     return response()->json([
-        //         'message' => 'Cannot delete amusement with transactions before it has been settled.',
-        //     ], 409);
-        // }
+        if ($amusement->settled_at === null && $amusement->transactions()->exists()) {
+            return response()->json([
+                'message' => 'Cannot delete amusement with transactions before it has been settled.',
+            ], 409);
+        }
 
         $amusement->delete();
 
